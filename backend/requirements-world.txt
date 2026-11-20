@@ -1,0 +1,8 @@
+-r requirements-planning.txt
+camel-oasis==0.2.5
+camel-ai==0.2.78
+numpy==1.26.4
+scipy==1.12.0
+scikit-learn==1.4.2
+pandas==2.2.2
+igraph==0.11.6

@@ -2,7 +2,66 @@
 
 > 面向程序化数字户外广告（pDOOH）的城市数字孪生、合成人口仿真、效果预测与媒体组合优化平台。
 
-> **项目状态：Architecture / Specification。** 当前仓库尚未包含可运行服务；下文是目标技术架构与研发契约。
+> **项目状态：可运行的 pDOOH 规划与人群模拟工作台。** 当前实现使用 Flask、Vue 和 OASIS；本文后半部分保留目标架构，尚未实现的目标组件不代表当前服务。
+
+## 运行与使用
+
+当前支持 Excel 屏幕库存清洗与预算组合、按 GEOM 定位的街区场景、24 小时人车回放、四宫格对比、广告兴趣/好感分析，以及人物长文和群体投放建议。人群分析、场景详情和广告设置分别在独立弹窗中打开。
+
+![四宫格工作台](output/modal-ui/desktop.png)
+
+[人群分析窗口](output/modal-ui/audience.png) · [场景详情窗口](output/modal-ui/scene.png) · [广告设置窗口](output/modal-ui/advertising.png) · [功能与验证说明](docs/IMPLEMENTATION.md)
+
+### 本地启动
+
+推荐 Node.js 22.12+、Python 3.11 或 3.12。规划后端与 OASIS worker 使用独立 Python 环境。
+
+```bash
+git clone https://github.com/SuleynanAuir/AI-Native-pDOOH-Worlds-Model.git
+cd AI-Native-pDOOH-Worlds-Model
+cp .env.example .env
+python3.11 -m venv .venv
+.venv/bin/python -m pip install -r backend/requirements-planning.txt
+npm ci --prefix frontend
+```
+
+在 `.env` 中填写自己的 `LLM_API_KEY`、`LLM_BASE_URL` 和 `LLM_MODEL_NAME`。图片模型按供应商实际能力配置。需要坐标/周边查询时，填写 `MAPRICOT_API_KEY` 并将 `LOCATION_LOOKUP_ENABLED` 改为 `true`。Zep 仅供可选的旧版图谱/社交模块使用。
+
+分别在两个终端启动：
+
+```bash
+# 终端一：后端，默认 http://localhost:5001
+.venv/bin/python backend/run.py
+
+# 终端二：前端，默认 http://localhost:3000
+npm --prefix frontend run dev
+```
+
+前端端口占用时，以 Vite 输出的实际地址为准。`/world` 为人群模拟，`/planning` 为库存与预算规划。
+
+需要运行 OASIS 人群决策时，另外安装 worker：
+
+```bash
+python3.11 -m venv backend/.venv-oasis
+backend/.venv-oasis/bin/python -m pip install -r backend/requirements-world.txt
+```
+
+首次克隆不带本机的模拟记录、地图缓存和已生成报告。可使用 `data/test.xlsx`，在工作台「场景设置」中从库存添加地点，再配置广告并运行分析；也可在单场景中设置地区与人群后运行 OASIS。地图查证、人物生成及广告分析会使用你配置的外部 API，结果保存在 `backend/uploads/`。
+
+`.env`、虚拟环境、上传数据和运行日志不提交到仓库。`output/` 仅保留最新界面展示；详细开发说明里的其他产物链接指向本地验收文件。
+
+### 验证
+
+```bash
+npm --prefix frontend run build
+PYTHONPATH=backend .venv/bin/python -m pytest backend/tests/test_campaign.py backend/tests/test_campaign_narratives.py backend/tests/test_comparison.py -q
+```
+
+曝光数字表示模拟的经过机会，兴趣与好感是模型推测；人数、车流和消费能力需用现场数据校准，不能当成真实观看、购买率或预算回报承诺。
+
+## 目标架构与研发契约
+
+以下保留原设计文档；实际可用功能及运行边界以以上启动说明和 [实现与验证说明](docs/IMPLEMENTATION.md) 为准。
 
 ## 1. 核心设计
 

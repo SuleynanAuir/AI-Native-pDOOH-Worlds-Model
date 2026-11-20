@@ -1,0 +1,57 @@
+<template>
+  <section class="campaign-controls" aria-label="广告内容与车流">
+    <div class="campaign-heading"><div class="active-creative"><small>当前广告</small><b>{{ active?.spec.campaign.title || '原始回放' }}</b></div><div class="campaign-quick"><label>颜色<select aria-label="广告态度颜色指标" v-model="metric" @change="$emit('metric',metric)"><option value="interest">兴趣</option><option value="favorability">好感</option></select></label><span class="mini-gradient" title="红：低 · 黄：中 · 绿：高 · 灰：未知"></span><button type="button" aria-haspopup="dialog" :aria-expanded="expanded" @click="expanded=true">广告设置</button></div></div>
+    <p v-if="busy" class="campaign-progress" role="status">{{ job?.message || '正在提交…' }}</p>
+    <p v-if="error" class="campaign-error" role="alert">{{ error }}</p>
+    <p v-if="dirty&&active" class="campaign-warning">设置已修改，尚未应用。</p>
+    <p v-if="active&&!matches" class="campaign-warning">部分地点未应用当前广告，正在显示原始回放。</p>
+    <ModalWindow v-model="expanded" title="广告设置">
+    <div class="campaign-controls campaign-editor">
+    <p v-if="busy" class="campaign-progress" role="status">{{ job?.message || '正在提交…' }}</p>
+    <p v-if="error" class="campaign-error" role="alert">{{ error }}</p>
+    <p v-if="dirty&&active" class="campaign-warning">设置已修改，尚未应用。</p>
+    <div class="campaign-fields">
+      <label>广告方案<select aria-label="广告方案" v-model="preset" :disabled="busy" @change="choose"><option v-for="p in presets" :key="p.id" :value="p.id">{{ p.title }}</option><option value="custom">自定义品牌与内容</option></select></label>
+      <label>品牌<input aria-label="广告品牌" v-model="draft.brand" maxlength="80" :disabled="busy"></label>
+      <label>屏幕标题<input aria-label="广告标题" v-model="draft.title" maxlength="100" :disabled="busy"></label>
+      <label>区域基准车流 · 辆/小时<input aria-label="区域基准车流" v-model.number="flow" type="number" min="0" max="3000" step="100" :disabled="busy"></label>
+    </div>
+    <div class="creative-row"><div class="creative-preview"><small>屏幕创意预览 · 情景文案</small><b>{{ draft.title||'广告标题' }}</b><span>{{ draft.message }}</span></div><div class="creative-inputs"><label>播放内容 / 诉求<textarea aria-label="广告播放内容" v-model="draft.message" maxlength="1000" rows="2" :disabled="busy"></textarea></label><details><summary>检索主题与资料入口</summary><label>检索主题<input v-model="draft.topic" aria-label="广告检索主题" maxlength="250" :disabled="busy"></label><label>官方资料页 / 新闻页<input aria-label="广告资料网址" type="url" v-model="draft.source_url" maxlength="1500" :disabled="busy"></label></details></div></div>
+    <div class="campaign-actions"><button class="generate" :disabled="busy||!scenes.some(Boolean)" @click="generate">{{ busy?'正在检索与推演…':'检索资料并应用到所选场景' }}</button><button v-if="active" :disabled="busy||creativeDirty||!matches" @click="trafficOnly">仅应用车流</button><button v-if="active" @click="clear" :disabled="busy">查看原始回放</button></div>
+    <div class="attitude-legend"><span>0 · {{ metric==='interest'?'低兴趣':'低好感' }}</span><i></i><span>50 · 中性</span><span>100 · {{ metric==='interest'?'高兴趣':'高好感' }}</span><em>灰色 = 无评分</em></div>
+    <p class="campaign-note">车流按整个可见区域设定，随早晚高峰、深夜与节日变化，尚无现场流量校准。广告假设全天循环播放；数字为曝光机会，颜色为已评分行人的模型态度，不是观看、销量或民调。车辆乘员态度未知。</p>
+    <details v-if="active?.research" class="campaign-evidence"><summary>当前广告的真实资料与模型依据 · {{ active.research.sources.length }} 个来源 · {{ new Date(active.research.retrieved_at).toLocaleString() }}</summary><p>{{ active.research.summary }}</p><ul><li v-for="f in active.research.facts" :key="f.statement">{{ f.statement }} <span v-for="id in f.source_ids" :key="id">[{{ id }}]</span></li></ul><ul class="source-list"><li v-for="s in active.research.sources" :key="s.id">[{{ s.id }}] <a :href="s.url" target="_blank" rel="noopener noreferrer">{{ s.title }}</a><small>发布：{{ s.published_at||'日期未提供' }} · {{ s.scope }}</small></li></ul><p v-for="gap in active.research.gaps" :key="gap">待验证：{{ gap }}</p><p v-for="warning in active.research.warnings" :key="warning">{{ warning }}</p><small>{{ active.research.method }} · {{ active.research.model }}。原 OASIS 行程保留，广告评分是新增 LLM 分析。</small></details>
+    </div>
+    </ModalWindow>
+  </section>
+</template>
+<script setup>
+import {ref,computed,onMounted,onBeforeUnmount,watch} from 'vue'
+import api from '../api'
+import ModalWindow from './ModalWindow.vue'
+const props=defineProps({scenes:Array}),emit=defineEmits(['apply','metric'])
+const expanded=ref(false)
+const presets=ref([]),preset=ref('nike-running'),draft=ref({brand:'Nike',title:'NIKE RUNNING',message:'Everyday miles. Your own pace. 日常跑步与舒适运动。',topic:'running everyday comfort community',source_url:'https://about.nike.com/en/newsroom'}),flow=ref(1800),metric=ref('interest'),job=ref(null),active=ref(null),error=ref(''),submitting=ref(false)
+let poll,disposed=false,checking=false
+const busy=computed(()=>submitting.value||['queued','running'].includes(job.value?.status))
+const fields=['brand','title','message','topic','source_url']
+const creativeDirty=computed(()=>active.value&&fields.some(k=>draft.value[k]!==active.value.spec.campaign[k]))
+const dirty=computed(()=>active.value&&(flow.value!==active.value.spec.vehicles_per_hour||creativeDirty.value))
+const matches=computed(()=>!active.value||props.scenes.filter(Boolean).every(id=>active.value.spec.scene_ids.includes(id)))
+function choose(){if(preset.value!=='custom')draft.value={...presets.value.find(p=>p.id===preset.value)}}
+function apply(value){active.value=value;localStorage.setItem('pdooh-campaign-experiment',value.id);emit('apply',value)}
+function clear(){active.value=null;localStorage.setItem('pdooh-campaign-experiment','none');emit('apply',null)}
+async function check(){if(checking||!job.value?.id)return;checking=true;try{const r=(await api.get('/api/world/campaign-experiments/'+job.value.id)).data;if(disposed)return;job.value=r;if(r.status==='completed'){clearInterval(poll);apply(r)}else if(r.status==='failed'){clearInterval(poll);error.value=r.message}}catch(e){error.value=e.message}finally{checking=false}}
+async function trafficOnly(){error.value='';submitting.value=true;try{job.value=(await api.post(`/api/world/campaign-experiments/${active.value.id}/traffic`,{scene_ids:[...new Set(props.scenes.filter(Boolean))],vehicles_per_hour:flow.value})).data;localStorage.setItem('pdooh-campaign-pending',job.value.id);if(disposed)return;clearInterval(poll);poll=setInterval(check,2500)}catch(e){error.value=e.message}finally{submitting.value=false}}
+async function generate(){error.value='';submitting.value=true;try{job.value=(await api.post('/api/world/campaign-experiments',{scene_ids:[...new Set(props.scenes.filter(Boolean))],campaign:draft.value,vehicles_per_hour:flow.value})).data;localStorage.setItem('pdooh-campaign-pending',job.value.id);if(disposed)return;clearInterval(poll);poll=setInterval(check,2500)}catch(e){error.value=e.message}finally{submitting.value=false}}
+watch(job,value=>{if(value&&['completed','failed'].includes(value.status))localStorage.removeItem('pdooh-campaign-pending')})
+onMounted(async()=>{try{presets.value=(await api.get('/api/world/campaign-presets')).data;if(disposed)return;const saved=new URLSearchParams(window.location.search).get('campaign')||localStorage.getItem('pdooh-campaign-experiment');if(saved!=='none'){const url=saved?'/api/world/campaign-experiments/'+saved:'/api/world/campaign-experiments/latest';const value=(await api.get(url)).data;if(!disposed&&value?.status==='completed'){draft.value={...value.spec.campaign};flow.value=value.spec.vehicles_per_hour;preset.value=presets.value.find(p=>p.title===draft.value.title)?.id||'custom';apply(value)}}const pending=localStorage.getItem('pdooh-campaign-pending');if(pending&&!disposed){job.value={id:pending,status:'running',message:'恢复广告实验进度…'};await check();if(busy.value)poll=setInterval(check,2500)}}catch(e){error.value=e.message}})
+onBeforeUnmount(()=>{disposed=true;clearInterval(poll)})
+</script>
+<style scoped>
+.campaign-controls.campaign-editor{margin:0;padding:0;border:0;border-radius:0;background:#fff}
+
+.active-creative{display:flex;align-items:center;gap:10px;min-width:0}.active-creative b{font-size:13px;overflow-wrap:anywhere}.active-creative small{letter-spacing:0!important}.campaign-quick{display:flex;align-items:center;gap:12px;flex-shrink:0}.campaign-quick label{display:flex;align-items:center;gap:6px}.campaign-quick select{width:auto;margin:0}.mini-gradient{width:60px;height:5px;border-radius:4px;background:linear-gradient(90deg,#b33439,#936600,#16764b)}.campaign-editor{border-top:1px solid #dce2e5;margin-top:12px;padding-top:12px}.campaign-progress{font-size:11px;margin:8px 0 0;color:#395348}@media(max-width:600px){.campaign-heading{flex-wrap:wrap}.campaign-quick{width:100%;justify-content:space-between}.mini-gradient{width:45px}}
+
+.campaign-controls{border:1px solid #dce2e5;border-radius:8px;background:#f8faf9;padding:14px;margin:12px 0;color:#20262b}.campaign-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.campaign-heading small{font-size:9px;letter-spacing:1.2px;color:#52605b}.campaign-heading h3{font-size:15px;margin:5px 0 12px}.campaign-controls label{display:block;font-size:10px;color:#4d5853;min-width:0}.campaign-controls input,.campaign-controls select,.campaign-controls textarea{display:block;width:100%;font:inherit;font-size:11px;background:white;color:#20262b;border:1px solid #d2dbde;border-radius:4px;padding:7px;margin-top:5px;min-width:0}.campaign-controls textarea{resize:vertical}.campaign-fields{display:grid;grid-template-columns:1fr 1fr 1.3fr 1fr;gap:12px}.creative-row{display:grid;grid-template-columns:260px 1fr;gap:14px;margin-top:12px}.creative-preview{background:#17211d;color:#fff;border-radius:5px;display:flex;flex-direction:column;justify-content:center;padding:16px;gap:8px;overflow-wrap:anywhere}.creative-preview small{font-size:9px;color:#c5d8cc}.creative-preview b{font-size:23px;letter-spacing:-.5px;font-style:italic}.creative-preview span{font-size:11px;line-height:1.6}.creative-inputs details{margin-top:8px}.creative-inputs summary{font-size:10px;cursor:pointer}.creative-inputs details label{margin-top:8px}.campaign-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.campaign-controls button{background:white;border:1px solid #c6d6cd;border-radius:4px;padding:8px 12px;font-size:11px;color:#1c3326;cursor:pointer}.campaign-controls button.generate{background:#e6f3ed}.campaign-controls button:disabled{opacity:.5;cursor:not-allowed}.campaign-actions span{font-size:11px}.campaign-note,.campaign-warning,.campaign-error{font-size:10px;line-height:1.8;margin-top:9px}.campaign-note{color:#525b65}.campaign-warning{color:#855c13}.campaign-error{color:#a53535}.attitude-legend{display:flex;align-items:center;gap:10px;font-size:10px;margin-top:14px;flex-wrap:wrap}.attitude-legend i{height:7px;width:120px;background:linear-gradient(90deg,#b33439,#936600,#16764b);border-radius:3px}.attitude-legend em{font-style:normal;color:#68747c}.campaign-evidence{font-size:11px;line-height:1.8;border-top:1px solid #dce2e5;margin-top:12px;padding-top:10px}.campaign-evidence summary{cursor:pointer}.campaign-evidence ul{padding-left:18px;margin:10px 0}.campaign-evidence a{color:#285d4a}.campaign-evidence small{display:block;color:#57655e}.source-list li{margin:7px 0;overflow-wrap:anywhere}@media(max-width:750px){.campaign-fields{grid-template-columns:1fr 1fr}.creative-row{grid-template-columns:1fr}.campaign-heading{align-items:start}.campaign-heading h3{font-size:14px}.creative-preview{padding:12px}.creative-preview b{font-size:20px}}
+</style>

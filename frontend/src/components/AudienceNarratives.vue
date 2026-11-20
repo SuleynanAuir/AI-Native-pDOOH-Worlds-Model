@@ -1,0 +1,72 @@
+<template>
+  <div class="audience-analysis-entry">
+    <button class="analysis-launch" type="button" aria-haspopup="dialog" :aria-expanded="expanded" @click="show()">人群分析</button>
+    <ModalWindow v-model="expanded" title="人群分析" :subtitle="sceneTitle || result?.scene_title">
+    <section class="audience-narratives" aria-label="广告想法与模拟评论">
+    <div v-if="expanded" class="narrative-body">
+      <div v-if="!result" class="narrative-status"><p role="status">{{ status?.message||'正在读取文字分析…' }}</p><small v-if="status?.completed_agents">已生成 {{ status.completed_agents }} 个代表人物 · {{ status.completed_scenes }} / {{ status.total_scenes }} 个地点</small><button v-if="!working" :disabled="starting" @click="generate">{{ starting?'提交中…':['failed','interrupted'].includes(status?.status)?'继续生成文字':'生成本次广告的想法与评论' }}</button></div>
+      <p v-if="error" class="narrative-error" role="alert">{{ error }}</p>
+      <template v-if="result">
+        <label class="group-picker">选择群体<select aria-label="文字分析群体" v-model="groupId" @change="personId=''">
+          <option v-for="g in result.groups" :key="g.group_id" :value="g.group_id">{{ g.name }}</option></select></label>
+        <template v-if="group">
+          <p class="key-insight">{{ group.need_priorities }}</p>
+          <details class="full-group" :key="group.group_id"><summary>完整群体分析</summary><div class="profile-facts"><p><span>身份与生活阶段</span>{{ group.profile.life_stage }}</p><p><span>偏好与需求</span>{{ group.profile.preferences }} · {{ group.profile.needs }}</p><p><span>消费能力</span>{{ group.profile.purchasing_power }}</p><p><span>家庭与价格考虑</span>{{ group.profile.household }} · {{ group.profile.price_sensitivity }}</p></div>
+          <article class="group-reading"><h4>{{ group.name }}可能如何理解这则广告</h4><p>{{ group.summary }}</p><h5>实际需求的优先次序</h5><p>{{ group.need_priorities }}</p><h5>同一群体，也会有不同想法</h5><p>{{ group.differences }}</p><h5>从感兴趣到愿意花钱，还有什么条件？</h5><p>{{ group.purchase_barriers }}</p></article></details>
+          <details class="decision-reading" data-testid="group-decision"><summary>投放建议</summary><p class="decision-boundary">以下是待验证的试投建议。模拟经过与兴趣分数不能直接推算实际购买率或预算比例。</p><h5>创意与信息安排</h5><p>{{ group.creative_plan }}</p><h5>场所与时段试投</h5><p>{{ group.placement_plan }}</p><details class="hour-evidence"><summary>查看时段建议的模拟依据</summary><p>{{ group.exposure_context?.label }}</p><div class="hour-table"><table><thead><tr><th>时段</th><th>模拟加权经过机会</th></tr></thead><tbody><tr v-for="h in group.exposure_context?.hours||[]" :key="h.round"><td>{{ h.time }} · {{ h.period }}</td><td>{{ Number(h.weighted_opportunities).toLocaleString('zh-CN') }}</td></tr></tbody></table></div></details><h5>验证计划与调整条件</h5><p>{{ group.validation_plan }}</p><small>群体资料依据：{{ group.source_ids.join('、') }}；local-context 指合成画像。</small></details>
+          <details class="comment-examples"><summary>代表性评论 · 模拟</summary><div v-for="person in examples" :key="person.agent_id" class="comment-example"><blockquote>“{{ person.possible_comment }}”</blockquote><button @click="personId=String(person.agent_id)">{{ person.name }} · 查看完整想法 →</button></div></details>
+          <label class="person-picker">具体人物<select aria-label="文字分析人物" v-model="personId"><option value="">选择一个人物</option><option v-for="p in people" :key="p.agent_id" :value="String(p.agent_id)">{{ p.name }}</option></select></label>
+        </template>
+        <article v-if="person" class="person-reading" data-testid="person-narrative">
+          <div class="person-heading"><h4>{{ person.name }}</h4><span>好感 {{ score(person.favorability) }} · 兴趣 {{ score(person.interest) }}</span></div>
+          <p class="person-context">画像需求：{{ person.profile.current_need||person.profile.needs }} · {{ person.profile.time_pressure||person.profile.attention_context }}</p>
+          <dl><dt>可能评论 · 模拟</dt><dd class="possible-comment">“{{ person.possible_comment }}”</dd><dt>可能的下一步</dt><dd>{{ person.next_action }}</dd></dl>
+          <details class="full-person" :key="person.agent_id"><summary>完整人物分析</summary><dl><dt>身份与偏好分析</dt><dd>{{ person.interpretation }}</dd><dt>预算与消费判断</dt><dd>{{ person.budget_reasoning }}</dd><dt>内心想法（模拟）</dt><dd class="inner-thought">“{{ person.inner_thought }}”</dd><dt>对投放决策的启示</dt><dd>{{ person.decision_implications }}</dd><dt>依据、不确定性与待核实信息</dt><dd>{{ person.uncertainty }}</dd></dl><small>画像依据：{{ person.profile_fields.map(k=>fieldLabels[k]||k).join('、') }}。资料：{{ person.source_ids.join('、') }}；local-context 为合成画像设定。{{ person.confidence==='medium'?'中':'低' }}置信度。</small></details>
+        </article>
+        <details class="narrative-sources"><summary>来源与说明</summary><p>{{ result.method }}</p><p>文字描述代表画像的可能反应，不代表回放时刻正在发生的对话。家庭、身份和预算以情景画像为准；资料未提供售价，不推断真实收入、购买经历或实际转化。</p><a v-for="s in result.sources" :key="s.id" :href="s.url" target="_blank" rel="noopener noreferrer">[{{ s.id }}] {{ s.title }}</a></details>
+        <details class="narrative-footer"><summary>导出报告</summary><a :href="downloadUrl+'?scope=groups'" target="_blank" rel="noopener">群体决策报告 (.txt)</a><a :href="downloadUrl" target="_blank" rel="noopener">完整人物报告 (.txt)</a></details>
+
+      </template>
+    </div>
+    </section>
+    </ModalWindow>
+  </div>
+</template>
+<script setup>
+import {ref,shallowRef,computed,watch,onBeforeUnmount} from 'vue'
+import api from '../api'
+import ModalWindow from './ModalWindow.vue'
+const props=defineProps({experimentId:String,sceneId:String,selectedAgent:Number,sceneTitle:String})
+const expanded=ref(false),result=shallowRef(null),status=ref(null),error=ref(''),starting=ref(false),groupId=ref(''),personId=ref('')
+let timer=null,ticket=0,controller=null,disposed=false,inFlight=false,pendingSelection=null
+const working=computed(()=>['queued','running'].includes(status.value?.status))
+const group=computed(()=>result.value?.groups.find(g=>g.group_id===groupId.value))
+const people=computed(()=>Object.values(result.value?.agents||{}).filter(p=>p.group_id===groupId.value))
+const person=computed(()=>result.value?.agents[personId.value])
+const examples=computed(()=>(group.value?.example_agent_ids||[]).map(id=>result.value.agents[String(id)]).filter(Boolean))
+const endpoint=computed(()=>`/api/world/campaign-experiments/${props.experimentId}/narratives`)
+const downloadUrl=computed(()=>new URL(endpoint.value+'/report.txt',api.defaults.baseURL||window.location.origin).href)
+const score=n=>n==null?'未知':Number(n).toFixed(1)+'/100'
+const fieldLabels={life_stage:'生活阶段',purchasing_power:'消费能力',economic_context:'经济情景',household:'家庭情况',preferences:'消费偏好',needs:'需求',price_sensitivity:'价格敏感度',mobility:'出行方式',attention_context:'注意力环境',time_pressure:'时间压力',attention_habit:'注意习惯',purchase_planning:'采购计划',decision_style:'决策方式',purchase_channel:'购买渠道',current_need:'当前需求'}
+function selectAgent(id){const p=result.value?.agents[String(id)];if(p){groupId.value=p.group_id;personId.value=String(id)}}
+function show(id=null){expanded.value=true;if(id!=null){pendingSelection=id;selectAgent(id)}}
+defineExpose({show})
+async function read(token=ticket){if(disposed||token!==ticket||inFlight)return;inFlight=true;const url=endpoint.value,sid=props.sceneId,signal=controller.signal
+ try{const state=(await api.get(url,{signal})).data;if(token!==ticket)return;status.value=state;error.value=''
+  if(state.status==='completed'){clearInterval(timer);if(!result.value){const value=(await api.get(url+'/scenes/'+sid,{signal})).data;if(token!==ticket)return;result.value=value;groupId.value=value.groups[0]?.group_id||'';if(pendingSelection!=null)selectAgent(pendingSelection)}}
+  else if(['failed','interrupted'].includes(state.status))clearInterval(timer)
+ }catch(e){if(token===ticket&&!signal.aborted)error.value=e.message}finally{if(token===ticket)inFlight=false}}
+async function generate(){starting.value=true;error.value='';const token=ticket;try{const state=(await api.post(endpoint.value,{})).data;if(disposed||token!==ticket)return;status.value=state;clearInterval(timer);timer=setInterval(()=>read(token),4000);await read(token)}catch(e){if(token===ticket)error.value=e.message}finally{if(token===ticket)starting.value=false}}
+watch(()=>[props.experimentId,props.sceneId],()=>{const token=++ticket;clearInterval(timer);controller?.abort();controller=new AbortController();result.value=null;status.value=null;groupId.value='';personId.value='';pendingSelection=null;expanded.value=false;error.value='';inFlight=false;starting.value=false;if(props.experimentId){read(token);timer=setInterval(()=>read(token),4000)}},{immediate:true})
+watch(()=>props.selectedAgent,id=>{if(id!=null)show(id)})
+onBeforeUnmount(()=>{disposed=true;ticket++;clearInterval(timer);controller?.abort()})
+</script>
+<style scoped>
+.audience-analysis-entry{display:inline-flex}.analysis-launch{font:inherit;font-size:12px;padding:8px 14px;color:#284e3c;background:#fff;border:1px solid #cadbce;border-radius:5px;cursor:pointer}.analysis-launch:hover{background:#edf5f0}.analysis-launch:focus-visible{outline:2px solid #147d68;outline-offset:2px}
+
+.narrative-heading:has(.narrative-toggle){padding:0}.audience-narratives .narrative-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;border-radius:0;background:#fff;color:#263f30;font-size:11px;text-align:left;padding:11px 12px}.narrative-toggle span{font-size:13px;color:#647b6a}.key-insight{font-size:12px;line-height:1.9;color:#29372e;margin:12px 0}.full-group,.full-person{margin:12px 0;font-size:11px;line-height:1.8}.full-group>summary,.full-person>summary,.comment-examples>summary,.narrative-footer>summary{cursor:pointer;font-size:11px;color:#465e4e;padding:5px 0}.full-group .profile-facts{margin-top:8px}.full-person small{display:block;margin-top:12px;color:#627168;font-size:10px}.comment-examples{font-size:11px;margin:12px 0}details.narrative-footer{display:block}details.narrative-footer>a{display:block;margin:8px 0}.decision-reading:not([open]){background:#fff;padding:8px 0;border:0;margin:8px 0}.decision-reading:not([open])>summary{font-size:11px;font-weight:400;color:#465e4e}
+
+.decision-reading{border:1px solid #d4e2d9;border-radius:6px;margin:16px 0;padding:12px;background:#f8fbf9}.decision-reading>summary{font-size:12px;font-weight:600;cursor:pointer;color:#203d2d}.decision-reading h5{font-size:11px;margin:14px 0 6px}.decision-reading p{font-size:12px;line-height:1.95;margin:8px 0;white-space:pre-line}.decision-reading .decision-boundary{font-size:10px;color:#617165}.decision-reading>small{display:block;font-size:10px;line-height:1.8;color:#617165;margin-top:12px}.hour-evidence{font-size:10px;border-top:1px solid #dbe6df;padding-top:8px}.hour-evidence summary{cursor:pointer}.hour-evidence p{font-size:10px}.hour-table{max-height:220px;overflow:auto}.hour-table table{width:100%;border-collapse:collapse;font-size:10px}.hour-table th,.hour-table td{padding:5px;border-bottom:1px solid #e2eae4;text-align:left}.hour-table th{position:sticky;top:0;background:#f8fbf9}.hour-table td:last-child{text-align:right}.group-reading p,.person-reading dd{white-space:pre-line}
+
+.audience-narratives{background:#fff;color:#222c26}.narrative-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px}.narrative-heading b{font-size:12px}.narrative-heading small{display:block;font-size:10px;color:#5b6960;margin-top:5px}.audience-narratives button{font:inherit;font-size:10px;padding:6px 9px;color:#284e3c;background:#f1f7f3;border:1px solid #cadbce;border-radius:4px;cursor:pointer}.audience-narratives button:disabled{opacity:.5;cursor:wait}.narrative-body{padding:0}.narrative-status{font-size:11px;line-height:1.8;padding:10px;background:#f6f8f7;border-radius:5px}.narrative-status small{display:block}.narrative-status button{margin-top:8px}.narrative-error{color:#a33435;font-size:11px;margin:8px 0}.audience-narratives label{display:block;font-size:10px;color:#566259;margin:8px 0}.audience-narratives select{display:block;width:100%;margin-top:5px;background:#fff;border:1px solid #ccd9d0;color:#202b24;border-radius:4px;font:inherit;font-size:11px;padding:8px}.profile-facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f5f8f6;padding:10px;border-radius:5px}.profile-facts p{font-size:11px;line-height:1.7;margin:0}.profile-facts span{display:block;font-size:10px;color:#596b5e;margin-bottom:3px}.group-reading h4,.person-reading h4{font-size:13px;margin:14px 0 8px;line-height:1.6}.group-reading h5,.comment-examples h5{font-size:11px;margin:12px 0 5px}.group-reading p{font-size:12px;line-height:1.9;margin:0}.comment-examples h5 small{color:#66756b;font-size:10px;font-weight:400;margin-left:6px}.comment-example{padding:10px 12px;border-left:3px solid #99bba6;background:#f3f8f5;margin:8px 0}.comment-example blockquote{font-size:12px;line-height:1.8;margin:0 0 6px}.comment-example button{border:0;background:transparent;text-align:left;padding:0;font-size:10px}.person-reading{margin-top:14px;border:1px solid #cbded0;border-radius:6px;padding:12px;background:#fbfdfb}.person-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.person-heading h4{margin:0}.person-heading span,.person-context{font-size:10px;color:#586b5d}.person-context{line-height:1.8;margin:8px 0}.person-reading dl{margin:0}.person-reading dt{font-size:10px;color:#53675b;margin:12px 0 4px}.person-reading dd{font-size:12px;line-height:1.9;margin:0}.person-reading .inner-thought{font-style:italic}.person-reading .possible-comment{background:#edf5ef;border-radius:4px;padding:8px 10px}.person-reading>small{display:block;font-size:10px;color:#627168;line-height:1.8;margin-top:12px}.narrative-sources{margin-top:12px;font-size:10px;line-height:1.8;color:#5c6b61}.narrative-sources summary{cursor:pointer}.narrative-sources p{margin:8px 0}.narrative-sources a{display:block;color:#315d43;overflow-wrap:anywhere;margin:4px 0}.narrative-footer{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid #e2e9e4;margin-top:12px;padding-top:10px;font-size:10px;line-height:1.7}.narrative-footer a{color:#315d43}.narrative-footer span{color:#627168}@media(max-width:600px){.profile-facts{grid-template-columns:1fr}.narrative-heading{align-items:flex-start}.group-reading p,.person-reading dd{font-size:12px}.narrative-heading button{white-space:nowrap}}
+</style>

@@ -1,0 +1,24 @@
+{
+  "checks": [
+    "two separate side-by-side buttons",
+    "all three dialogs in top layer",
+    "card/page geometry unchanged",
+    "scroll lock and position restoration",
+    "Escape/backdrop/close button",
+    "keyboard focus stays inside and returns",
+    "detailed reports and export retained",
+    "repeated map person click opens dialog",
+    "screen click opens corresponding scores",
+    "ad draft survives closing without applying",
+    "exposure counts unchanged",
+    "three mobile dialogs fit viewport",
+    "no model requests"
+  ],
+  "counts": [
+    "29,849",
+    "51,750",
+    "46,556",
+    "40,650"
+  ],
+  "errors": []
+}

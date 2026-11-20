@@ -1,0 +1,33 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+.pytest_cache/
+node_modules/
+frontend/dist/
+backend/uploads/
+backend/logs/
+.DS_Store
+
+.venv-oasis/
+log/
+
+# Local environments, editor backups and credentials
+.venv/
+venv/
+.aws/
+.codex/
+.agents/
+*.log
+.coverage
+htmlcov/
+~$*
+.~*
+/README_副本.md
+
+# Generated simulation data stay local; retain the latest UI showcase.
+/output/*
+!/output/modal-ui/
+
+# Keep the historical local notes after their removal upstream.
+/PRE_README.md

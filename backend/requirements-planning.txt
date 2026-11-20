@@ -1,0 +1,15 @@
+# Standalone pDOOH planning workflow (no legacy social simulation dependencies).
+flask>=3.0.0
+flask-cors>=6.0.0
+openai>=1.0.0
+httpx>=0.27.0
+PyMuPDF>=1.24.0
+python-dotenv>=1.0.0
+pytest>=8.0.0
+
+# Bounded, explicitly enabled map evidence requests
+requests>=2.32.0,<3
+
+# Official map provider and compatible cartographic geometry decoder
+mapricot==0.14.0
+mapbox-vector-tile==2.0.1

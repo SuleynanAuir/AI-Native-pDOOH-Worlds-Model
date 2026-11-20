@@ -1,0 +1,82 @@
+<template>
+  <section class="regional-map">
+    <div class="region-heading"><div><small>MAPRICOT · REGIONAL CONTEXT</small><h3>先看地区，再看每一块屏幕</h3></div><div class="map-actions"><button @click="$emit('start')" :disabled="disabled||working||!enabled">{{ working?'正在查询…':region?'重新查询区域':'查证全部屏幕与周边 POI' }}</button><button @click="$emit('analyze')" :disabled="disabled||working||!region?.groups?.length||analyzing">{{ analyzing?'大模型分析中…':'分析各区域人群' }}</button></div></div>
+    <p class="region-intro">街道与建筑来自 Mapricot 底图；屏幕位置来自 FilteredFrames.GEOM。POI 逐坐标查询、按距离关联，库存原始 POI 保留为待核对线索。</p>
+    <div class="region-metrics"><div><b>{{ inventory?.total||0 }}</b><span>屏幕记录</span></div><div><b>{{ region?.completed||0 }} / {{ region?.total||uniqueCoordinates }}</b><span>已查证 / 不同坐标</span></div><div><b>{{ region?.pois?.length||0 }}</b><span>返回设施（去重）</span></div><div><b>{{ region?.groups?.length||0 }}</b><span>地理分析分区</span></div></div>
+    <div v-if="working||analyzing" class="map-progress" role="status"><i :style="{width:(working?100*(region?.completed||0)/Math.max(1,region?.total||1):100)+'%'}"></i><span>{{ analyzing?`结合地址与设施分析人群 · ${region?.analysis_completed||0}/${region?.groups?.length||0} 个分区`:`${region?.phase||'开始查询'} · ${region?.completed||0}/${region?.total||0}` }}</span></div>
+    <p v-if="mapError" role="alert" class="map-error">{{ mapError }} <button @click="initMap">重试地图</button></p>
+    <div class="map-workspace"><div class="map-canvas-wrap"><div ref="canvas" class="region-map-canvas" :data-map-ready="!mapLoading" aria-label="Mapricot 区域地图：街道、建筑、屏幕与 POI"></div><div v-if="mapLoading" class="map-loading" role="status">正在加载地图道路与建筑…</div><div class="map-tools"><button @click="fitAll">全域</button><button @click="focusSelected">所选屏幕</button><button @click="buildings">建筑视角</button></div><div class="map-key"><span class="screen-dot"></span>屏幕 <span class="poi-dot"></span>所选屏幕周边设施 · 连线为直线关联</div></div>
+      <aside class="region-detail"><small>当前坐标的区域上下文</small><h4>{{ currentGroup?.label||'选择地图上的屏幕' }}</h4><p v-if="currentGroup">{{ currentGroup.basis }} · {{ currentGroup.screen_count }} 块屏幕</p><p v-else>查询前仅显示原始坐标。城市、设施及分析将在查证后展示。</p>
+        <div class="detail-tabs"><button :class="{active:detailTab==='places'}" @click="detailTab='places'">周边设施</button><button :class="{active:detailTab==='audiences'}" @click="detailTab='audiences'">人群推演 {{ currentAnalysis?.audiences?.length||'' }}</button></div>
+        <template v-if="association?.status==='verified' && detailTab==='places'"><div class="verified-address"><b>{{ association.resolved_address.label }}</b><p>反查类型 {{ association.address_granularity }} · 地址返回点距屏幕 {{ association.address_distance_m }} m</p><strong v-if="association.city_conflict">库存市场“{{ association.city }}”与反查城市不同</strong></div><h5>此屏幕附近的返回设施</h5><ul class="nearby-list"><li v-for="p in association.pois.slice(0,8)" :key="p.id"><button @click="focusPoi(p)">{{ p.name||p.label }}<span>{{ p.distance_m }} m</span></button></li></ul><p v-if="!association.pois.length">查询范围内未返回设施；未用模型补造 POI。</p></template>
+        <p v-else-if="association?.lookup_error" class="map-error">{{ association.lookup_error }}</p>
+        <template v-if="currentAnalysis && detailTab==='audiences'"><h5>区域人群推演 · {{ region.analysis.model }}</h5><p>{{ currentAnalysis.environment }}</p><details v-for="a in currentAnalysis.audiences" :key="a.name"><summary>{{ a.name }}</summary><p>{{ a.behavior }}</p><p>{{ a.periods }}</p><small>依据：{{ sourceNames(a.source_ids) }}</small></details><h5>对模拟的影响</h5><p>{{ currentAnalysis.simulation_implications }}</p><ul><li v-for="u in currentAnalysis.uncertainties" :key="u">{{ u }}</li></ul></template>
+        <p v-if="!currentAnalysis||detailTab==='places'" class="inference-note">地图说明设施与地点；人群角色、消费需求、时段活动属于大模型推演。真实收入、文化、家庭结构与客流需要额外资料。</p>
+      </aside></div>
+    <div v-if="region?.groups?.length" class="group-tabs"><button v-for="g in region.groups" :key="g.id" :class="{active:g.id===currentGroup?.id}" @click="$emit('select',g.frame_keys[0])">{{ g.label }} <b>{{ g.screen_count }}</b></button></div>
+    <details class="screen-table"><summary>逐屏 POI 关联 · {{ region?.counts?.verified||0 }} / {{ inventory?.total||0 }} 条已查证</summary><div><table><thead><tr><th>Frame</th><th>反查城市 / 库存城市</th><th>最近返回 POI</th><th>距离</th><th>状态</th></tr></thead><tbody><tr v-for="f in region?.frames||inventory?.frames||[]" :key="f.key" :class="{selected:f.key===selected}" @click="$emit('select',f.key)"><td><button @click.stop="$emit('select',f.key)">{{ f.screen_id }}</button></td><td>{{ f.resolved_address?.address?.locality||'待查证' }} / {{ f.city }}</td><td>{{ f.pois?.[0]?.name||'未返回' }}</td><td>{{ f.pois?.[0]?f.pois[0].distance_m+' m':'—' }}</td><td>{{ {verified:'已查证',pending:'等待查询',error:'查询失败',invalid:'坐标错误'}[f.status]||'尚未查询' }}</td></tr></tbody></table></div></details>
+    <p v-if="region?.analysis_error" class="map-error">{{ region.analysis_error }}</p><p v-if="region?.error" class="map-error">{{ region.error }}</p><p class="region-footnote">{{ (region?.limitations||['POI 最多返回每坐标最近 20 个设施，不代表完整区域清单；设施数量不是客流。']).join(' ') }}<span v-if="region?.queried_at"> 查询时间 {{ region.queried_at }}</span></p><p class="map-attribution"><a href="https://mapricot.com" target="_blank" rel="noopener noreferrer">Mapricot</a><template v-for="a in credits" :key="a.text"> · <a :href="safeLink(a.url)" target="_blank" rel="noopener noreferrer">{{ a.text }}</a></template></p>
+  </section>
+</template>
+<script setup>
+import {ref,computed,onMounted,onBeforeUnmount,watch,nextTick} from 'vue'
+import api from '../api'
+import 'maplibre-gl/dist/maplibre-gl.css'
+const props=defineProps({inventory:Object,region:Object,selected:String,enabled:Boolean,disabled:Boolean})
+const emit=defineEmits(['select','start','analyze'])
+const canvas=ref(null),mapError=ref(''),mapLoading=ref(true),detailTab=ref('places');let map,lib,observer,destroyed=false
+const working=computed(()=>['queued','running'].includes(props.region?.status)),analyzing=computed(()=>props.region?.analysis_status==='running')
+const uniqueCoordinates=computed(()=>new Set((props.inventory?.frames||[]).filter(f=>f.coordinate&&!f.error).map(f=>`${f.coordinate.lon},${f.coordinate.lat}`)).size)
+const association=computed(()=>props.region?.frames?.find(f=>f.key===props.selected))
+const selectedFrame=computed(()=>props.inventory?.frames.find(f=>f.key===props.selected))
+const currentGroup=computed(()=>props.region?.groups?.find(g=>g.id===association.value?.region_id))
+const currentAnalysis=computed(()=>props.region?.analysis?.regions?.find(a=>a.id===currentGroup.value?.id))
+const credits=computed(()=>[...new Map((props.region?.attribution||[{text:'© OpenStreetMap contributors',url:'https://www.openstreetmap.org/copyright'}]).map(a=>[a.text,a])).values()])
+const safeLink=url=>/^https:\/\//.test(url||'')?url:undefined
+function sourceNames(ids){return ids.map(id=>props.region?.pois?.find(p=>p.id===id)?.name||props.region?.groups?.find(g=>g.id===id)?.label||id).join('、')}
+const collection=features=>({type:'FeatureCollection',features})
+const point=(p,properties)=>({type:'Feature',geometry:{type:'Point',coordinates:[p.lon,p.lat]},properties})
+function render(){if(!map?.getSource('frames'))return
+  const verified=new Set(props.region?.frames?.filter(f=>f.status==='verified').map(f=>f.key)||[])
+  map.getSource('frames').setData(collection((props.inventory?.frames||[]).filter(f=>f.coordinate&&!f.error).map(f=>point(f.coordinate,{key:f.key,selected:f.key===props.selected,verified:verified.has(f.key),name:f.screen_id}))))
+  const pois=association.value?.pois||[];map.getSource('nearby').setData(collection(pois.map(p=>point(p,{name:p.name||p.label,id:p.id}))))
+  const center=selectedFrame.value?.coordinate
+  map.getSource('links').setData(collection(center?pois.slice(0,5).map(p=>({type:'Feature',properties:{},geometry:{type:'LineString',coordinates:[[center.lon,center.lat],[p.lon,p.lat]]}})):[]))
+}
+function fitAll(){if(!map)return;const frames=(props.inventory?.frames||[]).filter(f=>f.coordinate&&!f.error);if(!frames.length)return;const b=new lib.LngLatBounds();frames.forEach(f=>b.extend([f.coordinate.lon,f.coordinate.lat]));map.fitBounds(b,{padding:55,maxZoom:16,duration:600,pitch:0})}
+function focusSelected(){const p=selectedFrame.value?.coordinate;if(map&&p)map.flyTo({center:[p.lon,p.lat],zoom:16.5,pitch:0,duration:700})}
+function buildings(){const p=selectedFrame.value?.coordinate;if(map&&p)map.flyTo({center:[p.lon,p.lat],zoom:17,pitch:52,bearing:-15,duration:700})}
+function focusPoi(p){if(map)map.flyTo({center:[p.lon,p.lat],zoom:17,duration:650})}
+async function initMap(){if(!props.enabled||!canvas.value||destroyed)return;mapError.value='';mapLoading.value=true;try{
+  if(map){observer?.disconnect();map.remove()};lib=await import('maplibre-gl');if(destroyed)return
+  const base=api.defaults.baseURL||window.location.origin
+  map=new lib.Map({container:canvas.value,style:new URL('/api/world/mapricot/style',base).href,center:[0,20],zoom:1,attributionControl:true,
+    transformRequest:(url)=>({url:url.startsWith('/api/world/')?new URL(url,base).href:url})})
+  map.addControl(new lib.NavigationControl(),'top-right')
+  map.on('dataloading',()=>{mapLoading.value=true})
+  map.on('movestart',()=>{mapLoading.value=true})
+  map.on('idle',()=>{mapLoading.value=!map.areTilesLoaded()})
+  map.on('error',e=>{mapError.value='地图资源加载失败，请检查 Mapricot tiles 权限或网络。'})
+  map.on('load',()=>{
+    if(destroyed)return
+    if(map.getSource('protomaps'))map.addLayer({id:'known-building-heights',type:'fill-extrusion',source:'protomaps','source-layer':'buildings',minzoom:15,paint:{'fill-extrusion-color':'#526572','fill-extrusion-height':['coalesce',['get','height'],0],'fill-extrusion-base':['coalesce',['get','min_height'],0],'fill-extrusion-opacity':.6}})
+    for(const id of ['frames','nearby','links'])map.addSource(id,{type:'geojson',data:collection([])})
+    map.addLayer({id:'poi-links',type:'line',source:'links',paint:{'line-color':'#ffce80','line-opacity':.8,'line-width':1.5,'line-dasharray':[2,3]}})
+    map.addLayer({id:'nearby-points',type:'circle',source:'nearby',paint:{'circle-radius':5,'circle-color':'#f4bf77','circle-stroke-color':'#2c231e','circle-stroke-width':1}})
+    map.addLayer({id:'nearby-labels',type:'symbol',source:'nearby',minzoom:15,layout:{'text-field':['get','name'],'text-font':['Noto Sans Regular'],'text-size':11,'text-offset':[0,1.2],'text-anchor':'top'},paint:{'text-color':'#ffe2b3','text-halo-color':'#15202b','text-halo-width':2}})
+    map.addLayer({id:'screen-points',type:'circle',source:'frames',paint:{'circle-radius':['case',['get','selected'],9,5],'circle-color':['case',['get','selected'],'#fff5ce',['get','verified'],'#74d6bc','#7ca7c9'],'circle-stroke-color':'#153e43','circle-stroke-width':2}})
+    map.on('click','screen-points',e=>{const f=e.features?.[0];if(f)emit('select',f.properties.key)})
+    map.on('mouseenter','screen-points',()=>map.getCanvas().style.cursor='pointer');map.on('mouseleave','screen-points',()=>map.getCanvas().style.cursor='')
+    render();fitAll()
+  })
+  observer=new ResizeObserver(()=>map?.resize());observer.observe(canvas.value)
+}catch(e){mapError.value='地图初始化失败：'+e.message}}
+watch(()=>[props.region,props.selected],()=>{render()})
+watch(()=>props.selected,(v,old)=>{if(v&&old&&v!==old)focusSelected()})
+watch(()=>props.inventory,()=>{render();fitAll()})
+watch(()=>props.enabled,async v=>{if(v&&!map){await nextTick();initMap()}})
+onMounted(initMap);onBeforeUnmount(()=>{destroyed=true;observer?.disconnect();map?.remove()})
+</script>
+<style scoped>
+.regional-map{margin:20px 0;background:#ffffff;border:1px solid #dce2e5;border-radius:9px;overflow:hidden}.region-heading{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:20px 18px 4px;flex-wrap:wrap}.region-heading small{font-size:10px;color:#525b65;letter-spacing:1.2px}.region-heading h3{font-size:20px;color:#191d21;margin:7px 0}.map-actions,.map-tools{display:flex;gap:8px;flex-wrap:wrap}.regional-map button{font:inherit;font-size:12px;cursor:pointer;background:#f1f5f4;border:1px solid #dce2e5;border-radius:5px;color:#191d21;padding:9px 12px}.regional-map button:disabled{opacity:.45;cursor:not-allowed}.region-intro,.region-footnote{padding:0 18px;color:#525b65;font-size:12px;line-height:1.9}.region-metrics{display:grid;grid-template-columns:repeat(4,1fr);padding:12px 18px 18px;gap:12px}.region-metrics>div{border-left:2px solid #dce2e5;padding-left:12px}.region-metrics b{display:block;font-size:24px;color:#191d21;font-weight:500}.region-metrics span{font-size:11px;color:#525b65;display:block;margin-top:5px}.map-workspace{display:grid;grid-template-columns:minmax(0,1fr) 300px;border-top:1px solid #dce2e5;border-bottom:1px solid #dce2e5}.map-canvas-wrap{position:relative;min-width:0}.region-map-canvas{width:100%;height:590px;background:#ffffff}.map-tools{position:absolute;top:15px;left:14px;right:60px}.map-loading{position:absolute;left:15px;top:62px;background:#f1f5f4;color:#191d21;padding:8px 12px;border-radius:5px;font-size:12px;pointer-events:none}.map-tools button{background:#ffffff;box-shadow:0 2px 8px #0004}.map-key{position:absolute;bottom:35px;left:10px;padding:7px 9px;background:#ffffff;color:#191d21;font-size:10px;pointer-events:none}.screen-dot,.poi-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#74d6bc;margin:0 4px}.poi-dot{background:#f4bf77;margin-left:14px}.region-detail{max-height:590px;overflow:auto;padding:20px 16px;background:#ffffff;border-left:1px solid #dce2e5}.region-detail>small{font-size:10px;color:#525b65}.region-detail h4{color:#191d21;margin:10px 0;font-size:17px;line-height:1.6}.region-detail p,.region-detail li{font-size:12px;line-height:1.9;color:#525b65}.detail-tabs{display:flex;gap:8px;margin:12px 0}.detail-tabs button{flex:1;padding:8px 5px}.detail-tabs button.active{background:#e6f3ed;color:#191d21;border-color:#dce2e5}.region-detail h5{font-size:12px;color:#191d21;margin:20px 0 10px}.verified-address{padding:12px;background:#f1f5f4;border:1px solid #dce2e5;border-radius:6px;font-size:12px;line-height:1.7;color:#191d21}.verified-address p{font-size:10px;margin:5px 0}.verified-address strong{font-size:11px;color:#191d21;font-weight:400}.nearby-list{list-style:none;padding:0}.nearby-list button{border:none;border-bottom:1px solid #dce2e5;background:none;width:100%;text-align:left;padding:10px 0;display:flex;justify-content:space-between;gap:12px;color:#191d21}.nearby-list span{white-space:nowrap;color:#525b65;font-size:10px}.region-detail details{border:1px solid #dce2e5;border-radius:5px;padding:10px;margin:7px 0}.region-detail summary{font-size:12px;color:#191d21;cursor:pointer}.region-detail details small{font-size:10px;color:#525b65;line-height:1.8}.region-detail ul{padding-left:16px}.map-progress{position:relative;background:#f1f5f4;padding:10px 18px;font-size:12px;color:#191d21}.map-progress i{position:absolute;inset:0 auto 0 0;background:#2a796944;transition:width .4s}.map-progress span{position:relative}.map-error{font-size:12px;color:#9a452b;padding:0 18px;line-height:1.8}.group-tabs{display:flex;gap:7px;overflow-x:auto;padding:16px}.group-tabs button{white-space:nowrap;background:#f1f5f4;font-size:11px}.group-tabs button.active{background:#e6f3ed;border-color:#dce2e5}.group-tabs b{margin-left:8px;color:#525b65}.screen-table{margin:0 18px 18px;border:1px solid #dce2e5;border-radius:5px}.screen-table summary{cursor:pointer;padding:12px;color:#191d21;font-size:12px}.screen-table>div{max-height:340px;overflow:auto}.screen-table table{border-collapse:collapse;width:100%;font-size:11px;white-space:nowrap}.screen-table td,.screen-table th{padding:10px;text-align:left;border-top:1px solid #dce2e5}.screen-table th{color:#525b65}.screen-table tr{cursor:pointer}.screen-table tr.selected{background:#e6f3ed}.screen-table td button{padding:0;background:none;border:0;font-size:10px;color:#191d21}.map-attribution{font-size:10px;padding:0 18px 12px}.map-attribution a{color:#525b65}.region-footnote span{display:block;font-size:10px}@media(max-width:1000px){.map-workspace{grid-template-columns:1fr}.region-detail{max-height:380px;border-left:0;border-top:1px solid #dce2e5}.region-map-canvas{height:470px}}@media(max-width:650px){.region-metrics{grid-template-columns:1fr 1fr;gap:18px}.region-map-canvas{height:390px}.region-heading h3{font-size:17px}.map-key{font-size:9px}.region-detail{padding:15px}.region-metrics b{font-size:22px}}
+</style>
