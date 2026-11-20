@@ -1,9 +1,9 @@
 <template>
-  <div :class="['neighborhood',{compact}]">
-    <div v-if="trafficReady" class="impression-banner"><div><small>模拟曝光机会</small><strong data-testid="total-impressions" :style="campaign?{color:attitudeColor(totalAttitude)}:{}">{{ number(totalImpressions) }}</strong></div><p>人群经过 + 车内人数的曝光机会<br>不是实测观看或去重人数</p><span>此刻 {{ visibleVehicles.length }} 辆车 · {{ visible.length }} 个行人样本</span></div>
-    <div v-if="campaign" class="map-attitude" :style="{color:attitudeColor(totalAttitude)}"><b>{{ attitudeMetric==='interest'?'兴趣程度':'好感度' }} {{ totalAttitude==null?'未知':totalAttitude.toFixed(1)+'/100' }}</b><span v-if="!compact">有评分的曝光权重 {{ number(ratedWeight) }} / {{ number(totalImpressions) }} · 非实测</span><span v-else>模型估计</span></div>
+  <div :class="['neighborhood',{compact,'map-only':mapOnly}]">
+    <div v-if="trafficReady && !mapOnly" class="impression-banner"><div><small>模拟曝光机会</small><strong data-testid="total-impressions" :style="campaign?{color:attitudeColor(totalAttitude)}:{}">{{ number(totalImpressions) }}</strong></div><p>人群经过 + 车内人数的曝光机会<br>不是实测观看或去重人数</p><span>此刻 {{ visibleVehicles.length }} 辆车 · {{ visible.length }} 个行人样本</span></div>
+    <div v-if="campaign && !mapOnly" class="map-attitude" :style="{color:attitudeColor(totalAttitude)}"><b>{{ attitudeMetric==='interest'?'兴趣程度':'好感度' }} {{ totalAttitude==null?'未知':totalAttitude.toFixed(1)+'/100' }}</b><span v-if="!compact">有评分的曝光权重 {{ number(ratedWeight) }} / {{ number(totalImpressions) }} · 非实测</span><span v-else>模型估计</span></div>
     <div class="walk-stats"><span>此刻 {{ visible.length }} 个{{ trafficReady?'步行样本':'代表' }}在场</span><span>本小时 {{ trips.length }} 次{{ trafficReady?"步行样本":"代表" }}出行</span><span>步行离开 {{ departures }} 次 · 交通接续 {{ trips.length-departures }} 次</span></div>
-    <svg viewBox="0 0 1000 590" class="world-map" role="img" aria-label="周边街区步行仿真：住宅、商店、公园、场所与步行出口">
+    <svg :viewBox="mapViewBox" class="world-map" role="img" aria-label="周边街区步行仿真：住宅、商店、公园、场所与步行出口">
       <defs><pattern :id="patternId" width="25" height="25" patternUnits="userSpaceOnUse"><path d="M25 0H0V25" fill="none" stroke="#dce3e5" stroke-width=".5"/></pattern><linearGradient v-for="(s,i) in screens" :key="s.id" :id="`${patternId}-attitude-${i}`"><stop offset="0%" :stop-color="attitudeColor(screenScore(s.id)==null?null:screenScore(s.id)-10)"/><stop offset="100%" :stop-color="attitudeColor(screenScore(s.id)==null?null:screenScore(s.id)+10)"/></linearGradient></defs>
       <rect width="1000" height="590" fill="#f7f9f9"/><rect width="1000" height="590" :fill="`url(#${patternId})`"/>
       <g v-if="!network.geographic"><path d="M0 360H1000" stroke="#dce3e5" stroke-width="60"/><path d="M0 360H1000" stroke="#fff" stroke-width="1" stroke-dasharray="14 15"/>
@@ -49,7 +49,17 @@ import {computed,ref,watch,useId} from 'vue'
 import {sampleJourney,routePath} from '../utils/neighborhoodPlayback'
 import {attitudeColor} from '../utils/campaignPlayback'
 const patternId='neighborhood-grid-'+useId()
-const props=defineProps({compact:Boolean,network:Object,agents:Array,screens:Array,minute:Number,hour:String,selectedAgent:Number,showTrails:Boolean,groupFilter:String,vehicles:{type:Array,default:()=>[]},impressions:{type:Object,default:()=>({})},trafficReady:Boolean,campaign:Object,attitudes:{type:Object,default:()=>({})},attitudeMetric:{type:String,default:"interest"}})
+const props=defineProps({compact:Boolean,mapOnly:Boolean,network:Object,agents:Array,screens:Array,minute:Number,hour:String,selectedAgent:Number,showTrails:Boolean,groupFilter:String,vehicles:{type:Array,default:()=>[]},impressions:{type:Object,default:()=>({})},trafficReady:Boolean,campaign:Object,attitudes:{type:Object,default:()=>({})},attitudeMetric:{type:String,default:"interest"}})
+// Fit the actual walkable area, preserving the full network and screen labels.
+// The original 1000×590 geometry and encounter coordinates remain unchanged.
+const mapViewBox=computed(()=>{
+ if(!props.mapOnly||!props.network?.geographic)return '0 0 1000 590'
+ const points=[...(props.network.nodes||[]),...(props.screens||[])].filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y))
+ if(!points.length)return '0 0 1000 590'
+ const x=Math.min(...points.map(p=>p.x))-65,y=Math.min(...points.map(p=>p.y))-65
+ const width=Math.max(...points.map(p=>p.x))-x+65,height=Math.max(...points.map(p=>p.y))-y+65
+ return `${x} ${y} ${width} ${height}`
+})
 const emit=defineEmits(['agent','screen','minute'])
 const focusedActor=ref(null)
 const parent=a=>a.parent_agent_id ?? a.id
@@ -77,6 +87,12 @@ const selectedPosition=computed(()=>sampleJourney(selectedTrip.value,props.minut
 const watching=a=>['watch','interest'].includes(a.reaction)&&Math.abs(props.minute-a.journey.encounter?.minute)<(a.dwell_seconds||0)/60
 </script>
 <style scoped>
+.neighborhood.map-only{display:flex;flex-direction:column;background:#f7f9f9}
+.neighborhood.map-only .world-map{flex:1 1 0;width:100%;height:0;min-height:0;aspect-ratio:auto}
+.neighborhood.map-only .map-attribution{flex-shrink:0;line-height:1.6;padding:7px 10px;font-size:8px;border-top:1px solid #e7ece9;max-height:none}
+.map-only .route-detail{display:none}
+
+
 .compact .impression-banner{padding:8px 10px;gap:12px;flex-wrap:wrap}
 .compact .impression-banner strong{font-size:24px}
 .compact .impression-banner small{font-size:9px}

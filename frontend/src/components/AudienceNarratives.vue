@@ -37,6 +37,7 @@ import {ref,shallowRef,computed,watch,onBeforeUnmount} from 'vue'
 import api from '../api'
 import ModalWindow from './ModalWindow.vue'
 const props=defineProps({experimentId:String,sceneId:String,selectedAgent:Number,sceneTitle:String})
+const emit=defineEmits(['loaded'])
 const expanded=ref(false),result=shallowRef(null),status=ref(null),error=ref(''),starting=ref(false),groupId=ref(''),personId=ref('')
 let timer=null,ticket=0,controller=null,disposed=false,inFlight=false,pendingSelection=null
 const working=computed(()=>['queued','running'].includes(status.value?.status))
@@ -53,7 +54,7 @@ function show(id=null){expanded.value=true;if(id!=null){pendingSelection=id;sele
 defineExpose({show})
 async function read(token=ticket){if(disposed||token!==ticket||inFlight)return;inFlight=true;const url=endpoint.value,sid=props.sceneId,signal=controller.signal
  try{const state=(await api.get(url,{signal})).data;if(token!==ticket)return;status.value=state;error.value=''
-  if(state.status==='completed'){clearInterval(timer);if(!result.value){const value=(await api.get(url+'/scenes/'+sid,{signal})).data;if(token!==ticket)return;result.value=value;groupId.value=value.groups[0]?.group_id||'';if(pendingSelection!=null)selectAgent(pendingSelection)}}
+  if(state.status==='completed'){clearInterval(timer);if(!result.value){const value=(await api.get(url+'/scenes/'+sid,{signal})).data;if(token!==ticket)return;result.value=value;emit('loaded',value);groupId.value=value.groups[0]?.group_id||'';if(pendingSelection!=null)selectAgent(pendingSelection)}}
   else if(['failed','interrupted'].includes(state.status))clearInterval(timer)
  }catch(e){if(token===ticket&&!signal.aborted)error.value=e.message}finally{if(token===ticket)inFlight=false}}
 async function generate(){starting.value=true;error.value='';const token=ticket;try{const state=(await api.post(endpoint.value,{})).data;if(disposed||token!==ticket)return;status.value=state;clearInterval(timer);timer=setInterval(()=>read(token),4000);await read(token)}catch(e){if(token===ticket)error.value=e.message}finally{if(token===ticket)starting.value=false}}

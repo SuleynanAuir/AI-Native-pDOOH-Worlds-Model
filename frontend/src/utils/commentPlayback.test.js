@@ -1,0 +1,12 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {shortComment,commentKey,commentTimeline,createCommentQueue} from './commentPlayback.js'
+const narrative={groups:[{group_id:'a',name:'通勤者'},{group_id:'b',name:'学生'}],agents:{1:{name:'甲',group_id:'a',possible_comment:'我更关心跑步鞋的支撑，周末试穿后再决定。'},2:{name:'乙',group_id:'b',possible_comment:'我会先比较价格，等有需要的时候再买。'},3:{name:'丙',group_id:'b',possible_comment:'我更关心跑步鞋的支撑，周末试穿后再决定！'}}}
+const event=(id,minute,kind='pedestrian')=>({id:`${id}-${minute}`,actor_id:`p-${id}-0`,round:1,minute,kind})
+test('extracts short excerpts without inventing or changing saved comments',()=>{const original='我先看价格和需求。'.repeat(12);assert.ok(Array.from(shortComment(original)).length<=44);assert.ok(original.includes(shortComment(original).replace(/…$/,'')));assert.equal(shortComment('“短评论”'),'短评论');assert.equal(commentKey('Ａ，B!'),commentKey('a b'))})
+test('only releases known pedestrians after their encounter, never vehicle attitudes',()=>{const rows=commentTimeline([event(1,10),event(2,20),event(2,5,'vehicle'),event(99,1)],narrative),q=createCommentQueue(rows);q.offer(9);assert.equal(q.take(),null);q.offer(10);assert.equal(q.take().agentId,1);assert.equal(q.take(),null);q.offer(20);assert.equal(q.take().agentId,2)})
+test('does not repeat normalized content across people, screens, rewind or full day loop',()=>{const q=createCommentQueue(commentTimeline([event(1,10),event(3,12),event(1,30)],narrative));q.offer(10);assert.ok(q.take());q.offer(12);assert.equal(q.take(),null);q.offer(30);assert.equal(q.take(),null);assert.equal(q.offer(0),true);q.offer(30);assert.equal(q.take(),null)})
+test('four scenes share a ledger; queued duplicates are rechecked at emission',()=>{const seen=new Set(),rows=commentTimeline([event(1,10),event(2,20)],narrative),a=createCommentQueue(rows,seen),b=createCommentQueue(rows,seen);a.offer(20);b.offer(20);const first=a.take(),second=b.take();assert.notEqual(first.key,second.key);assert.equal(a.take(),null);assert.equal(b.take(),null)})
+test('empty or missing narratives do not manufacture comments',()=>{assert.deepEqual(commentTimeline([event(1,1)],null),[]);const q=createCommentQueue([]);q.offer(50);assert.equal(q.take(),null)})
+
+test('large seeks keep the newest eligible comments when the pending buffer is full',()=>{const rows=Array.from({length:100},(_,i)=>({time:i,key:String(i),group:'same',agentId:i}));const q=createCommentQueue(rows);q.offer(90);assert.equal(q.take().agentId,90);assert.equal(q.take().agentId,89)})

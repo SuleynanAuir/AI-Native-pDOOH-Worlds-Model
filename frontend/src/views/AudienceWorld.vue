@@ -174,4 +174,20 @@ onUnmounted(()=>{trafficTicket++;clearInterval(polling);clearInterval(timer)})
 /* Keep the canvas prominent in both single and comparison views. */
 @media(min-width:1151px){.rail{width:180px;padding:26px 12px}.world-main{width:calc(100% - 180px);margin-left:180px;padding:0 22px 26px}}
 .titlebar{margin:20px 0 18px}.titlebar h1{font-size:24px}.titlebar p{font-size:12px}.scene-layout-selector{margin:8px 0 12px;font-size:12px}.scene-layout-selector button{padding:8px 14px;font-size:11px}.world-main>header{height:58px}
+/* Comparison mode gives the first viewport to two complete scene cards. */
+.comparison-mode .world-main{position:relative}
+.comparison-mode .world-main>header{height:36px;font-size:10px}
+.comparison-mode .titlebar{position:absolute;width:1px;height:1px;margin:0;padding:0;overflow:hidden;clip-path:inset(50%)}
+.comparison-mode .scene-layout-selector{position:absolute;right:16px;top:5px;margin:0;font-size:10px;z-index:1}
+.comparison-mode .scene-layout-selector select{padding:4px 6px;font-size:10px}
+@media(min-width:751px){
+ .comparison-mode .rail{width:88px;padding:18px 6px}
+ .comparison-mode .brand{flex-direction:column;gap:3px;padding:0;font-size:12px;letter-spacing:1px}
+ .comparison-mode .brand-symbol{font-size:28px;line-height:1}
+ .comparison-mode .brand small,.comparison-mode .rail-label{display:none}
+ .comparison-mode .rail-item{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10px;padding:10px 2px;margin:10px 0}
+ .comparison-mode .rail-item span{font-size:18px}
+ .comparison-mode .world-main{margin-left:88px;width:calc(100% - 88px);padding:0 12px 18px}
+}
+@media(max-width:750px){.comparison-mode .world-main{padding:0 8px 16px}.comparison-mode .breadcrumb{font-size:10px}}
 </style>
