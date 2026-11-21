@@ -1,0 +1,32 @@
+<template>
+ <section class="decision-panel" aria-label="量化选屏依据">
+  <h3>量化选屏依据 <small>完整 {{ summary?.durationHours }} 小时情景</small></h3>
+  <div class="decision-filters"><label>屏幕<select v-model="screenId"><option value="">本场景全部屏幕</option><option v-for="s in base.screens" :key="s.id" :value="s.id">{{ s.name }}</option></select></label><label>高兴趣阈值<input type="number" min="0" max="100" step="5" v-model.number="threshold"> /100</label></div>
+  <template v-if="summary">
+   <div class="decision-kpis"><div><small>模拟曝光机会</small><b>{{ num(summary.total) }}</b></div><div><small>行人 / 车内机会</small><b>{{ pct(summary.pedestrianShare) }} / {{ pct(summary.pedestrianShare==null?null:100-summary.pedestrianShare) }}</b></div><div><small>已评分曝光 / 全部机会</small><b>{{ pct(summary.coverage) }}</b></div><div><small>高兴趣 / 已评分行人机会</small><b>{{ pct(summary.highShare) }}</b></div></div>
+   <p class="decision-context">{{ num(summary.rated) }} 次机会有评分，涉及 {{ summary.representatives }} 个代表画像；高兴趣 {{ summary.rated ? num(summary.high) : '未知' }} 次（≥ {{ safeThreshold }} 分）。重复经过仍计次，画像数不是独立触达人口。车内人员不参与态度计算。覆盖率不等于模型可信度。</p>
+   <h4>屏幕比较</h4><div class="table-scroll"><table><thead><tr><th>屏幕</th><th>模拟机会</th><th>已评占比</th><th>兴趣 /100</th><th>高兴趣机会</th></tr></thead><tbody><tr v-for="s in summary.screens" :key="s.id"><td>{{ s.name }}</td><td>{{ num(s.total) }}</td><td>{{ pct(s.coverage) }}</td><td>{{ score(s.interest) }}</td><td>{{ s.rated?num(s.high):'未知' }}</td></tr></tbody></table></div>
+   <h4>值得对照测试的时段</h4><div class="peak-list"><p v-for="h in summary.peak" :key="h.id"><b>{{ h.name }}</b> · {{ h.period }}<span>{{ num(h.total) }} 次机会 · 高兴趣 {{ h.rated ? num(h.high) : '未知' }} 次</span></p></div>
+   <h4>群体匹配与观点</h4><p class="decision-context">试验线索来自该组的一位代表，不表示整组意见一致。</p><div class="table-scroll"><table><thead><tr><th>群体</th><th>行人机会</th><th>兴趣 /100</th><th>高兴趣机会</th><th>代表观点的试验线索</th></tr></thead><tbody><tr v-for="g in summary.groups" :key="g.id"><td>{{ g.name }}</td><td>{{ num(g.pedestrian) }}</td><td>{{ score(g.interest) }}</td><td>{{ g.rated?num(g.high):'未知' }}</td><td>{{ hint(g.id) }}</td></tr></tbody></table></div>
+   <details class="cost-scenario"><summary>成本情景测算 · 使用自己的报价</summary><p>填写覆盖当前选中屏幕、完整 {{ summary.durationHours }} 小时和下方 SOT 的最终报价（含 DSP 等费用）。此报价由你输入，不是库存报价；不同币种需自行换算后再比较。</p><div class="quote-inputs"><label>最终报价<input aria-label="情景最终报价" type="number" min="0" step="0.01" v-model="quote" placeholder="未提供报价"></label><label>币种<input aria-label="情景报价币种" v-model="currency" maxlength="3"></label><label>SOT %<input aria-label="情景SOT" type="number" min="1" max="100" v-model.number="sot"></label></div><div v-if="cost && validCurrency" class="cost-results"><p>分摊后模拟机会 <b>{{ num(cost.opportunities) }}</b></p><p>千次模拟机会成本 <b>{{ money(cost.cpm) }} {{ currency.toUpperCase() }}</b></p><p>千次高兴趣情景机会成本 <b>{{ money(cost.highCpm) }} {{ currency.toUpperCase() }}</b></p></div><p v-else>补齐有效报价、三字母币种和 SOT 后计算。</p><small>机会 = 原始模拟机会 × SOT%；CPM = 最终报价 ÷ 分摊后机会 × 1000。假定播放均匀且与经过独立，不计算去重覆盖；兴趣分不等于购买概率，缺少转化和毛利时不计算 ROI。</small></details>
+   <p class="decision-boundary">这是同口径模拟筛选依据，尚缺实际客流、可见性校准、可售状态及库存报价。先比较目标人群与时段，再用实际库存和总预算形成投放组合。</p><a href="/planning">进入库存评分与预算规划 →</a>
+  </template>
+ </section>
+</template>
+<script setup>
+import {ref,computed,watch} from 'vue'
+import {screenDecision,quoteScenario} from '../utils/screenDecision'
+const props=defineProps({base:Object,narrative:Object,selectedScreen:String})
+const threshold=ref(60),screenId=ref(props.selectedScreen||''),quote=ref(''),currency=ref('USD'),sot=ref(100)
+const safeThreshold=computed(()=>Number.isFinite(threshold.value)?Math.max(0,Math.min(100,threshold.value)):60)
+const summary=computed(()=>screenDecision(props.base,props.narrative,safeThreshold.value,screenId.value||null))
+const cost=computed(()=>quoteScenario(summary.value,quote.value,sot.value))
+const validCurrency=computed(()=>/^[A-Z]{3}$/i.test(currency.value))
+const num=n=>Math.round(n||0).toLocaleString('zh-CN'),pct=n=>n==null?'—':n.toFixed(1)+'%',score=n=>n==null?'未知':n.toFixed(1),money=n=>n==null?'—':n.toFixed(2)
+const hint=id=>Object.values(props.narrative?.agents||{}).find(p=>p.group_id===id&&p.decision_hint)?.decision_hint||'查看人群分析中的需求与投放建议'
+watch(()=>props.selectedScreen,id=>{screenId.value=id||''})
+watch(()=>[props.base.meta.id,screenId.value],()=>{quote.value=''})
+</script>
+<style scoped>
+.decision-panel{font-size:12px;line-height:1.7;color:#25362c}.decision-panel h3{font-size:17px;margin:0 0 12px}.decision-panel h3 small{font-size:10px;color:#6f7d74;font-weight:400;margin-left:10px}.decision-filters,.quote-inputs{display:flex;gap:14px;flex-wrap:wrap;align-items:end}.decision-panel label{font-size:11px;color:#55675b}.decision-panel input,.decision-panel select{display:block;padding:7px;border:1px solid #cad8cf;border-radius:4px;font:inherit;background:#fff;color:#24392d;max-width:100%;box-sizing:border-box}.decision-filters>label:first-child{flex:1;min-width:180px}.decision-filters select{width:100%}.decision-filters input{display:inline-block;width:64px}.decision-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.decision-kpis>div{background:#f2f7f4;padding:10px;border-radius:6px}.decision-kpis small{display:block;font-size:10px}.decision-kpis b{display:block;font-size:18px;margin-top:5px;font-variant-numeric:tabular-nums}.decision-context,.decision-boundary{font-size:11px;color:#637469}.decision-panel h4{font-size:13px;margin:20px 0 8px}.table-scroll{overflow:auto}.decision-panel table{width:100%;border-collapse:collapse;font-size:11px;text-align:left}.decision-panel td,.decision-panel th{padding:9px;border-bottom:1px solid #e3eae5;min-width:70px;vertical-align:top}.decision-panel td:first-child{min-width:160px}.decision-panel td:last-child{max-width:250px}.decision-panel th{background:#f4f8f5;font-weight:500;white-space:nowrap}.peak-list{display:flex;gap:8px;flex-wrap:wrap}.peak-list p{flex:1;min-width:150px;margin:0;padding:10px;border:1px solid #dce7df;border-radius:6px;font-size:11px}.peak-list span{display:block;color:#58705e;margin-top:4px}.cost-scenario{margin-top:18px;border-top:1px solid #e1e8e3;padding-top:12px}.cost-scenario summary{cursor:pointer;font-weight:600}.cost-scenario p,.cost-scenario small{font-size:11px}.quote-inputs input{width:150px}.quote-inputs label:not(:first-child) input{width:75px}.cost-results{display:flex;gap:20px;flex-wrap:wrap}.cost-results b{display:block;font-size:16px}.decision-panel a{color:#1c7053}@media(max-width:600px){.decision-kpis{grid-template-columns:repeat(2,1fr)}}
+</style>

@@ -1,13 +1,15 @@
 // Excerpts of saved synthetic comments, released only after a pedestrian encounter.
 // A shared session ledger prevents repetition across scenes, seeks and day loops.
 export function shortComment(value, limit = 44) {
-  const text = String(value || '').replace(/\s+/g, ' ').replace(/^[“”"「」]+|[“”"「」]+$/g, '').trim()
+  let text = String(value || '').replace(/\s+/g, ' ').trim()
+  if ((text.startsWith('“')&&text.endsWith('”'))||(text.startsWith('「')&&text.endsWith('」'))||(text.startsWith('\"')&&text.endsWith('\"')))text=text.slice(1,-1).trim()
+  // Repair a legacy excerpt that removed the opening quote of a quoted slogan.
+  if((text.match(/”/g)||[]).length>(text.match(/“/g)||[]).length)text='“'+text
   if (Array.from(text).length <= limit) return text
   // Prefer a complete decision-related sentence over a cut-off scene description.
   const sentences = text.match(/[^。！？；]+[。！？；]?/gu) || []
   const candidates = sentences.filter(s => Array.from(s).length >= 12 && Array.from(s).length <= limit)
-  const relevance = s => (s.match(/价格|预算|需要|需求|试穿|舒适|比较|考虑|购买|适合|关注|想知道/g) || []).length * 12 + Array.from(s).length
-  if (candidates.length) return candidates.sort((a,b) => relevance(b)-relevance(a))[0].trim()
+  if (candidates.length) return candidates[0].trim()
   const prefix = Array.from(text).slice(0, limit - 1).join('')
   const boundary = Math.max(prefix.lastIndexOf('。'), prefix.lastIndexOf('！'), prefix.lastIndexOf('？'), prefix.lastIndexOf('；'))
   return boundary >= 24 ? prefix.slice(0, boundary + 1) : prefix.replace(/[，、；：\s]+$/g, '') + '…'
@@ -16,8 +18,8 @@ export const commentKey = text => text.normalize('NFKC').toLocaleLowerCase().rep
 export function commentTimeline(events, narrative) {
   const groups = Object.fromEntries((narrative?.groups || []).map(g => [g.group_id, g.name]))
   const people = new Map(Object.entries(narrative?.agents || {}).map(([id, p]) => {
-    const text = shortComment(p.possible_comment)
-    return [id, { agentId: Number(id), name: p.name, group: groups[p.group_id] || '代表画像', text, key: commentKey(text), interest: p.interest }]
+    const text = p.ad_anchor && p.ad_focus ? shortComment(p.short_comment) : ''
+    return [id, { agentId: Number(id), name: p.name, group: groups[p.group_id] || '代表画像', text, key: commentKey(text), interest: p.interest, style:p.style, axis:p.ad_focus, decisionAxis:p.decision_axis, hint:p.decision_hint }]
   }))
   return (events || []).flatMap(e => {
     const id = e.kind === 'pedestrian' ? String(e.actor_id).match(/^p-(\d+)-/)?.[1] : null
@@ -31,7 +33,7 @@ function upperBound(rows, time) {
   return low
 }
 export function createCommentQueue(rows, seen = new Set()) {
-  let previous = null, pending = [], lastGroup = ''
+  let previous = null, pending = [], lastGroup = '', lastStyle = '', lastAxis = ''
   return {
     offer(time) {
       const rewound = previous != null && time < previous
@@ -48,12 +50,20 @@ export function createCommentQueue(rows, seen = new Set()) {
       return rewound
     },
     take() {
-      pending = pending.filter(r => !seen.has(r.key))
+      pending = pending.filter(r => ![...seen].some(key=>similarComment(r.key,key)))
       if (!pending.length) return null
-      const different = pending.findIndex(r => r.group !== lastGroup)
-      const row = pending.splice(different < 0 ? 0 : different, 1)[0]
-      seen.add(row.key); lastGroup = row.group
+      const diversity=r=>Number(r.group!==lastGroup)+Number(!!r.style&&r.style!==lastStyle)+Number(!!r.axis&&r.axis!==lastAxis)
+      let best=0;for(let i=1;i<pending.length;i++)if(diversity(pending[i])>diversity(pending[best]))best=i
+      const row = pending.splice(best,1)[0]
+      seen.add(row.key); lastGroup = row.group;lastStyle=row.style;lastAxis=row.axis
       return row
     },
   }
+}
+
+export function similarComment(a,b){
+ a=commentKey(a);b=commentKey(b);if(a===b)return true
+ const grams=text=>new Set(Array.from({length:Math.max(0,text.length-1)},(_,i)=>text.slice(i,i+2)))
+ const x=grams(a),y=grams(b);if(!x.size||!y.size)return false
+ return 2*[...x].filter(g=>y.has(g)).length/(x.size+y.size)>=.68
 }

@@ -82,13 +82,13 @@ def fetch_page(url):
     raise ValueError('资料跳转次数过多')
 
 
-def llm_json(config,system,payload,max_tokens=7000,client=None):
+def llm_json(config,system,payload,max_tokens=7000,client=None,temperature=.2):
     if client is None:
         from openai import OpenAI
         if not config.get('LLM_API_KEY'):raise ValueError('请配置 LLM_API_KEY')
         client=OpenAI(api_key=config['LLM_API_KEY'],base_url=config.get('LLM_BASE_URL'),timeout=180,max_retries=1)
     extra={'extra_body':{'thinking':{'type':'disabled'}}} if 'deepseek.com' in (config.get('LLM_BASE_URL') or '') else {}
-    r=client.chat.completions.create(model=config['LLM_MODEL_NAME'],temperature=.2,max_tokens=max_tokens,response_format={'type':'json_object'},messages=[dict(role='system',content=system+'\nReturn valid JSON.'),dict(role='user',content=json.dumps(payload,ensure_ascii=False))],**extra)
+    r=client.chat.completions.create(model=config['LLM_MODEL_NAME'],temperature=temperature,max_tokens=max_tokens,response_format={'type':'json_object'},messages=[dict(role='system',content=system+'\nReturn valid JSON.'),dict(role='user',content=json.dumps(payload,ensure_ascii=False))],**extra)
     if r.choices[0].finish_reason!='stop':raise ValueError('广告模型返回不完整，请重试')
     try:value=json.loads(r.choices[0].message.content)
     except (ValueError,TypeError):raise ValueError('广告模型返回无效 JSON') from None

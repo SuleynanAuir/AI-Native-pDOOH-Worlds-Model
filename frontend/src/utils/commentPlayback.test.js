@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {shortComment,commentKey,commentTimeline,createCommentQueue} from './commentPlayback.js'
 const narrative={groups:[{group_id:'a',name:'通勤者'},{group_id:'b',name:'学生'}],agents:{1:{name:'甲',group_id:'a',possible_comment:'我更关心跑步鞋的支撑，周末试穿后再决定。'},2:{name:'乙',group_id:'b',possible_comment:'我会先比较价格，等有需要的时候再买。'},3:{name:'丙',group_id:'b',possible_comment:'我更关心跑步鞋的支撑，周末试穿后再决定！'}}}
+for(const p of Object.values(narrative.agents)){p.short_comment=p.possible_comment;p.ad_anchor='价格';p.ad_focus='信息清晰度'}
 const event=(id,minute,kind='pedestrian')=>({id:`${id}-${minute}`,actor_id:`p-${id}-0`,round:1,minute,kind})
 test('extracts short excerpts without inventing or changing saved comments',()=>{const original='我先看价格和需求。'.repeat(12);assert.ok(Array.from(shortComment(original)).length<=44);assert.ok(original.includes(shortComment(original).replace(/…$/,'')));assert.equal(shortComment('“短评论”'),'短评论');assert.equal(commentKey('Ａ，B!'),commentKey('a b'))})
 test('only releases known pedestrians after their encounter, never vehicle attitudes',()=>{const rows=commentTimeline([event(1,10),event(2,20),event(2,5,'vehicle'),event(99,1)],narrative),q=createCommentQueue(rows);q.offer(9);assert.equal(q.take(),null);q.offer(10);assert.equal(q.take().agentId,1);assert.equal(q.take(),null);q.offer(20);assert.equal(q.take().agentId,2)})
@@ -10,3 +11,9 @@ test('four scenes share a ledger; queued duplicates are rechecked at emission',(
 test('empty or missing narratives do not manufacture comments',()=>{assert.deepEqual(commentTimeline([event(1,1)],null),[]);const q=createCommentQueue([]);q.offer(50);assert.equal(q.take(),null)})
 
 test('large seeks keep the newest eligible comments when the pending buffer is full',()=>{const rows=Array.from({length:100},(_,i)=>({time:i,key:String(i),group:'same',agentId:i}));const q=createCommentQueue(rows);q.offer(90);assert.equal(q.take().agentId,90);assert.equal(q.take().agentId,89)})
+
+test('dedicated voice beats generic long-text excerpt and keeps decision metadata',()=>{const updated=structuredClone(narrative);Object.assign(updated.agents[1],{short_comment:'赶着换乘，跑步口号先放一边。',style:'任务优先',decision_axis:'注意窗口',decision_hint:'测试简洁通勤线索'});const row=commentTimeline([event(1,10)],updated)[0];assert.equal(row.text,'赶着换乘，跑步口号先放一边。');assert.equal(row.axis,'信息清晰度');assert.equal(row.hint,'测试简洁通勤线索')})
+test('near copies are suppressed and available alternative styles/concerns get priority',()=>{const first='赶着换乘呢，跑步口号还没我的路线提示有用。',copy='赶着换乘呢，跑步口号还没路线提示有用！';const rows=[{time:1,key:first,text:first,group:'a',style:'直接',axis:'任务'},{time:2,key:copy,text:copy,group:'b',style:'直接',axis:'任务'},{time:3,key:'鞋底是偏软还是偏稳',group:'b',style:'追问',axis:'功能'}];const q=createCommentQueue(rows);q.offer(1);assert.equal(q.take().text,first);q.offer(3);assert.equal(q.take().style,'追问');assert.equal(q.take(),null)})
+test('quoted slogan at the start is not stripped into a dangling closing quote',()=>{assert.equal(shortComment('“自己的节奏”这句挺好，但今天只是路过。'),'“自己的节奏”这句挺好，但今天只是路过。')})
+
+test('legacy task-only narratives cannot appear as ad-content reviews',()=>{const source=structuredClone(narrative);for(const p of Object.values(source.agents)){delete p.ad_anchor;delete p.ad_focus}assert.deepEqual(commentTimeline([event(1,10)],source),[])})

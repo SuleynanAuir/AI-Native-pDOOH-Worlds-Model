@@ -21,7 +21,7 @@ def body():
 
 
 def preview(project):
-    return dict(id=project['id'],filename=project['filename'],headers=project['headers'],frames=clean(project,{}),documents=project.get('documents',[]),photos=project.get('photos',{}),analyses=project.get('analyses',{}),result=project.get('result'))
+    return dict(id=project['id'],filename=project['filename'],source_sheet=project.get('source_sheet','UnfilteredFrames'),headers=project['headers'],frames=clean(project,{}),documents=project.get('documents',[]),photos=project.get('photos',{}),analyses=project.get('analyses',{}),result=project.get('result'))
 
 
 @planning_bp.errorhandler(ValueError)
@@ -37,14 +37,14 @@ def import_inventory():
     if not upload or not upload.filename.lower().endswith('.xlsx'): raise ValueError('请上传 .xlsx 原始库存')
     data=upload.read(25_000_001)
     if len(data)>25_000_000: raise ValueError('Excel 不能超过 25 MB')
-    project=store.create(root(),ingest(data,Path(upload.filename).name))
+    project=store.create(root(),ingest(data,Path(upload.filename).name,request.form.get('source_sheet')))
     return jsonify(success=True,data=preview(project))
 
 
 @planning_bp.post('/sample')
 def sample():
     sample=Path(__file__).resolve().parents[3]/'data/test.xlsx'
-    project=store.create(root(),ingest(sample.read_bytes(),'data/test.xlsx'))
+    project=store.create(root(),ingest(sample.read_bytes(),'data/test.xlsx',(request.get_json(silent=True) or {}).get('source_sheet')))
     return jsonify(success=True,data=preview(project))
 
 
@@ -168,8 +168,26 @@ def analyze(pid):
 def make_plan(pid):
     options=body()
     with store.locked(root(),pid) as (path,project):
-        result=plan(project,options); project['result']=result; store.save(path,project)
+        from .investment import campaign_evidence,settings,report,attach_plan
+        cfg=settings(options)
+        evidence=campaign_evidence(root(),options.get('campaign_id'),cfg['threshold'])
+        from .coverage import supplement
+        supplement(root(),pid,options.get('campaign_id'),evidence,cfg['threshold'])
+        result=plan(project,options)
+        result['investment']=report(result,evidence,options)
+        attach_plan(result)
+        project['result']=result; store.save(path,project)
     return jsonify(success=True,data=result)
+
+
+@planning_bp.get('/campaigns')
+def campaigns():
+    items=[]
+    for path in (Path(root())/'campaign_experiments').glob('*/state.json'):
+        value=json.loads(path.read_text())
+        if value.get('status')=='completed':
+            items.append(dict(id=value['id'],campaign=value['spec']['campaign'],scenes=len(value['spec']['scene_ids']),updated_at=value.get('updated_at')))
+    return jsonify(success=True,data=sorted(items,key=lambda v:v.get('updated_at') or '',reverse=True))
 
 
 @planning_bp.get('/<pid>/export')
@@ -179,3 +197,10 @@ def export(pid):
         strategy=request.args.get('strategy','balanced')
         raw=export_plan(project,project['result'],strategy,path)
     return send_file(BytesIO(raw),mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',as_attachment=True,download_name=f'pDOOH-{strategy}.xlsx')
+
+
+@planning_bp.route('/<pid>/coverage/<cid>',methods=['GET','POST'])
+def screen_coverage(pid,cid):
+    from .coverage import start,status
+    value=start(current_app._get_current_object(),pid,cid) if request.method=='POST' else status(root(),pid,cid)
+    return jsonify(success=True,data={k:v for k,v in value.items() if k!='items'} | {'failures':[{ 'screen_id':sid,'error':i.get('error')} for sid,i in value.get('items',{}).items() if i.get('status')=='failed']})

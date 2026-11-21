@@ -29,7 +29,9 @@
 import {ref,computed,onMounted,onBeforeUnmount,watch} from 'vue'
 import api from '../api'
 import ModalWindow from './ModalWindow.vue'
-const props=defineProps({scenes:Array}),emit=defineEmits(['apply','metric'])
+const props=defineProps({scenes:Array,projectId:String}),emit=defineEmits(['apply','metric'])
+const scope=props.projectId||new URLSearchParams(window.location.search).get('project')
+const experimentKey=scope?'pdooh-campaign-experiment-'+scope:'pdooh-campaign-experiment',pendingKey=scope?'pdooh-campaign-pending-'+scope:'pdooh-campaign-pending'
 const expanded=ref(false)
 const presets=ref([]),preset=ref('nike-running'),draft=ref({brand:'Nike',title:'NIKE RUNNING',message:'Everyday miles. Your own pace. 日常跑步与舒适运动。',topic:'running everyday comfort community',source_url:'https://about.nike.com/en/newsroom'}),flow=ref(1800),metric=ref('interest'),job=ref(null),active=ref(null),error=ref(''),submitting=ref(false)
 let poll,disposed=false,checking=false
@@ -39,13 +41,13 @@ const creativeDirty=computed(()=>active.value&&fields.some(k=>draft.value[k]!==a
 const dirty=computed(()=>active.value&&(flow.value!==active.value.spec.vehicles_per_hour||creativeDirty.value))
 const matches=computed(()=>!active.value||props.scenes.filter(Boolean).every(id=>active.value.spec.scene_ids.includes(id)))
 function choose(){if(preset.value!=='custom')draft.value={...presets.value.find(p=>p.id===preset.value)}}
-function apply(value){active.value=value;localStorage.setItem('pdooh-campaign-experiment',value.id);emit('apply',value)}
-function clear(){active.value=null;localStorage.setItem('pdooh-campaign-experiment','none');emit('apply',null)}
+function apply(value){active.value=value;localStorage.setItem(experimentKey,value.id);emit('apply',value)}
+function clear(){active.value=null;localStorage.setItem(experimentKey,'none');emit('apply',null)}
 async function check(){if(checking||!job.value?.id)return;checking=true;try{const r=(await api.get('/api/world/campaign-experiments/'+job.value.id)).data;if(disposed)return;job.value=r;if(r.status==='completed'){clearInterval(poll);apply(r)}else if(r.status==='failed'){clearInterval(poll);error.value=r.message}}catch(e){error.value=e.message}finally{checking=false}}
-async function trafficOnly(){error.value='';submitting.value=true;try{job.value=(await api.post(`/api/world/campaign-experiments/${active.value.id}/traffic`,{scene_ids:[...new Set(props.scenes.filter(Boolean))],vehicles_per_hour:flow.value})).data;localStorage.setItem('pdooh-campaign-pending',job.value.id);if(disposed)return;clearInterval(poll);poll=setInterval(check,2500)}catch(e){error.value=e.message}finally{submitting.value=false}}
-async function generate(){error.value='';submitting.value=true;try{job.value=(await api.post('/api/world/campaign-experiments',{scene_ids:[...new Set(props.scenes.filter(Boolean))],campaign:draft.value,vehicles_per_hour:flow.value})).data;localStorage.setItem('pdooh-campaign-pending',job.value.id);if(disposed)return;clearInterval(poll);poll=setInterval(check,2500)}catch(e){error.value=e.message}finally{submitting.value=false}}
-watch(job,value=>{if(value&&['completed','failed'].includes(value.status))localStorage.removeItem('pdooh-campaign-pending')})
-onMounted(async()=>{try{presets.value=(await api.get('/api/world/campaign-presets')).data;if(disposed)return;const saved=new URLSearchParams(window.location.search).get('campaign')||localStorage.getItem('pdooh-campaign-experiment');if(saved!=='none'){const url=saved?'/api/world/campaign-experiments/'+saved:'/api/world/campaign-experiments/latest';const value=(await api.get(url)).data;if(!disposed&&value?.status==='completed'){draft.value={...value.spec.campaign};flow.value=value.spec.vehicles_per_hour;preset.value=presets.value.find(p=>p.title===draft.value.title)?.id||'custom';apply(value)}}const pending=localStorage.getItem('pdooh-campaign-pending');if(pending&&!disposed){job.value={id:pending,status:'running',message:'恢复广告实验进度…'};await check();if(busy.value)poll=setInterval(check,2500)}}catch(e){error.value=e.message}})
+async function trafficOnly(){error.value='';submitting.value=true;try{job.value=(await api.post(`/api/world/campaign-experiments/${active.value.id}/traffic`,{scene_ids:[...new Set(props.scenes.filter(Boolean))],vehicles_per_hour:flow.value})).data;localStorage.setItem(pendingKey,job.value.id);if(disposed)return;clearInterval(poll);poll=setInterval(check,2500)}catch(e){error.value=e.message}finally{submitting.value=false}}
+async function generate(){error.value='';submitting.value=true;try{job.value=(await api.post('/api/world/campaign-experiments',{scene_ids:[...new Set(props.scenes.filter(Boolean))],campaign:draft.value,vehicles_per_hour:flow.value})).data;localStorage.setItem(pendingKey,job.value.id);if(disposed)return;clearInterval(poll);poll=setInterval(check,2500)}catch(e){error.value=e.message}finally{submitting.value=false}}
+watch(job,value=>{if(value&&['completed','failed'].includes(value.status))localStorage.removeItem(pendingKey)})
+onMounted(async()=>{try{presets.value=(await api.get('/api/world/campaign-presets')).data;if(disposed)return;const saved=new URLSearchParams(window.location.search).get('campaign')||localStorage.getItem(experimentKey)||(scope?'none':null);if(saved!=='none'){const url=saved?'/api/world/campaign-experiments/'+saved:'/api/world/campaign-experiments/latest';const value=(await api.get(url)).data;if(!disposed&&value?.status==='completed'){draft.value={...value.spec.campaign};flow.value=value.spec.vehicles_per_hour;preset.value=presets.value.find(p=>p.title===draft.value.title)?.id||'custom';apply(value)}}const pending=localStorage.getItem(pendingKey);if(pending&&!disposed){job.value={id:pending,status:'running',message:'恢复广告实验进度…'};await check();if(busy.value)poll=setInterval(check,2500)}}catch(e){error.value=e.message}})
 onBeforeUnmount(()=>{disposed=true;clearInterval(poll)})
 </script>
 <style scoped>

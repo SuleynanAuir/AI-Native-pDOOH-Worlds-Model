@@ -7,11 +7,12 @@
     <NeighborhoodMap compact map-only :network="base.network" :screens="base.screens" :agents="frame?.pedestrians || []" :vehicles="frame?.vehicles || []" :minute="minute" :hour="String((round-1)%24).padStart(2,'0')" :selected-agent="selectedAgent" :show-trails="showTrails" group-filter="all" :impressions="counts" :attitudes="attitudes" :attitude-metric="attitudeMetric" :campaign="base.campaign" traffic-ready @agent="openPerson" @screen="openScreen" />
     <aside class="scene-live-sidebar" aria-label="场景实时反馈">
       <div class="scene-live-metrics"><div><span>Impressions <small>模拟曝光</small></span><strong data-testid="total-impressions" :style="{color:attitudeColor(liveScore)}">{{ number(totalImpressions) }}</strong></div><div class="scene-interest"><span>{{ attitudeMetric==='interest'?'感兴趣程度':'好感度' }}</span><b :style="{color:attitudeColor(liveScore)}">{{ liveScore==null?'—':liveScore.toFixed(1) }}<small v-if="liveScore!=null"> / 100</small></b></div></div>
-      <LiveAudienceComments :events="base.events" :narrative="narrative" :round="round" :minute="minute" :playing="playing && !busy" :active="active" :seen="seenComments" />
+      <div class="live-evidence" title="分母均为当前累计模拟曝光机会；车辆乘员没有态度评分；已评比例是覆盖率，不是可信度"><span>行人 {{ liveEvidence.pedestrian }}</span><span>已评分 {{ liveEvidence.coverage }}</span></div>
+      <LiveAudienceComments :events="base.events" :narrative="narrative" :round="round" :minute="minute" :playing="playing && !busy" :active="active" :seen="seenComments" @person="openPerson" />
     </aside></div>
     <div v-if="selectedAgent!=null && selected && !base?.attitudes" class="card-person"><button @click="selectedAgent=null" aria-label="关闭画像">×</button><b>{{ selected.name }}</b><p>{{ group?.name }} · {{ group?.profile?.needs }} · {{ group?.profile?.mobility }}</p><p>代表画像权重 {{ number(selectedWeight) }} 人；此格的展开行人共享该画像。</p><template v-if="personAttitude"><p><b>对 {{ base.campaign.title }} 的模型推演</b></p><p>好感 {{ score(personAttitude.favorability) }} · 兴趣 {{ score(personAttitude.interest) }} · {{ personAttitude.confidence }} 置信度</p><p>{{ personAttitude.reason }}</p><small>依据 {{ personAttitude.source_ids.join("、") }} · 非真实个人调查</small></template></div>
     <div class="card-window-actions"><AudienceNarratives ref="analysisWindow" v-if="base?.attitudes && experimentId" :experiment-id="experimentId" :scene-id="sceneId" :selected-agent="selectedAgent" :scene-title="base.meta.title" @loaded="narrative=$event" /><button type="button" aria-haspopup="dialog" :aria-expanded="detailsOpen" :disabled="!base" @click="selectedScreen=null;detailsOpen=true">场景详情</button></div>
-    <ModalWindow v-model="detailsOpen" title="场景详情" :subtitle="base?.meta.title"><div v-if="base" class="scene-details-body"><p>{{ sourceDate }} · {{ currentSlot?.period_label }} · {{ clock }} · {{ base.meta.group_count }} 类画像</p><p>{{ base.meta.source_label }}</p>
+    <ModalWindow v-model="detailsOpen" title="场景详情" :subtitle="base?.meta.title"><div v-if="base" class="scene-details-body"><ScreenDecisionPanel :base="base" :narrative="narrative" :selected-screen="selectedScreen" /><p>{{ sourceDate }} · {{ currentSlot?.period_label }} · {{ clock }} · {{ base.meta.group_count }} 类画像</p><p>{{ base.meta.source_label }}</p>
     <div v-if="base?.campaign" class="card-campaign"><b>{{ base.campaign.title }}</b><span>区域基准 {{ base.traffic.vehicles_per_hour }} 辆/h · 未实测校准</span><small>颜色：{{ attitudeMetric==='interest'?'兴趣':'好感' }} · 仅汇总有评分的行人曝光；车内人员态度未知</small></div>
     <details v-if="base?.attitudes" class="attitude-details" :open="selectedScreen!=null"><summary>人群态度与推演依据 · {{ base.attitudes.groups.length }} 类</summary><p>{{ base.attitude_caveat }}</p><div v-for="g in base.attitudes.groups" :key="g.id" class="attitude-group"><span>{{ g.name }}</span><b :style="{color:attitudeColor(g[attitudeMetric])}">{{ score(g[attitudeMetric]) }}</b></div><small>表中为全部代表画像加权分，地图颜色按实际回放经过的画像加权，两者可能不同。点击地图上的行人可看个人原因。</small><p v-if="base.traffic.policies.length">{{ base.traffic.policies.map(p=>p.road+'：'+p.note).join('；') }}</p></details>
 <button @click="showTrails=!showTrails" :aria-pressed="showTrails">{{ showTrails?'隐藏轨迹':'显示轨迹' }}</button><small>{{ frame ? `${frame.pedestrians.length} 段步行 / ${frame.vehicles.length} 段车行 · 本小时` : '独立场景' }}</small></div></ModalWindow>
@@ -25,13 +26,16 @@ import NeighborhoodMap from './NeighborhoodMap.vue'
 import AudienceNarratives from './AudienceNarratives.vue'
 import ModalWindow from './ModalWindow.vue'
 import LiveAudienceComments from './LiveAudienceComments.vue'
+import ScreenDecisionPanel from './ScreenDecisionPanel.vue'
+import {screenDecision,percent} from '../utils/screenDecision'
 import {indexImpressions,impressionsAt} from '../utils/trafficPlayback'
 import {indexAttitudes,attitudesAt,attitudeColor} from '../utils/campaignPlayback'
 const props=defineProps({slot:Number,sceneId:String,catalog:Array,round:Number,minute:Number,synchronized:Boolean,playing:Boolean,focused:Boolean,active:{type:Boolean,default:true},seenComments:{type:Set,default:()=>new Set()},experimentId:String,attitudeMetric:{type:String,default:"interest"}})
-const emit=defineEmits(['select','focus','play','hour','minute','ready'])
+const emit=defineEmits(['select','focus','play','hour','minute','ready','decision'])
 const base=shallowRef(null),frame=shallowRef(null),busy=ref(false),error=ref(''),selectedAgent=ref(null),showTrails=ref(false)
 const narrative=shallowRef(null)
 const selectedScreen=ref(null),detailsOpen=ref(false),analysisWindow=ref(null)
+defineExpose({slotNumber:props.slot,showDecision:()=>{selectedScreen.value=null;detailsOpen.value=true}})
 function openPerson(id){selectedAgent.value=id;selectedScreen.value=null;analysisWindow.value?.show(id)}
 function openScreen(id){selectedAgent.value=null;selectedScreen.value=id;detailsOpen.value=true}
 watch(()=>[props.sceneId,props.experimentId],()=>{detailsOpen.value=false;narrative.value=null})
@@ -45,6 +49,9 @@ const liveScore=computed(()=>{
  const metric=props.attitudeMetric,rows=Object.values(attitudes.value),weight=rows.reduce((sum,row)=>sum+(row[metric+'Weight']||0),0)
  return weight?rows.reduce((sum,row)=>sum+(row[metric]??0)*(row[metric+'Weight']||0),0)/weight:null
 })
+const liveEvidence=computed(()=>{const total=totalImpressions.value,ped=Object.values(counts.value).reduce((s,r)=>s+r.pedestrian,0),rated=Object.values(attitudes.value).reduce((s,r)=>s+(r.interestWeight||0),0);const fmt=x=>x==null?'—':x.toFixed(1)+'%';return {pedestrian:fmt(percent(ped,total)),coverage:fmt(percent(rated,total))}})
+const decision=computed(()=>screenDecision(base.value,narrative.value))
+watch(decision,value=>emit('decision',value),{immediate:true})
 const personAttitude=computed(()=>base.value?.attitudes?.agents[String(selectedAgent.value)])
 const score=n=>n==null?'未知':Number(n).toFixed(1)+'/100'
 const endpoint=computed(()=>props.experimentId?`/api/world/campaign-experiments/${props.experimentId}/scenes/${props.sceneId}`:'/api/world/comparison-scenes/'+props.sceneId)
@@ -66,6 +73,8 @@ watch(()=>[props.sceneId,props.round,props.experimentId],load,{immediate:true})
 onBeforeUnmount(()=>{ticket++;controller?.abort()})
 </script>
 <style scoped>
+.live-evidence{display:flex;justify-content:space-between;gap:5px;font-size:9px;color:#617469;flex-shrink:0;margin-top:-5px}
+
 .comparison-card{container-type:inline-size}
 .scene-live-layout{display:grid;grid-template-columns:minmax(0,1fr) clamp(182px,34%,290px);height:var(--scene-body-height,440px);min-height:0;border-top:1px solid #e7ece9}
 .scene-live-layout>.neighborhood{min-width:0;min-height:0;height:100%;overflow:hidden}

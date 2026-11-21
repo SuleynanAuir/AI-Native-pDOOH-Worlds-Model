@@ -45,11 +45,15 @@ def country(v):
     return COUNTRIES.get(v, v)
 
 
-def ingest(data, filename):
+def ingest(data, filename, source_sheet=None):
     sheets = read_workbook(data)
-    source = next((k for k in sheets if re.sub('[^a-z]', '', k.lower()) == 'unfilteredframes'), None)
+    wanted = re.sub('[^a-z]', '', (source_sheet or 'UnfilteredFrames').lower())
+    if wanted not in ('filteredframes','unfilteredframes'): raise ValueError('请选择 FilteredFrames 或 UnfilteredFrames')
+    source = next((k for k in sheets if re.sub('[^a-z]', '', k.lower()) == wanted), None)
+    if not source and not source_sheet:
+        source = next((k for k in sheets if re.sub('[^a-z]', '', k.lower()) == 'filteredframes'), None)
     if not source:
-        raise ValueError('工作簿必须包含 UnfilteredFrames 原始库存表')
+        raise ValueError('工作簿缺少所选 Frames 表')
     try: headers, records = headers_and_records(sheets[source], 'VIOOHID')
     except ValueError: headers, records = headers_and_records(sheets[source], 'SCREENID')
     frames = []
@@ -67,7 +71,7 @@ def ingest(data, filename):
         raw_id = canonical.get('VIOOH_ID')
         sid = '' if missing(raw_id) else str(raw_id).strip()
         frames.append(dict(key=f'row-{index}', screen_id=sid, original=original, fields=canonical, import_warnings=conflicts))
-    return dict(filename=filename, headers=headers, frames=frames, source_sheets=sheets, analyses={}, photos={}, documents=[])
+    return dict(filename=filename, source_sheet=source, headers=headers, frames=frames, source_sheets=sheets, analyses={}, photos={}, documents=[])
 
 
 def clean(project, options):
@@ -318,4 +322,6 @@ def export_plan(project, result, strategy, project_dir=None):
                 photo=next((photo for photo in project.get('photos',{}).values() if photo.get('source')==source_path and photo.get('file')),None)
                 if photo:
                     images.append(dict(sheet='PICS',row=ri,column=ci,data=(project_dir/photo['file']).read_bytes(),mime=photo['mime']))
+    from .investment import export_sheets
+    sheets.extend(export_sheets(result))
     return write_workbook(sheets,images)

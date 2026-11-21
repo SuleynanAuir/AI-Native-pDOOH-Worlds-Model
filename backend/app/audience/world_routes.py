@@ -527,3 +527,21 @@ def campaign_narrative_report(identifier):
     report=report_text([scene_result(campaign_root(),identifier,s) for s in state['spec']['scene_ids']],groups_only=scope=='groups')
     filename='audience-decision-brief.txt' if scope=='groups' else 'audience-ad-comments.txt'
     return Response(report,content_type='text/plain; charset=utf-8',headers={'Content-Disposition':f'attachment; filename="{filename}"'})
+
+
+@world_bp.get('/campaign-experiments/<identifier>/short-comments')
+def campaign_short_comment_status(identifier):
+    from .campaign_comments import status
+    return jsonify(success=True,data=status(campaign_root(),identifier))
+
+
+@world_bp.post('/campaign-experiments/<identifier>/short-comments')
+def campaign_short_comment_start(identifier):
+    from .campaign_comments import start
+    return jsonify(success=True,data=start(campaign_root(),identifier,dict(current_app.config))),202
+
+
+@world_bp.get('/campaign-experiments/<identifier>/short-comments/scenes/<sid>')
+def campaign_short_comment_scene(identifier,sid):
+    from .campaign_comments import scene_result
+    return jsonify(success=True,data=scene_result(campaign_root(),identifier,sid))
