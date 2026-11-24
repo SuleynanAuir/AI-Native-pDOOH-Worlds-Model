@@ -12,7 +12,23 @@
     <title>MiroFish - 预测万物</title>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
+    <div id="app"><p style="padding:32px;color:#334b40;font:14px sans-serif" role="status">正在加载投放规划界面…</p></div>
+    <script type="module">
+      import('/src/main.js').then(() => {
+        if (!document.getElementById('app').__vue_app__) throw new Error('应用入口未正常启动')
+      }).catch(error => {
+        console.error('应用加载失败', error)
+        const root = document.getElementById('app')
+        root.replaceChildren()
+        const message = document.createElement('p')
+        message.textContent = '界面加载失败，请刷新重试。若仍无法打开，请检查前端服务。'
+        message.style.cssText = 'padding:32px;color:#933;font:14px sans-serif'
+        root.append(message)
+        const button = document.createElement('button')
+        button.textContent = '重新加载'
+        button.onclick = () => location.reload()
+        root.append(button)
+      })
+    </script>
   </body>
 </html>

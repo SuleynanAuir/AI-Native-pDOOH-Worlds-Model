@@ -23,7 +23,9 @@ def enabled(config):
 def cached(cache, signature, fetch):
     path=Path(cache)/(hashlib.sha256(json.dumps(signature,sort_keys=True).encode()).hexdigest()+'.json')
     path.parent.mkdir(parents=True,exist_ok=True)
-    if path.exists() and time.time()-path.stat().st_mtime<TTL:return json.loads(path.read_text())
+    if path.exists() and time.time()-path.stat().st_mtime<TTL:
+        try:return json.loads(path.read_text())
+        except (json.JSONDecodeError,OSError):pass  # Re-fetch incomplete local cache; never treat it as map evidence.
     result=fetch()
     temp=path.with_suffix('.'+uuid.uuid4().hex+'.tmp');temp.write_text(json.dumps(result,ensure_ascii=False,allow_nan=False));temp.replace(path)
     return result
@@ -131,7 +133,10 @@ def local_geometry(point,radius,config,cache):
                 if typ=='Point':parts=[[raw]]
                 for part in parts:
                     coords=converted(part,x,y,extent)
-                    if not coords or not any(lon-dx<=a<=lon+dx and lat-dy<=b<=lat+dy for a,b in coords):continue
+                    if not coords:continue
+                    # Long roads can cross the window with both endpoints outside it.
+                    # Road LineStrings are intersected with clip below.
+                    if layer!='roads' and not any(lon-dx<=a<=lon+dx and lat-dy<=b<=lat+dy for a,b in coords):continue
                     digest=hashlib.sha256(json.dumps([layer,coords,p],sort_keys=True).encode()).hexdigest()[:18]
                     if digest in seen:continue
                     seen.add(digest);fid='mapricot-tile-'+digest

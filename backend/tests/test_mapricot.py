@@ -125,3 +125,14 @@ def test_tile_projection_nodes_intersections_without_connecting_bridges(monkeypa
     assert not set(nodes).intersection(n for f in bridges for n in f['nodes'])
     assert min(f['distance_m'] for f in ground)<.1
     assert all(abs(p['lat']-point['lat'])<.001 for f in features for p in f['geometry'])
+
+
+def test_long_road_crossing_window_is_kept_without_inside_vertices(monkeypatch,tmp_path):
+    import math
+    x,y=map(math.floor,mp.tile_xy(37.777738,-122.423367));n=2**15
+    point=dict(lon=(x+.5)/n*360-180,lat=math.degrees(math.atan(math.sinh(math.pi*(1-2*(y+.5)/n)))))
+    road=dict(properties={'kind':'major_road','name':'TEST LONG ROAD'},geometry={'type':'LineString','coordinates':[[0,2048],[4096,2048]]})
+    monkeypatch.setattr(mp,'cached',lambda *args:{'roads':{'extent':4096,'features':[road]}})
+    features=mp.local_geometry(point,100,CONFIG,tmp_path)
+    assert any(f['tags'].get('name')=='TEST LONG ROAD' for f in features)
+    assert all(abs(g['lon']-point['lon'])<.002 for f in features for g in f['geometry'])

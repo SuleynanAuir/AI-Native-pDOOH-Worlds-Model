@@ -83,6 +83,7 @@ def validate_attitudes(value,people,allowed):
 
 def analyze_people(people,groups,locality,evidence,config,model=llm_json):
     allowed=['local-context']+[s['id'] for s in evidence['sources']]
+    if evidence.get('campaign',{}).get('creative_observation'):allowed.append('creative-image')
     # Drop any remote local sources outside this scene's country/city scope.
     local_ids={s['id'] for s in evidence['sources'] if s['kind']=='local' and (s['city'].casefold()!=locality.get('city','').casefold() or s['country'].casefold()!=locality.get('country','').casefold() or (s.get('community_contains') and s['community_contains'] not in locality.get('community','').casefold()))}
     allowed=[x for x in allowed if x not in local_ids]
@@ -117,7 +118,28 @@ def write_compact(path,value):
     temp=path.with_suffix('.tmp');temp.write_text(json.dumps(value,ensure_ascii=False,allow_nan=False,separators=(',',':')),encoding='utf-8');temp.replace(path)
 
 
-def materialize_scene(target,base,people,locality,schedule,seed,evidence,analysis,flow):
+
+def scene_flow(spec, base):
+    if spec.get('traffic_manual') is not None:
+        return spec['traffic_manual'], {'kind':'manual','calibration':'uncalibrated'}
+    sid=base['meta'].get('screen_id')
+    estimate=spec.get('traffic_estimates',{}).get(sid,{})
+    if estimate.get('schema_version')==2 and len(estimate.get('hourly',[]))==24:
+        return spec['vehicles_per_hour'], estimate
+    if estimate.get('simulation_vehicles_per_hour') is not None:
+        return estimate['simulation_vehicles_per_hour'], estimate
+    return spec['vehicles_per_hour'], {'kind':'default_scenario','calibration':'uncalibrated','reason':'此地点没有可用模型估算，使用可调默认情景，非实测或模型预测'}
+
+def hourly_flow(flow, estimate, hour):
+    if estimate and estimate.get('schema_version')==2:
+        row=next((r for r in estimate['hourly'] if r['hour']==hour),None)
+        if row and row.get('simulation_vehicles_per_hour') is not None:
+            return row['simulation_vehicles_per_hour'], True, 'llm_hourly_estimate'
+        return flow, False, 'unknown_hour_default_scenario'
+    return flow, False, (estimate or {}).get('kind','default_scenario')
+
+
+def materialize_scene(target,base,people,locality,schedule,seed,evidence,analysis,flow,traffic_estimate=None):
     target.mkdir(parents=True,exist_ok=True);events=[dict(e) for e in base['events'] if e['kind']=='pedestrian'];network=base['network'];screens=copy.deepcopy(base['screens'])
     policies=road_policies(base,evidence);pool=route_pool(network,seed,policies);summary=[]
     for screen in screens:screen.update(creative=evidence['campaign']['title'],creative_label=evidence['campaign']['message'])
@@ -126,16 +148,17 @@ def materialize_scene(target,base,people,locality,schedule,seed,evidence,analysi
         # Older libraries omit period/activity fields, so infer period from hour
         # only as a labelled default, never a measured traffic curve.
         h=slot.get('hour',(r-1)%24);slot={**slot,'period':slot.get('period') or ('morning' if 7<=h<10 else 'evening' if 17<=h<19 else 'night' if 19<=h<23 else 'quiet' if h<6 else 'daytime')}
-        cars=connected_vehicles(slot,seed,flow,network,policies,pool)
+        requested,absolute,flow_source=hourly_flow(flow,traffic_estimate,h)
+        cars=connected_vehicles(slot,seed,requested,network,policies,pool,absolute_count=absolute)
         for car in cars:
             for encounter in opportunities(car['journey']['waypoints'],screens,network['view_radius']):
-                events.append(dict(**encounter,id=f'{r}:{car["id"]}:{encounter["screen_id"]}',round=r,actor_id=car['id'],kind='vehicle',count=car['occupants'],units=1))
+                events.append(dict(**encounter,id=f'{r}:{car["id"]}:{encounter["screen_id"]}',round=r,actor_id=car['id'],kind='vehicle',count=car['occupants']*car.get('represented_vehicles',1),units=car.get('represented_vehicles',1)))
         hourly={**hour,'vehicles':cars}
-        summary.append(dict(round=r,vehicles=len(cars),average_duration_minutes=round(sum(c['journey']['end_minute']-c['journey']['start_minute'] for c in cars)/max(1,len(cars)),2)))
+        summary.append(dict(round=r,hour=h,requested_vehicles=requested,flow_source=flow_source,absolute_hourly=absolute,vehicles=sum(c.get('represented_vehicles',1) for c in cars),rendered_samples=len(cars),average_duration_minutes=round(sum(c['journey']['end_minute']-c['journey']['start_minute'] for c in cars)/max(1,len(cars)),2)))
         write_compact(target/f'hour-{r}.json',hourly)
     events.sort(key=lambda e:(e['round'],e['minute'],e['id']))
     output={k:v for k,v in base.items() if k!='_path'};output.update(screens=screens,events=events,attitudes=analysis,campaign=evidence['campaign'],research=evidence,
-      traffic=dict(vehicles_per_hour=flow,hourly=summary,route_count=len(pool),policies=policies,calibration='uncalibrated',assumptions='区域基准车流为可调情景，不是实测；高峰1.5–1.6×，夜间活动1.2×，深夜0.18×。遵循地图单向/已知限制；路口等待为假设，尚未模拟车道、避碰、真实信号。'),
+      traffic=dict(estimate=traffic_estimate,vehicles_per_hour=flow,hourly=summary,route_count=len(pool),policies=policies,calibration='uncalibrated',assumptions='非实测。24小时模型曲线按当地小时直接使用，不重复叠加高峰或节日倍数；普通工作日模板逐日重复，非节日预测。未知小时回退默认情景并逐小时标注。手动/旧基准仍使用时段系数。每小时最多3000个带整数权重的车辆样本，车流与曝光按权重累计；无可用路线时可低于目标。样本代表多辆车，不是逐车微观仿真；路口等待为假设。'),
       attitude_caveat='数字为所有几何曝光机会；颜色只汇总截至当前时间有模型态度的行人曝光，按展开权重加权。车辆态度未知不当作中性；不代表实测好感、独立样本或转化。')
     write_compact(target/'base.json',output)
     return dict(scene_id=base['meta']['id'],agents_scored=len(analysis['agents']),route_count=len(pool),hourly=summary)
@@ -159,7 +182,8 @@ def run_job(root,library,worlds,identifier,spec,config):
             sid,base,people,locality,schedule,seed=context
             analysis=read_json(parent/f'attitudes-{sid}.json') if parent else analyze_people(people,base['groups'],locality,evidence,config)
             write_json(target/f'attitudes-{sid}.json',analysis)
-            return materialize_scene(target/'scenes'/sid,base,people,locality,schedule,seed,evidence,analysis,spec['vehicles_per_hour'])
+            flow,estimate=scene_flow(spec,base)
+            return materialize_scene(target/'scenes'/sid,base,people,locality,schedule,seed,evidence,analysis,flow,estimate)
         with ThreadPoolExecutor(max_workers=2) as executor:
             for future in as_completed([executor.submit(one,c) for c in contexts]):
                 result=future.result();state['results'].append(result);update(completed_scenes=len(state['results']),message=f'已完成 {len(state["results"])} / {len(contexts)} 个场景')

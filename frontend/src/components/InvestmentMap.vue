@@ -1,0 +1,40 @@
+<template>
+ <section class="investment-map" aria-label="区域屏幕投入地图">
+  <div class="map-heading"><div><h3>区域屏幕投入分布</h3><p>等大圆点的颜色由浅到深表示含 DSP 媒体投入；点击屏幕查看依据。同坐标屏幕合并显示，可逐条选择。</p></div><select v-model="region" aria-label="投资地图区域"><option value="all">全部区域 · {{ rows.length }} 块</option><option v-for="g in regions" :key="g.id" :value="g.id">{{ g.name }} · {{ money(g.total) }} {{ currency }}</option></select></div>
+  <div class="map-layout"><div class="map-wrap">
+   <div ref="canvas" class="canvas" aria-label="屏幕投资地理底图"></div>
+   <svg v-if="!loaded" class="fallback" viewBox="0 0 900 460" role="img" aria-label="按真实经纬度绘制的屏幕投入分布（无底图）"><path v-for="n in 9" :key="n" :d="`M ${n*90} 0 V460 M0 ${n*46} H900`" stroke="#e0e9e3"/><g v-for="p in points" :key="p.key" @click="pick(p)" role="button" tabindex="0" @keydown.enter="pick(p)" :aria-label="`${p.name} ${money(p.total)} ${currency}`"><circle :cx="xy(p)[0]" :cy="xy(p)[1]" r="7" :fill="color(p)" opacity=".95" stroke="white"/><title>{{ p.name }} · {{ money(p.total) }} {{ currency }}</title></g><text x="15" y="440" fill="#62776c" font-size="13">{{ error || '正在加载街道底图；当前按 GEOM 经纬度呈现分布' }}</text></svg>
+   <div class="map-legend">小额 <span class="amount-gradient"></span> 大额 · {{ visible.length }} 块 · {{ money(total) }} {{ currency }}</div>
+  </div><aside><b>{{ selected?.name || '区域投入排行' }}</b><template v-if="selected"><p>此坐标 {{ selected.rows.length }} 块屏幕 · {{ money(selected.total) }} {{ currency }}</p><button v-for="r in selected.rows" :key="r.key" @click="$emit('select',r)">{{ r.address||r.screen_id }}<small>{{ money(r.recommended_amount) }} · #{{ r.rank }} · {{ r.sim?'直接模拟':'补充预测' }}</small></button><button @click="selected=null">返回区域排行</button></template><template v-else><button v-for="g in regions" :key="g.id" @click="region=g.id">{{ g.name }}<small>{{ g.count }} 块 · {{ money(g.total) }} {{ currency }} · {{ percent(g.total) }}</small><i :style="{width:100*g.total/Math.max(1,...regions.map(x=>x.total))+'%'}"></i></button></template></aside></div>
+  <p class="footnote">区域按屏幕坐标约 400 米范围归组，不代表行政边界；区域金额可相加，曝光不能当作去重覆盖。{{ missing }} 块无有效坐标未绘制，金额仍保留在报告中。</p>
+ </section>
+</template>
+<script setup>
+import {computed,ref,onMounted,onBeforeUnmount,watch} from 'vue'
+import api from '../api'
+import 'maplibre-gl/dist/maplibre-gl.css'
+const props=defineProps({rows:Array,regions:{type:Array,default:()=>[]},currency:String})
+defineEmits(['select'])
+const canvas=ref(null),loaded=ref(false),error=ref(''),region=ref('all'),selected=ref(null)
+let map,lib,observer,disposed=false
+const valid=r=>Number.isFinite(r.lat)&&Number.isFinite(r.lon)&&Math.abs(r.lat)<=90&&Math.abs(r.lon)<=180
+const missing=computed(()=>props.rows.filter(r=>!valid(r)).length)
+const visible=computed(()=>props.rows.filter(r=>valid(r)&&(region.value==='all'||props.regions.find(g=>g.id===region.value)?.screen_ids.includes(r.screen_id))))
+const total=computed(()=>visible.value.reduce((s,r)=>s+r.recommended_amount,0))
+const regions=computed(()=>props.regions.map(g=>{const members=props.rows.filter(r=>g.screen_ids.includes(r.screen_id));return {...g,count:members.length,total:members.reduce((s,r)=>s+r.recommended_amount,0)}}).sort((a,b)=>b.total-a.total))
+const points=computed(()=>{const m=new Map();for(const r of visible.value){const k=`${r.lon},${r.lat}`;if(!m.has(k))m.set(k,{key:k,lat:r.lat,lon:r.lon,name:r.address||r.screen_id,total:0,rows:[]});const p=m.get(k);p.rows.push(r);p.total+=r.recommended_amount}return [...m.values()]})
+const max=computed(()=>Math.max(1,...points.value.map(p=>p.total)))
+const bounds=computed(()=>{const xs=points.value.map(p=>p.lon),ys=points.value.map(p=>p.lat);return [Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)]})
+function xy(p){const [a,b,c,d]=bounds.value,mid=(b+d)/2*Math.PI/180;const dx=Math.max((c-a)*Math.cos(mid),.001),dy=Math.max(d-b,.001),scale=Math.min(820/dx,380/dy);return [450+(p.lon-(a+c)/2)*Math.cos(mid)*scale,230-(p.lat-(b+d)/2)*scale]}
+const color=p=>{const t=p.total/max.value;const a=[218,237,249],b=[18,67,145];return `rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*t)).join(',')})`}
+const money=n=>Number(n).toLocaleString('zh-CN',{maximumFractionDigits:2})
+const percent=n=>(100*n/Math.max(1,props.rows.reduce((s,r)=>s+r.recommended_amount,0))).toFixed(1)+'%'
+function pick(p){selected.value=p}
+function render(){if(!map?.getSource('investment'))return;map.getSource('investment').setData({type:'FeatureCollection',features:points.value.map(p=>({type:'Feature',geometry:{type:'Point',coordinates:[p.lon,p.lat]},properties:{key:p.key,color:color(p),amount:p.total}}))});if(points.value.length){const b=new lib.LngLatBounds();points.value.forEach(p=>b.extend([p.lon,p.lat]));map.fitBounds(b,{padding:45,maxZoom:16,duration:300})}}
+onMounted(async()=>{try{lib=await import('maplibre-gl');if(disposed)return;const base=api.defaults.baseURL||location.origin;map=new lib.Map({container:canvas.value,style:new URL('/api/world/mapricot/style',base).href,center:[0,0],zoom:1,transformRequest:url=>({url:url.startsWith('/api/world/')?new URL(url,base).href:url})});map.addControl(new lib.NavigationControl(),'top-right');map.on('error',()=>{error.value='底图未就绪，保留真实坐标分布'});map.on('load',()=>{for(const layer of map.getStyle().layers){const tag=(layer.id+' '+(layer['source-layer']||'')).toLowerCase();if(layer.type==='background')map.setPaintProperty(layer.id,'background-color','#f5f7f3');if(layer.type==='fill')map.setPaintProperty(layer.id,'fill-color',/water|ocean/.test(tag)?'#dfedf2':/park|landcover|green/.test(tag)?'#e2ecd9':/building/.test(tag)?'#d5dfd7':'#eef1e9');if(layer.type==='line')map.setPaintProperty(layer.id,'line-color',/water/.test(tag)?'#bdd6e1':'#b6c4ba');if(layer.type==='symbol'){map.setPaintProperty(layer.id,'text-color','#42564b');map.setPaintProperty(layer.id,'text-halo-color','#ffffff')}}map.addSource('investment',{type:'geojson',data:{type:'FeatureCollection',features:[]}});map.addLayer({id:'investment-points',type:'circle',source:'investment',paint:{'circle-radius':7,'circle-color':['get','color'],'circle-opacity':.95,'circle-stroke-color':'#fff','circle-stroke-width':1.5}});map.on('click','investment-points',e=>{const p=points.value.find(p=>p.key===e.features?.[0]?.properties.key);if(p)pick(p)});loaded.value=true;render()});observer=new ResizeObserver(()=>map?.resize());observer.observe(canvas.value)}catch{error.value='无法初始化底图，当前按真实坐标呈现屏幕'}})
+watch(()=>[props.rows,region.value],()=>{selected.value=null;render()})
+onBeforeUnmount(()=>{disposed=true;observer?.disconnect();map?.remove()})
+</script>
+<style scoped>
+.investment-map{border:1px solid #dae5dc;border-radius:9px;margin:20px 0;overflow:hidden}.map-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:15px}h3{margin:0;font-size:16px}p{font-size:11px;line-height:1.6;color:#5b7064}.map-heading select{max-width:45%;padding:8px;border:1px solid #cfddd3;background:white;border-radius:5px}.map-layout{display:grid;grid-template-columns:minmax(0,1fr) 250px}.map-wrap{position:relative;min-width:0;background:#f4f8f5}.canvas{height:460px}.fallback{position:absolute;inset:0;width:100%;height:100%;background:#f4f8f5}.fallback g{cursor:pointer}.amount-gradient{display:inline-block;vertical-align:middle;width:85px;height:8px;background:linear-gradient(90deg,#daedf9,#124391);border-radius:4px;margin:0 5px}.map-legend{position:absolute;top:12px;left:12px;background:#fffe;padding:9px;border-radius:5px;font-size:11px;pointer-events:none}aside{padding:15px;max-height:430px;overflow:auto;border-left:1px solid #dce6df}aside button{display:block;width:100%;text-align:left;background:white;border:0;border-bottom:1px solid #e5ece7;padding:12px 0;color:#203b2c;font-size:11px;cursor:pointer}small{display:block;margin:5px 0;color:#5b7465}i{display:block;background:#97c8b6;height:4px;border-radius:3px}.footnote{padding:0 15px}@media(max-width:800px){.map-layout{grid-template-columns:1fr}aside{max-height:180px}.map-heading{flex-wrap:wrap}.map-heading select{max-width:100%}}
+</style>

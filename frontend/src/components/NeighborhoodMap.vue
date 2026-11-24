@@ -1,6 +1,6 @@
 <template>
   <div :class="['neighborhood',{compact,'map-only':mapOnly}]">
-    <div v-if="trafficReady && !mapOnly" class="impression-banner"><div><small>模拟曝光机会</small><strong data-testid="total-impressions" :style="campaign?{color:attitudeColor(totalAttitude)}:{}">{{ number(totalImpressions) }}</strong></div><p>人群经过 + 车内人数的曝光机会<br>不是实测观看或去重人数</p><span>此刻 {{ visibleVehicles.length }} 辆车 · {{ visible.length }} 个行人样本</span></div>
+    <div v-if="trafficReady && !mapOnly" class="impression-banner"><div><small>模拟曝光机会</small><strong data-testid="total-impressions" :style="campaign?{color:attitudeColor(totalAttitude)}:{}">{{ number(totalImpressions) }}</strong></div><p>人群经过 + 车内人数的曝光机会<br>不是实测观看或去重人数</p><span>此刻 {{ visibleVehicles.length }} 个车辆样本 · {{ visible.length }} 个行人样本</span></div>
     <div v-if="campaign && !mapOnly" class="map-attitude" :style="{color:attitudeColor(totalAttitude)}"><b>{{ attitudeMetric==='interest'?'兴趣程度':'好感度' }} {{ totalAttitude==null?'未知':totalAttitude.toFixed(1)+'/100' }}</b><span v-if="!compact">有评分的曝光权重 {{ number(ratedWeight) }} / {{ number(totalImpressions) }} · 非实测</span><span v-else>模型估计</span></div>
     <div class="walk-stats"><span>此刻 {{ visible.length }} 个{{ trafficReady?'步行样本':'代表' }}在场</span><span>本小时 {{ trips.length }} 次{{ trafficReady?"步行样本":"代表" }}出行</span><span>步行离开 {{ departures }} 次 · 交通接续 {{ trips.length-departures }} 次</span></div>
     <svg :viewBox="mapViewBox" class="world-map" role="img" aria-label="周边街区步行仿真：住宅、商店、公园、场所与步行出口">
@@ -16,7 +16,7 @@
       <g v-for="place in network.places.filter(p=>!network.geographic||p.kind!=='assumption')" :key="place.id" class="place"><circle :cx="node(place.node).x" :cy="node(place.node).y" :r="place.kind==='boundary'?8:4" :class="place.kind"/><text v-if="!network.geographic || place.kind==='boundary' || place.id==='venue'" :x="node(place.node).x" :y="node(place.node).y+(place.kind==='boundary'?27:-16)" :text-anchor="node(place.node).x<50?'start':node(place.node).x>950?'end':'middle'">{{ place.kind==='boundary'?'↗ ':'' }}{{ place.label }}</text></g>
       <g class="trails" v-if="showTrails || selectedAgent!=null"><path v-for="a in routeAgents" :key="a.id" :d="routePath(a.journey)" fill="none" :stroke="a.color" :stroke-width="isSelected(a)?3:1.4" :opacity="isSelected(a) ? .8 : .2" stroke-dasharray="4 5"/></g>
       <g v-for="car in visibleVehicles" :key="car.id" class="vehicle-node" :data-vehicle="car.id" :data-kind="car.kind" :transform="`translate(${car.position.x},${car.position.y}) rotate(${car.position.angle})`">
-        <title>{{ car.label }} · 假设 {{ car.occupants }} 人 · {{ car.speed_kmh }} km/h</title><rect :x="-car.length/2" y="-7" :width="car.length" height="14" rx="4" :fill="car.color" stroke="#e8f0f4" stroke-width=".7"/><rect :x="car.length/2-9" y="-5" width="5" height="10" rx="1" fill="#274557"/><path v-if="car.kind==='bus'" :d="`M${-car.length/2+5} -4h18m-18 8h18`" stroke="#335c68" stroke-width="2"/><rect v-if="car.kind==='taxi'" x="-3" y="-3" width="6" height="6" rx="1" fill="#fff0a8"/><path :d="`M${-car.length/2+4} -8h5m-5 16h5m${car.length-18} -16h5m-5 16h5`" stroke="#080f18" stroke-width="2"/>
+        <title>{{ car.label }} · 代表 {{ car.represented_vehicles || 1 }} 辆车 · 假设每车 {{ car.occupants }} 人 · {{ car.speed_kmh }} km/h</title><rect :x="-car.length/2" y="-7" :width="car.length" height="14" rx="4" :fill="car.color" stroke="#e8f0f4" stroke-width=".7"/><rect :x="car.length/2-9" y="-5" width="5" height="10" rx="1" fill="#274557"/><path v-if="car.kind==='bus'" :d="`M${-car.length/2+5} -4h18m-18 8h18`" stroke="#335c68" stroke-width="2"/><rect v-if="car.kind==='taxi'" x="-3" y="-3" width="6" height="6" rx="1" fill="#fff0a8"/><path :d="`M${-car.length/2+4} -8h5m-5 16h5m${car.length-18} -16h5m-5 16h5`" stroke="#080f18" stroke-width="2"/>
       </g>
       <g v-for="a in visible" :key="a.id" class="agent-node" :data-agent="a.id" :data-stage="a.position.stage" :transform="`translate(${a.position.x},${a.position.y})`" tabindex="0" role="button" :aria-label="`${a.name} ${a.position.activity}`" @click="selectActor(a)" @keydown.enter="selectActor(a)">
         <title>{{ a.name }} · {{ a.position.activity }} · {{ a.journey.mode_label }}</title>
@@ -87,6 +87,10 @@ const selectedPosition=computed(()=>sampleJourney(selectedTrip.value,props.minut
 const watching=a=>['watch','interest'].includes(a.reaction)&&Math.abs(props.minute-a.journey.encounter?.minute)<(a.dwell_seconds||0)/60
 </script>
 <style scoped>
+@keyframes actor-arrival{from{opacity:0}to{opacity:1}}
+.agent-node,.vehicle-node{animation:actor-arrival .22s ease-out}
+@media(prefers-reduced-motion:reduce){.agent-node,.vehicle-node{animation:none}}
+
 .neighborhood.map-only{display:flex;flex-direction:column;background:#f7f9f9}
 .neighborhood.map-only .world-map{flex:1 1 0;width:100%;height:0;min-height:0;aspect-ratio:auto}
 .neighborhood.map-only .map-attribution{flex-shrink:0;line-height:1.6;padding:7px 10px;font-size:8px;border-top:1px solid #e7ece9;max-height:none}

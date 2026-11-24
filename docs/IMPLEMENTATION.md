@@ -693,9 +693,44 @@ GET `/api/planning/campaigns` 列出已完成实验；POST `/{project}/plan` 的
 
 规划页上传入口使用FilteredFrames（表名语义匹配也支持filtered_frames），导入完成立即调用geo-inventory解析所有屏幕GEOM并分页展示ID、原地址、坐标和异常。用户选定屏幕后依次查证地图、生成本地画像、生成全天地图人群预览，再进入带project/scene参数的模拟页；地图查证失败不会跳过。预览明确区别于已完成OASIS，仍可在模拟页启动正式运行。新库存重置旧广告和区域筛选，并更新项目URL；项目范围内的场景列表按屏幕ID过滤，选择持久化按项目隔离，不自动加载全局旧广告实验或旧运行。后台全库存补齐任务保持独立运行。
 
-### 三阶段线性工作流
+### 四阶段线性工作流
 
-`/planning` 按步骤显示独立内容：1 导入与参数设置；2 库存地点、内嵌场景、人群/广告态度分析及补齐任务；3 投资报告与导出。未上传有效库存或未填写预算/币种/周期不可进入第二步；未关联广告态度时可以进入第三步生成库存/预算基础报告，态度与未提供的回报假设保持未知。有部分直接模拟时报告明确标为阶段性，不冒称全库存完成。前进通过底部动作，顶部步骤只允许回退。第一步的配置按项目保存，刷新恢复设置但从第一步开始；原有报告在第一二步隐藏，不提前展示。修改设置后报告需重新计算。地点准备完成在第二步内更新场景，不再跳离流程；独立模拟页仍可继续使用。
+`/planning` 按步骤显示：1 导入数据与预算设置；2 广告设置；3 库存地点、人群/广告态度模拟与覆盖补齐；4 报告与投放建议。前进通过底部动作，顶部只允许回退。资料与现场照片分别折叠。第一步从真实库存自动填入区域字段；未修改的默认区域不排除缺失字段的行。第二步按项目保存品牌、文案、图片与车流估算，第三步直接读取，不能通过旧弹窗覆盖项目广告。
+
+`/api/planning/{pid}/ad-setup` 保存广告设置；`creative` 上传最大8MB的PNG/JPEG/WebP，`creative/analyze` 调用视觉模型提取观察描述，失败仍保留图片并提示手动描述。视觉观察作为独立的 `creative_observation` 进入广告研究与人群态度分析，不冒充品牌新闻。
+
+`traffic-estimate` 每批最多12块屏幕，按下文核心区域协议估算；第二步可逐区或批量执行。结果在广告实验创建时快照，人工覆盖优先，未知地点明确使用默认情景。
+
+没有完成广告实验也允许进入第四步生成库存/预算基础报告，态度与未提供的回报假设保持未知。全库存长任务按进度断点保存；新增设置不会篡改已完成实验。修改广告后需在第三步重新执行态度分析，再更新报告。
 
 
-报告按钮修复：仅计算提交期间禁用，不再以缺少 campaign_id 将流程永久锁死。没有广告实验时显示基础报告说明，有完成证据则生成对应效果报告。广告实验与待完成任务按project_id隔离存储，进入第二步恢复并轮询；完成事件同步父页面、URL和工作流草稿，返回/刷新不丢失关联。浏览器回归覆盖无实验报告、零覆盖不填伪分、已完成pending任务恢复和项目关联持久化。
+### 核心区域24小时车流
+
+车流估算升级为schema_version=2。按屏幕ID稳定排序，以首个未归组屏幕为中心，将400米内屏幕归入同一核心区域；此分组是模拟范围，不是行政区、路网分区或互斥交通统计区。多个范围可能重叠，不相加作城市总量。测试库存144块屏幕形成42个核心区域。
+
+每个区域由LLM独立返回当地普通工作日0–23小时的24项中心估计、上下界及区域理由。严格拒绝缺失/重复小时、错误ID、负值、无序区间和混合null。完整未知小时为三个null，不能自动补零；旧单点数据不自动扩展成24小时。结果按项目保存，同区域的屏幕共享区域数据。可视化含最多四区曲线对比、当前区域区间阴影、42区热力表、小时滑块及24项明细；模型区间不是统计置信区间。
+
+新曲线回放直接按当地小时取值，不再叠加早晚高峰或节日activity_factor。普通工作日模板逐日重复，不是假定未来每个日期都相同的实测预测。每小时最多3000个带整数权重的车辆样本，不截断区域预测量；未知小时和未估算区域明确回退默认情景。手动统一基准/旧数据仍沿用原时段系数。hourly元数据记录requested_vehicles、flow_source、absolute_hourly和实际生成vehicles，避免路网未支持的车辆被当作实际完成轨迹。
+
+
+### 路网与历史计数约束（method_version=3）
+
+上一版仅用经纬度和库存文本。当前通过Mapricot读取600米地图窗口，在400米圆形边界计算可驾车道路的驶入门户，按道路/交点/层级去重，排除已知禁止车辆、私有道路和单向驶出方向。图形简化、权限和单向未知仍会影响入口计数，不是导航或交通实测。LLM对每条入口道路估算所有入口的日进入次数及区间，再提供24小时权重；代码将道路日进入次数相加后归一化分配，按最大余数法取整保留全天总数。不会将内部连续路段计数反复累加。
+
+对反向地理编码确认的旧金山区域，使用已核验的SFCTA CMP 2025 Attachment A3-1官方CSV快照（42条方向性断面日均计数，原始链接保留在`data/sfcta_2025_counts.json`）。仅匹配地图入口道路名称；没有测站经纬度，不声称是最近测站或同一断面。这些是2025年的方向性工作日日流量参考，不是2026年实时交通。其他城市不借用旧金山统计；无匹配参考时只作路网推测。所有计数ID引用必须来自该道路的候选集。展示入口道路、参考年份/路段/方向、迁移假设和公式。首轮升级前的估算快照保存在项目`traffic_estimates_before_road_evidence`以供审计。仍未完成现场校准，不保证比旧模型更准确。
+
+取消预测3000辆/小时的硬截断；生成至多3000条车辆样本路径，整数`represented_vehicles`合计保持目标车流。曝光机会按`occupants * represented_vehicles`累计，`units`同样加权。无可用路径造成的缺失不伪造为成功。UI区分样本数量与车流数，未运行过的新估算不改写历史广告实验。
+
+### Complete screen investment report (2026-11-23)
+
+The UI now defaults to `investment.complete_report=true`. Missing screen attitudes are individually projected by the configured LLM from the saved creative, exact screen fields, coordinates, scores and saved regional context. Predictions are validated, cached by input/model/prompt hash, and explicitly separated from direct simulation coverage. Existing direct scores and observation hours take priority. Without direct events, the report labels a 24-hour inventory-normalized forecast rather than inventing an original simulation period.
+
+The adaptive all-screen trial policy has no fixed budget utilization target. It uses a small equal trial seed plus cost/importance/region-adjusted weighted allocation, stopping at eligibility, capacity, concentration and objective constraints, and accounts in integer cents. It respects eligibility, full-SOT inventory capacity and per-screen budget caps. This is a continuous-SOT budget envelope requiring DSP minimum-purchase confirmation; the original discrete-SOT policy remains selectable. Infeasible budget/capacity constraints are reported rather than bypassed.
+
+Missing ROI assumptions in this mode use explicitly disclosed demonstration values: order value 100 in the budget currency, margin 45%, incrementality 25%, and 0.05/0.1/0.2 orders per thousand inventory exposures. Existing user assumptions take priority. ROI can be negative, is not inferred from attitude, and is not a revenue promise. Excel exports include projection provenance and cached low/base/high ROI formulas.
+
+The report automatically recovers completed experiments only when creative fields and image identity match; same-ID/coordinate results from the same experiment can be recovered across imported copies of the workbook. Coverage validates readable artifacts, detects exited/zombie workers, reuses completed same-location OASIS routes and retries missing screens. Saving an unchanged advertisement no longer clears the link. Background completion updates the report through polling; forecasts never become direct coverage by relabeling.
+
+The investment map uses real GEOM coordinates with Mapricot streets, area-proportional expenditure circles, co-located screen grouping, regional totals and a coordinate-only fallback if tiles fail. Areas are 400m scenario groups, not administrative boundaries.
+
+Optional per-screen CSV calibration accepts test/control exposures and orders, order value, margin, extra execution cost, currency, source and matched period. Incremental rates use the test-minus-control per-exposure difference; incrementality is not applied twice. ROI includes extra execution costs, which are reserved from the total budget. Uncalibrated screens show scenario ranges instead of pretending repeated uniform assumptions are screen-specific measured returns. Equal CPM and equal assumptions can legitimately yield equal ROI; no random variation or attitude-to-conversion mapping is used.

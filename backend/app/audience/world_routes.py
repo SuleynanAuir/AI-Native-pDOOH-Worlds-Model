@@ -169,7 +169,8 @@ def start():
             if old['status'] in ('initializing','running','paused','queued'):
                 try:
                     old_pid=read_json(path.parent/'process.json')['pid']
-                    os.kill(old_pid,0)
+                    from .process_health import alive
+                    if not alive(old_pid):continue
                 except (OSError,TypeError):continue
                 if old_pid:raise ValueError('已有 OASIS 运行，请先停止或等待完成')
         rid=uuid.uuid4().hex;path=root()/rid;path.mkdir()
@@ -180,6 +181,16 @@ def start():
             process=subprocess.Popen([python,str(backend/'scripts/run_audience_world.py'),str(path.resolve())],stdout=log,stderr=log,cwd=path.resolve(),start_new_session=True)
         # PID stored separately avoids racing the worker's atomic state updates.
         write_json(path/'process.json',{'pid':process.pid})
+        def reap():
+            code=process.wait()
+            if code:
+                try:
+                    latest=read_json(path/'state.json')
+                    if latest['status'] not in ('completed','failed','stopped'):
+                        latest.update(status='failed',message=f'OASIS工作进程退出（状态 {code}），请检查独立环境；已完成屏幕保留')
+                        write_json(path/'state.json',latest)
+                except (OSError,ValueError):pass
+        threading.Thread(target=reap,daemon=True).start()
     return jsonify(success=True,data=state),202
 
 
@@ -419,7 +430,8 @@ def comparison_preview():
 @world_bp.get('/comparison-scenes/<identifier>')
 def comparison_base(identifier):
     from .comparison import directory
-    return jsonify(success=True,data=read_json(directory(comparison_root(),identifier)/'base.json'))
+    from .replay_response import replay_response
+    return replay_response(directory(comparison_root(),identifier)/'base.json')
 
 
 @world_bp.get('/comparison-scenes/<identifier>/hours/<int:round_num>')
@@ -427,7 +439,8 @@ def comparison_hour(identifier,round_num):
     from .comparison import directory
     path=directory(comparison_root(),identifier);meta=read_json(path/'meta.json')
     if not 1<=round_num<=meta['rounds']:raise ValueError('该场景没有此时段，不复用其他小时记录')
-    return jsonify(success=True,data=read_json(path/f'hour-{round_num}.json'))
+    from .replay_response import replay_response
+    return replay_response(path/f'hour-{round_num}.json')
 
 
 @world_bp.get('/runs/<rid>/summary')
@@ -449,7 +462,20 @@ def campaign_presets():
 @world_bp.post('/campaign-experiments')
 def create_campaign_experiment():
     from .campaign import validate_request,start_job
-    spec=validate_request(request.get_json(silent=True),comparison_root())
+    data=request.get_json(silent=True)
+    spec=validate_request(data,comparison_root())
+    if data.get('project_id'):
+        with store.locked(current_app.config['UPLOAD_FOLDER'],data['project_id']) as (_,project):
+            setup=project.get('ad_setup',{})
+            if not setup.get('campaign'):raise ValueError('请先完成第二步广告设置')
+            spec['campaign']=dict(setup['campaign'])
+            creative=setup.get('creative')
+            if creative:
+                spec['campaign']['creative_asset']={k:creative[k] for k in ('id','name','url')}
+                if creative.get('description'):spec['campaign']['creative_observation']=creative['description']
+            spec['traffic_estimates']=setup.get('traffic_estimates',{})
+            spec['traffic_manual']=setup.get('vehicles_per_hour')
+            spec['project_id']=data['project_id']
     return jsonify(success=True,data=start_job(campaign_root(),comparison_root(),root(),spec,current_app.config)),202
 
 
@@ -469,6 +495,12 @@ def campaign_experiment_status(identifier):
 def campaign_scene_path(identifier,sid):
     from .campaign import job_dir,valid_id
     p=job_dir(campaign_root(),identifier);state=read_json(p/'state.json')
+    if state['spec'].get('coverage_only'):
+        from .coverage import path as coverage_path
+        folder=coverage_path(current_app.config['UPLOAD_FOLDER'],state['spec']['project_id'],identifier)
+        from .replay_response import completed
+        if valid_id(sid) not in completed(folder/'state.json'):raise ValueError('本轮该场景尚未完成24小时模拟')
+        return folder/'scenes'/sid
     if state['status']!='completed':raise ValueError('广告实验尚未完整完成，不能应用部分场景')
     if valid_id(sid) not in state['spec']['scene_ids']:raise ValueError('此地点未参与该广告实验，请重新生成')
     return p/'scenes'/sid
@@ -476,14 +508,17 @@ def campaign_scene_path(identifier,sid):
 
 @world_bp.get('/campaign-experiments/<identifier>/scenes/<sid>')
 def campaign_scene(identifier,sid):
-    return jsonify(success=True,data=read_json(campaign_scene_path(identifier,sid)/'base.json'))
+    from .replay_response import replay_response
+    return replay_response(campaign_scene_path(identifier,sid)/'base.json')
 
 
 @world_bp.get('/campaign-experiments/<identifier>/scenes/<sid>/hours/<int:round_num>')
 def campaign_scene_hour(identifier,sid,round_num):
     p=campaign_scene_path(identifier,sid)
-    if not 1<=round_num<=read_json(p/'base.json')['meta']['rounds']:raise ValueError('该场景没有此时段')
-    return jsonify(success=True,data=read_json(p/f'hour-{round_num}.json'))
+    from .replay_response import replay_response,rounds
+    if not 1<=round_num<=rounds(p/'base.json'):raise ValueError('该场景没有此时段')
+    from .replay_repair import campaign_hour
+    return replay_response(p/f'hour-{round_num}.json',repair=lambda:campaign_hour(p,round_num,current_app.config['UPLOAD_FOLDER']))
 
 
 @world_bp.post('/campaign-experiments/<identifier>/traffic')

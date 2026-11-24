@@ -1,0 +1,303 @@
+{
+  "source_url": "https://www.sfcta.org/sites/default/files/2025-12/SFCTA_CMP2025_AttA3-1_Average_Weekday_Traffic_Volumes_at_Mid-block_Count_Locations.csv",
+  "report_url": "https://www.sfcta.org/reports/congestion-management-program-2025",
+  "title": "SFCTA CMP 2025 Attachment A3-1",
+  "metric": "average weekday mid-block directional daily traffic",
+  "retrieved_at": "2026-11-23",
+  "counts": [
+    {
+      "id": "SFCTA2025-1",
+      "location": "19th Ave Between Moraga And Noriega",
+      "direction": "NB",
+      "daily_vehicles": 30665,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-2",
+      "location": "19th Ave Between Moraga And Noriega",
+      "direction": "SB",
+      "daily_vehicles": 33713,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-3",
+      "location": "1St St Between Mission And Minna",
+      "direction": "SB",
+      "daily_vehicles": 19840,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-4",
+      "location": "3rd St Between Fitzgerald And Gilman",
+      "direction": "NB",
+      "daily_vehicles": 8425,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-5",
+      "location": "3rd St Between Fitzgerald And Gilman",
+      "direction": "SB",
+      "daily_vehicles": 8537,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-6",
+      "location": "3rd St Between Minna And Howard",
+      "direction": "NB",
+      "daily_vehicles": 25389,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-7",
+      "location": "4th St Between Minna And Howard",
+      "direction": "SB",
+      "daily_vehicles": 16513,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-8",
+      "location": "7th St Between Howard And Folsom",
+      "direction": "NB",
+      "daily_vehicles": 13435,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-9",
+      "location": "8th St Between Tehama And Celementina",
+      "direction": "SB",
+      "daily_vehicles": 11380,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-10",
+      "location": "Columbus Ave Between Broadway And Pacific",
+      "direction": "NB",
+      "daily_vehicles": 9092,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-11",
+      "location": "Columbus Ave Between Broadway And Pacific",
+      "direction": "SB",
+      "daily_vehicles": 10525,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-12",
+      "location": "Fremont St Between Mission And Natoma",
+      "direction": "NB",
+      "daily_vehicles": 20736,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-13",
+      "location": "Junipero Serra Blvd Between Font And Brotherhood Ramps",
+      "direction": "NB",
+      "daily_vehicles": 40329,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-14",
+      "location": "Junipero Serra Blvd Between Font And Brotherhood Ramps",
+      "direction": "SB",
+      "daily_vehicles": 48147,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-15",
+      "location": "Mission St Between 24th And 25th",
+      "direction": "NB",
+      "daily_vehicles": 3305,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-16",
+      "location": "Mission St Between 24th And 25th",
+      "direction": "SB",
+      "daily_vehicles": 6048,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-17",
+      "location": "San Jose Ave Between Randall And Saint Mary'S",
+      "direction": "NB",
+      "daily_vehicles": 17729,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-18",
+      "location": "San Jose Ave Between Randall And Saint Mary'S",
+      "direction": "SB",
+      "daily_vehicles": 18367,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-19",
+      "location": "The Embarcadero Between Broadway And Washington",
+      "direction": "NB",
+      "daily_vehicles": 13699,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-20",
+      "location": "The Embarcadero Between Broadway And Washington",
+      "direction": "SB",
+      "daily_vehicles": 12574,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-21",
+      "location": "Van Ness Ave Between California And Pine",
+      "direction": "NB",
+      "daily_vehicles": 14102,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-22",
+      "location": "Van Ness Ave Between California And Pine",
+      "direction": "SB",
+      "daily_vehicles": 15355,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-23",
+      "location": "Bay St Between Leavenworth And Columbus",
+      "direction": "EB",
+      "daily_vehicles": 7868,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-24",
+      "location": "Bay St Between Leavenworth And Columbus",
+      "direction": "WB",
+      "daily_vehicles": 6283,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-25",
+      "location": "Broadway Tunnel Between Larkin And Powell",
+      "direction": "EB",
+      "daily_vehicles": 17697,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-26",
+      "location": "Broadway Tunnel Between Larkin And Powell",
+      "direction": "WB",
+      "daily_vehicles": 17963,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-27",
+      "location": "Bryant St Between 4th And 3rd",
+      "direction": "EB",
+      "daily_vehicles": 20429,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-28",
+      "location": "Bush St Between Grant And Kearny",
+      "direction": "EB",
+      "daily_vehicles": 14468,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-29",
+      "location": "Bush St Between Van Ness And Polk",
+      "direction": "EB",
+      "daily_vehicles": 17042,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-30",
+      "location": "Cesar Chavez St Between York And Hampshire",
+      "direction": "EB",
+      "daily_vehicles": 21735,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-31",
+      "location": "Cesar Chavez St Between York And Hampshire",
+      "direction": "WB",
+      "daily_vehicles": 23061,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-32",
+      "location": "Fell St Between Divisadero And Scott",
+      "direction": "WB",
+      "daily_vehicles": 26765,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-33",
+      "location": "Geary Blvd Between Laguna And Gough",
+      "direction": "EB",
+      "daily_vehicles": 12770,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-34",
+      "location": "Geary Blvd Between Laguna And Gough",
+      "direction": "WB",
+      "daily_vehicles": 12328,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-35",
+      "location": "Golden Gate Ave Between Van Ness And Polk",
+      "direction": "EB",
+      "daily_vehicles": 5574,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-36",
+      "location": "Harrison St Between 4th And 3rd",
+      "direction": "WB",
+      "daily_vehicles": 16717,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-37",
+      "location": "Lombard St Between Broderick And Divisadero",
+      "direction": "EB",
+      "daily_vehicles": 23442,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-38",
+      "location": "Lombard St Between Broderick And Divisadero",
+      "direction": "WB",
+      "daily_vehicles": 24097,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-39",
+      "location": "Oak St Between Divisadero And Scott",
+      "direction": "EB",
+      "daily_vehicles": 26393,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-40",
+      "location": "Pine St Between Grant And Kearny",
+      "direction": "WB",
+      "daily_vehicles": 14469,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-41",
+      "location": "Pine St Between Van Ness And Polk",
+      "direction": "WB",
+      "daily_vehicles": 18612,
+      "year": 2025
+    },
+    {
+      "id": "SFCTA2025-42",
+      "location": "Turk St Between Van Ness And Polk",
+      "direction": "WB",
+      "daily_vehicles": 7792,
+      "year": 2025
+    }
+  ]
+}

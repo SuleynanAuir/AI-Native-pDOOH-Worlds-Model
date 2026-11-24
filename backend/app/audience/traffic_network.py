@@ -64,12 +64,15 @@ def simplify_route(points,junctions):
     kept.append(points[-1]);return kept,kept_junctions
 
 
-def connected_vehicles(slot,seed,base_count,network,policies=(),pool=None):
+def connected_vehicles(slot,seed,base_count,network,policies=(),pool=None,absolute_count=False):
     from .traffic import VEHICLES
     pool=route_pool(network,seed,policies) if pool is None else pool
     if not pool or base_count==0:return []
     factor={'quiet':.18,'morning':1.5,'evening':1.6,'night':1.2,'daytime':1.}.get(slot.get('period'),1.)
-    count=min(9000,round(base_count*factor*slot.get('activity_factor',1.)))
+    target=max(0,round(base_count if absolute_count else base_count*factor*slot.get('activity_factor',1.)))
+    count=min(3000,target)
+    # Each path is a stratified traffic sample; integer weights preserve volume.
+    weight,remainder=divmod(target,max(1,count))
     rng=random.Random(f'connected-vehicles:{seed}:{slot["round"]}');result=[]
     peak=slot.get('period') in ('morning','evening')
     for i in range(count):
@@ -92,7 +95,7 @@ def connected_vehicles(slot,seed,base_count,network,policies=(),pool=None):
         points[-1]['activity']='驶出当前行程范围'
         # Keep positions on supplied road geometry. Lanes/turn restrictions need
         # further map/traffic data; no claim of collision-free microscopic physics.
-        result.append(dict(id=f'v-{slot["round"]}-{i}',**{k:v for k,v in definition.items() if k!='occupancy'},occupants=rng.randint(*definition['occupancy']),speed_kmh=round(speed,2),direction=1,
+        result.append(dict(id=f'v-{slot["round"]}-{i}',represented_vehicles=weight+(i<remainder),**{k:v for k,v in definition.items() if k!='occupancy'},occupants=rng.randint(*definition['occupancy']),speed_kmh=round(speed,2),direction=1,
             journey=dict(start_minute=points[0]['minute'],end_minute=points[-1]['minute'],waypoints=points,purpose=' → '.join(route['roads'][:4]),distance_m=round(route['length'])),
             source='OSM / Mapricot 地图连通道路 + 合成到达/速度/路口等待；不是实测车流，未校准车道与避碰'))
     return result

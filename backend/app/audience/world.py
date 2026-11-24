@@ -50,7 +50,10 @@ def scene(population=100, rounds=4, seed=42, screens=None, total_population=1000
     return result
 
 
-def read_json(path): return json.loads(Path(path).read_text(encoding='utf-8'))
+def read_json(path):
+    path=Path(path)
+    try:return json.loads(path.read_text(encoding='utf-8'))
+    except (json.JSONDecodeError,UnicodeDecodeError):raise ValueError(f'数据文件 {path.name} 为空或损坏，请重新生成该场景') from None
 
 def write_json(path,value):
     path=Path(path);temp=path.with_suffix('.tmp')

@@ -1,38 +1,41 @@
 <template>
   <main class="planning">
-    <header><strong>VIOOH <span>/ SCREEN PLANNING</span></strong><small>三阶段投放工作流</small></header>
-    <section class="hero"><small>01 数据与设置 → 02 人群模拟分析 → 03 报告与投放建议</small><h1>让每一块屏幕的选择，都有依据。</h1><p>结合原始库存、现场照片与地区资料，比较不同观众的观看机会，在预算内选择屏幕与 SOT。</p></section>
+    <header><strong>VIOOH <span>/ SCREEN PLANNING</span></strong><small>四阶段投放工作流</small></header>
+    <section class="hero"><small>01 数据与设置 → 02 广告设置 → 03 人群模拟分析 → 04 报告与投放建议</small><h1>让每一块屏幕的选择，都有依据。</h1><p>结合原始库存、现场照片与地区资料，比较不同观众的观看机会，在预算内选择屏幕与 SOT。</p></section>
     <nav class="workflow-steps" aria-label="工作流程"><button v-for="(label,i) in stepLabels" :key="label" :class="{current:step===i+1,done:step>i+1}" :aria-current="step===i+1?'step':undefined" :disabled="i+1>=step||busy" @click="goStep(i+1)"><span>{{ i+1 }}</span>{{ label }}</button></nav>
-    <p v-if="error" class="error" role="alert">{{ error }}</p><p v-if="notice" class="notice" role="status">{{ notice }}</p>
-    <section v-show="step===1" class="panel import-panel"><div><h2>01 / 导入原始库存</h2><p>导入后从 FilteredFrames（兼容 filtered_frames）提取每块屏幕的位置，再进入人群模拟。</p></div><div class="actions"><select v-model="sourceSheet" aria-label="库存工作表"><option>FilteredFrames</option></select><label class="button">上传 Excel<input class="file" type="file" accept=".xlsx" :disabled="busy" @change="importWorkbook"></label><button :disabled="busy" @click="loadSample">使用 data/test.xlsx 测试</button><span v-if="project">{{ project.filename }} · {{ project.frames.length }} 条</span></div></section>
+    <p v-if="error" class="error" role="alert">{{ error }}</p><p v-if="notice" class="notice" role="status">{{ notice }}</p><p v-if="progress" role="status">{{ progress }}</p>
+    <section v-show="step===1" class="panel import-panel"><div><h2>01 / 导入原始库存</h2><p>导入后从 FilteredFrames（兼容 filtered_frames）提取每块屏幕的位置，再进入人群模拟。</p></div><div class="actions"><div class="import-source"><strong v-if="project" class="import-filename">{{ project.filename }}</strong><select v-model="sourceSheet" aria-label="库存工作表"><option>FilteredFrames</option></select></div><label class="button">上传 Excel<input class="file" type="file" accept=".xlsx" :disabled="busy" @change="importWorkbook"></label><button :disabled="busy" @click="loadSample">使用 data/test.xlsx 测试</button><span v-if="project" class="import-success" role="status">✓ 导入成功 · {{ project.frames.length }} 块屏幕</span></div></section>
     <template v-if="project">
-      <section v-if="step===2" class="simulation-stage" aria-label="第二步 人群模拟分析">
-        <h2>第二步 · 人群模拟分析</h2><p>先查证屏幕地点、生成人群场景，再在场景中设置广告并完成态度分析。未完成的屏幕会在报告中标为待补证据。</p>
+      <AdSetup v-if="step===2" :key="project.id" :project="project" @back="goStep(1)" @saved="adSaved" />
+      <section v-if="step===3" class="simulation-stage" aria-label="第三步 人群模拟分析">
+        <h2>第三步 · 人群模拟分析</h2><p>先查证屏幕地点、生成人群场景，使用第二步的广告设置完成态度分析。全部屏幕完成本轮全天模拟后，才开放第四步报告。</p>
         <InventoryLocations :key="project.id" :project-id="project.id" embedded @ready="preparedScene=$event" />
-        <SceneComparison :key="project.id+preparedScene" :project-id="project.id" :initial-scene="preparedScene" @campaign="acceptCampaign" />
-        <CoverageTask :project-id="project.id" :campaign-id="options.campaign_id" @completed="evidenceChanged=true" />
-        <div class="stage-actions"><button :disabled="busy" @click="goStep(1)">← 返回数据与设置</button><button class="next-step" :disabled="busy" @click="finishAnalysis">{{ busy?'正在生成报告…':'生成屏幕分析报告 →' }}</button></div>
-        <p v-if="!options.campaign_id">尚未关联已完成的广告态度分析。现在可生成库存与预算基础报告；好感、兴趣等缺失项会标为未知。也可在「广告设置」中完成分析后更新报告。</p>
+        <SceneComparison ref="simulationPlayer" @request-start="simulationTask?.start()" :simulation-complete="simulationReady" @edit-ad="goStep(2)" :key="project.id" :project-id="project.id" :initial-scene="preparedScene" @campaign="acceptCampaign" />
+        <CoverageTask ref="simulationTask" @starting="simulationPlayer?.startPlayback($event)" @started="simulationPlayer?.refresh()" @start-failed="simulationPlayer?.stopPlayback()" :project-id="project.id" :campaign-id="options.campaign_id" @completed="evidenceChanged=true" @status="simulationReady=$event.ready" />
+        <p v-if="simulationReady" class="simulation-complete" role="status">✓ 本轮 24 小时模拟完成，已停止。可以进入下一步「生成屏幕分析报告」。</p>
+        <div class="stage-actions"><button :disabled="busy" @click="goStep(2)">← 返回广告设置</button><button class="next-step" :disabled="busy||!simulationReady" @click="finishAnalysis">{{ busy?'正在生成报告…':'生成屏幕分析报告 →' }}</button></div>
+        <p v-if="!options.campaign_id">请在本步骤启动本轮全天模拟。所有屏幕从00:00完成24小时后，才能生成第四步报告；历史回放不作为本轮结果。</p>
       </section>
-      <div class="workspace" :class="{'setup-stage':step===1,'report-stage':step===3}" v-show="step!==2">
+      <div class="workspace" :class="{'setup-stage':step===1,'report-stage':step===4}" v-show="(step===1||step===4)">
         <aside v-show="step===1" aria-label="第一步 参数设置">
-          <section class="panel"><details><summary>区域筛选与补充资料</summary><div class="fields"><label>国家 / ISO<input v-model="options.filters.country" placeholder="如 USA"></label><label>城市<input v-model="options.filters.city" placeholder="按原始表字段筛选"></label><label>媒体市场<input v-model="options.filters.market"></label><label>场所类型<input v-model="options.filters.venue"></label><label>POI<input v-model="options.filters.poi"></label></div>
-            <label>区域边界（可选 JSON）<input v-model="boundsText" placeholder="[最小纬度,最小经度,最大纬度,最大经度]"></label>
+          <section class="panel"><h2>区域信息</h2><p>已从 Excel 自动填入；默认包含全部屏幕。可编辑修改，多项请每行填写一项，留空表示不限。缺失资料不会推测补齐。</p><div class="fields"><label v-for="(label,key) in regionLabels" :key="key">{{ label }}<textarea v-model="options.filters[key]" rows="2" :aria-label="label" placeholder="表格未提供，可选填" /></label></div>
+          <details><summary>补充资料与高级筛选 · 可选</summary>
+            <label>库存坐标范围（自动提取，可修改 JSON）<input v-model="boundsText" placeholder="[最小纬度,最小经度,最大纬度,最大经度]"></label>
             <label>排除屏幕 ID（每行一个）<textarea v-model="excludedText" rows="2" /></label>
-            <h3>社会学资料 / 消费者调研 · 可选</h3><label>资料类型<select v-model="documentKind"><option value="regional">区域社会学资料</option><option value="consumer">消费者调研</option></select></label><label class="button">上传 PDF / TXT / MD<input class="file" type="file" multiple accept=".pdf,.txt,.md" :disabled="busy" @change="uploadDocuments"></label>
+            <details><summary>社会学资料 / 消费者调研 · 可选</summary><label>资料类型<select v-model="documentKind"><option value="regional">区域社会学资料</option><option value="consumer">消费者调研</option></select></label><label class="button">上传 PDF / TXT / MD<input class="file" type="file" multiple accept=".pdf,.txt,.md" :disabled="busy" @change="uploadDocuments"></label>
             <ul><li v-for="d in project.documents" :key="d.name">{{ d.name }} <strong v-if="d.truncated">（已截断至 60000 字符）</strong></li></ul>
-            <h3>现场照片 · 可选</h3><p>文件名使用屏幕 ID，或与 FRAMEIMAGEPATH 文件名一致；也可指定单块屏幕。图片只用于分析场景。</p>
+            </details><details><summary>现场照片 · 可选</summary><p>文件名使用屏幕 ID，或与 FRAMEIMAGEPATH 文件名一致；也可指定单块屏幕。图片只用于分析场景。</p>
             <label>关联屏幕 ID<input v-model="photoScreen" placeholder="批量按文件名关联时留空"></label><label class="button">上传现场照片<input class="file" type="file" multiple accept="image/png,image/jpeg,image/webp" :disabled="busy" @change="uploadPhotos"></label>
             <label>公开 HTTPS 图片 URL<input v-model="imageUrl" placeholder="需指定上方屏幕 ID"></label><button :disabled="busy || !photoScreen || !imageUrl" @click="addLink">关联图片链接</button>
             <details><summary>飞书图片</summary><p>文件夹链接不是图片。需可下载的图片文件 token，服务端配置 FEISHU_TENANT_ACCESS_TOKEN；或从飞书下载后上传。</p><label>文件 token<input v-model="feishuToken"></label><label>资源类型<select v-model="feishuKind"><option value="file">Drive 文件</option><option value="media">文档素材</option></select></label><button :disabled="busy || !photoScreen || !feishuToken" @click="addFeishu">获取并关联飞书图片</button></details>
             <p>已关联 {{ Object.keys(project.photos).length }} 张图片 · 已分析 {{ Object.keys(project.analyses).length }} 块屏幕</p>
             <label>多模态分析重点<textarea v-model="focus" rows="3" /></label><button :disabled="busy || !selectedIds.length" @click="analyzeSelected">分析勾选屏幕（{{ selectedIds.length }}）</button><p>批次逐块调用模型。先勾选重点候选屏幕，可控制调用量。无图片或资料时保留未知分项。</p>
-          </details></section>
-          <section class="panel"><h2>预算与投放条件</h2><div class="fields"><label>总预算<input v-model.number="options.budget" type="number" min="0.01" step="100"></label><label>预算币种<input v-model="options.currency" maxlength="3"></label><label>投放开始日期<input v-model="options.start_date" type="date"></label><label>投放天数（可留空）<input v-model.number="options.days" type="number" min="1" max="366"></label><label>预算估算天数<input v-model.number="options.planning_days" type="number" min="1" max="366"></label><label>库存曝光统计周期（天）<input v-model.number="options.impression_period_days" type="number" min="1" max="366"></label><label>DSP 费率（0–1）<input v-model.number="options.dsp_fee" type="number" min="0" max="1" step="0.01"></label><label>CPM 加价率<input v-model.number="options.cpm_markup" type="number" min="0" max="5" step="0.01"></label><label>SOT 步长<input v-model.number="options.sot_step" type="number" min="0.01" max="1" step="0.01"></label><label>最大 SOT<input v-model.number="options.max_sot" type="number" min="0.01" max="1" step="0.1"></label><label>同区域重复惩罚<input v-model.number="options.overlap_penalty" type="number" min="0" max="10" step="0.1"></label></div>
+          </details></details></section>
+          <section class="panel"><h2>预算与投放条件</h2><div class="fields"><label>总预算<input v-model.number="options.budget" type="number" min="0.01" step="100"></label><label>预算币种<input v-model="options.currency" maxlength="3"></label><label>投放开始日期<input v-model="options.start_date" type="date"></label><label>投放天数（可留空）<input v-model.number="options.days" type="number" min="1" max="366"></label></div><p>未填写日期或天数时输出预算级建议，默认按 30 天估算。</p><details><summary>费用、汇率与投放细节 · 默认即可</summary><div class="fields"><label>预算估算天数<input v-model.number="options.planning_days" type="number" min="1" max="366"></label><label>库存曝光统计周期（天）<input v-model.number="options.impression_period_days" type="number" min="1" max="366"></label><label>DSP 费率（0–1）<input v-model.number="options.dsp_fee" type="number" min="0" max="1" step="0.01"></label><label>CPM 加价率<input v-model.number="options.cpm_markup" type="number" min="0" max="5" step="0.01"></label><label>SOT 步长<input v-model.number="options.sot_step" type="number" min="0.01" max="1" step="0.01"></label><label>最大 SOT<input v-model.number="options.max_sot" type="number" min="0.01" max="1" step="0.1"></label><label>同区域重复惩罚<input v-model.number="options.overlap_penalty" type="number" min="0" max="10" step="0.1"></label></div>
             <p>无日期或天数时仅计算预算级建议。库存 IMPRESSIONS 按所填周期解释；默认 30 天，需按来源确认。</p>
             <label>汇率：1 单位原币 = 多少 USD（JSON）<textarea v-model="fxText" rows="3" placeholder='{"USD":1,"GBP":1.25}' /></label><div class="fields"><label>汇率来源<input v-model="options.fx_source" placeholder="来源 URL / 内部锁定报价"></label><label>汇率时点<input v-model="options.fx_date" type="date"></label></div>
             <label>替代方案不可用 ID（每行一个）<textarea v-model="alternativeText" rows="2" placeholder="留空则替代均衡方案投入最高的屏幕" /></label>
-          </section>
+          </details></section>
           <section class="panel"><InvestmentControls v-model="options" :campaigns="campaigns" :frames="project.frames" /></section>
 
           <section class="panel"><details><summary>库存六维评分 · 对照方案</summary><label>场景权重预设<select v-model="preset" @change="applyPreset"><option value="balanced">均衡 · 强调可见性、位置与市场</option><option value="roadside">道路 / 通勤 · 强调可见性</option><option value="retail">商业 / 购物 · 强调市场相关性</option></select></label>
@@ -41,7 +44,8 @@
 
           </details></section>
         </aside>
-        <div class="main-results" v-show="step===3" aria-label="第三步 报告与投放建议"><div class="stage-actions"><h2>第三步 · 屏幕报告与投放建议</h2><button @click="goStep(2)">← 返回人群分析</button></div><p v-if="result?.investment?.coverage.direct < result?.investment?.coverage.total" class="notice">阶段性报告：仍有屏幕待完成直接模拟；未将缺失态度当成实测效果。</p>
+        <div class="main-results" v-show="step===4" aria-label="第四步 报告与投放建议"><div class="stage-actions"><h2>第四步 · 屏幕报告与投放建议</h2><button @click="goStep(3)">← 返回人群分析</button></div><p v-if="result?.investment?.coverage.direct < result?.investment?.coverage.total" class="notice">本轮模拟结果发生变化，请重新检查完成状态。</p>
+          <CoverageTask v-if="result?.investment" :project-id="project.id" :campaign-id="result.investment.evidence.campaign_id" @completed="evidenceChanged=true" />
           <InvestmentDashboard v-if="result?.investment" :decision="result.investment" :currency="result.finance.currency" :source-sheet="project.source_sheet" :dirty="dirty" :busy="busy" @export="exportExcel('investment')" />
           <section class="panel"><div class="section-heading"><h2>库存与评分卡</h2><span>{{ filteredFrames.length }} 条匹配</span></div>
             <div class="toolbar"><input v-model="search" placeholder="搜索 ID、地点、场所" aria-label="搜索屏幕"><select v-model="availability" aria-label="候选筛选"><option value="all">全部记录</option><option value="eligible">可用候选</option><option value="rejected">已排除</option></select><button @click="selectPage">勾选当前页</button><button @click="selectedIds=[]">清除勾选</button></div>
@@ -62,7 +66,7 @@
           </template></section>
         </div>
       </div>
-      <div v-if="step===1" class="stage-actions"><span>保存当前设置后进入人群模拟，不会提前生成投资报告。</span><button class="next-step" :disabled="busy" @click="beginAnalysis">保存设置，进入第二步 →</button></div>
+      <div v-if="step===1" class="stage-actions"><span>保存当前设置后设置广告内容，不会提前生成投资报告。</span><button class="next-step" :disabled="busy" @click="beginAnalysis">保存设置，进入广告设置 →</button></div>
     </template>
     <section v-else class="empty"><h2>从真实库存开始</h2><p>可直接加载项目样本验证流程，再替换为正式投放库存。地区资料和照片可稍后补充，缺失证据会显式标注。</p></section>
   </main>
@@ -70,14 +74,17 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import api from '../api'
+import { inventoryRegion, inventoryBounds, resolveRegionFilters } from '../utils/inventorySetup'
+import AdSetup from '../components/AdSetup.vue'
 import SceneComparison from '../components/SceneComparison.vue'
 import InventoryLocations from '../components/InventoryLocations.vue'
 import CoverageTask from '../components/CoverageTask.vue'
 import InvestmentControls from '../components/InvestmentControls.vue'
 import InvestmentDashboard from '../components/InvestmentDashboard.vue'
-const step=ref(1),preparedScene=ref(''),stepLabels=['导入数据与设置','人群模拟分析','报告与投放建议']
+const simulationReady=ref(false),simulationPlayer=ref(null),simulationTask=ref(null)
+const step=ref(1),preparedScene=ref(''),stepLabels=['导入数据与设置','广告设置','人群模拟分析','报告与投放建议']
 const campaigns=ref([]),sourceSheet=ref('FilteredFrames')
-const investmentDefaults=()=>({objective:'effect',max_screen_share:.15,exploration_share:.2,threshold:60,weights:{exposure:20,favorability:15,interest:20,visibility:15,location:15,market:10,cost:5},roi:{order_value:'',margin:'',incrementality:'',rates:{low:'',base:'',high:''},overrides:{},source:''}})
+const investmentDefaults=()=>({complete_report:true,minimum_importance:40,objective:'effect',max_screen_share:.15,exploration_share:.2,threshold:60,weights:{exposure:20,favorability:15,interest:20,visibility:15,location:15,market:10,cost:5},roi:{order_value:'',margin:'',incrementality:'',rates:{low:'',base:'',high:''},overrides:{},calibration:{},source:''}})
 const project=ref(null),result=ref(null),busy=ref(false),error=ref(''),notice=ref(''),progress=ref('')
 const dimensions={exposure:'曝光潜力',visibility:'可见性',location:'位置价值',market:'市场相关性',cost:'成本效率',availability:'可用性'}
 const strategies={investment:'综合投资建议',balanced:'均衡方案',coverage:'覆盖优先',venue:'场所价值优先',exposure:'曝光优先',alternative:'替代方案',custom:'自定义目标'}
@@ -104,7 +111,9 @@ function applyPreset(){options.value.weights={...presets[preset.value]}}
 function selectPage(){selectedIds.value=[...new Set([...selectedIds.value,...pagedFrames.value.filter(f=>f.screen_id).map(f=>f.screen_id)])]}
 async function task(fn){if(busy.value)return;busy.value=true;error.value='';notice.value='';try{await fn()}catch(e){error.value=e.message||'操作失败'}finally{busy.value=false;progress.value=''}}
 function setProject(value,reset=false){project.value=value;try{localStorage.setItem('pdooh-planning-project',value.id)}catch{};evidenceChanged.value=true;if(reset){result.value=null;selectedIds.value=[];detailId.value=null;page.value=1;search.value='';availability.value='all'}}
-function resetImportedScope(){step.value=1;preparedScene.value='';options.value.campaign_id='';options.value.filters={country:'',city:'',market:'',venue:'',poi:''};boundsText.value='';excludedText.value='';alternativeText.value='';const u=new URL(window.location.href);u.searchParams.set('project',project.value.id);u.searchParams.delete('campaign');window.history.replaceState({},'',u)}
+const regionLabels={country:'国家 / ISO',city:'城市',market:'媒体市场',venue:'场所类型',poi:'POI'}
+function fillInventoryRegion(){options.value.filters=inventoryRegion(project.value.frames)}
+function resetImportedScope(){step.value=1;preparedScene.value='';options.value.campaign_id='';fillInventoryRegion();boundsText.value=inventoryBounds(project.value.frames);excludedText.value='';alternativeText.value='';const u=new URL(window.location.href);u.searchParams.set('project',project.value.id);u.searchParams.delete('campaign');window.history.replaceState({},'',u)}
 async function loadSample(){await task(async()=>{setProject((await api.post('/api/planning/sample',{source_sheet:sourceSheet.value})).data,true);resetImportedScope();notice.value='已加载实际样本。请输入自己的总预算；样本中的占位图不会用于现场分析。'})}
 async function importWorkbook(event){const file=event.target.files[0];if(!file)return;await task(async()=>{const form=new FormData();form.append('workbook',file);form.append('source_sheet',sourceSheet.value);setProject((await api.post('/api/planning/import',form,{headers:{'Content-Type':'multipart/form-data'}})).data,true);resetImportedScope()});event.target.value=''}
 async function uploadFiles(event,kind){const files=[...event.target.files];if(!files.length)return;await task(async()=>{const form=new FormData();files.forEach(file=>form.append(kind,file));if(kind==='photos')form.append('screen_id',photoScreen.value);else form.append('kind',documentKind.value);setProject((await api.post(`/api/planning/${project.value.id}/${kind}`,form,{headers:{'Content-Type':'multipart/form-data'}})).data);notice.value='证据已更新，请重新分析相关屏幕并计算方案。'});event.target.value=''}
@@ -112,22 +121,37 @@ const uploadPhotos=e=>uploadFiles(e,'photos'),uploadDocuments=e=>uploadFiles(e,'
 async function addLink(){await task(async()=>setProject((await api.post(`/api/planning/${project.value.id}/image-link`,{screen_id:photoScreen.value,url:imageUrl.value})).data))}
 async function addFeishu(){await task(async()=>setProject((await api.post(`/api/planning/${project.value.id}/feishu-image`,{screen_id:photoScreen.value,file_token:feishuToken.value,kind:feishuKind.value})).data))}
 async function analyzeSelected(){await task(async()=>{let done=0;const failures=[];for(const sid of selectedIds.value){progress.value=`分析 ${++done}/${selectedIds.value.length}`;const response=await api.post(`/api/planning/${project.value.id}/analyze`,{screen_ids:[sid],focus:focus.value});Object.assign(project.value.analyses,response.data.results);Object.entries(response.data.errors).forEach(([id,msg])=>failures.push(`${id}: ${msg}`));if(Object.keys(response.data.results).length)evidenceChanged.value=true}notice.value=`分析完成：${done-failures.length} 成功，${failures.length} 失败。${failures.join('；')}`})}
-function config(){const value=JSON.parse(JSON.stringify(options.value));value.fx=JSON.parse(fxText.value);value.exclude_ids=lines(excludedText.value);delete value.filters.bounds;delete value.alternative_exclude_ids;delete value.custom_weights;if(boundsText.value.trim())value.filters.bounds=JSON.parse(boundsText.value);if(alternativeText.value.trim())value.alternative_exclude_ids=lines(alternativeText.value);if(customEnabled.value)value.custom_weights=customWeights.value;return value}
-async function calculate(){await task(async()=>{const snapshot=inputSnapshot.value;result.value=(await api.post(`/api/planning/${project.value.id}/plan`,config())).data;lastInput.value=snapshot;evidenceChanged.value=false;if(!result.value.plans.some(p=>p.strategy===activeStrategy.value))activeStrategy.value='investment';notice.value=`已完成：${result.value.summary.eligible} 条候选，${result.value.plans.length} 个预算方案。`})}
+function config(){
+  const value=JSON.parse(JSON.stringify(options.value))
+  value.auto_simulate=true
+  delete value.investment.target_utilization
+  const region=resolveRegionFilters(project.value.frames,value.filters)
+  value.region_selection={...value.filters}
+  value.filters=region.filters
+  value.fx=JSON.parse(fxText.value)
+  value.exclude_ids=[...new Set([...lines(excludedText.value),...region.excludeIds])]
+  delete value.alternative_exclude_ids;delete value.custom_weights
+  if(boundsText.value.trim())value.filters.bounds=JSON.parse(boundsText.value)
+  if(alternativeText.value.trim())value.alternative_exclude_ids=lines(alternativeText.value)
+  if(customEnabled.value)value.custom_weights=customWeights.value
+  return value
+}
+async function calculate(){await task(async()=>{const snapshot=inputSnapshot.value;progress.value='正在汇总本轮24小时模拟与预算报告…';result.value=(await api.post(`/api/planning/${project.value.id}/plan`,config())).data;options.value.campaign_id=result.value.options.campaign_id||'';lastInput.value=inputSnapshot.value;evidenceChanged.value=false;if(!result.value.plans.some(p=>p.strategy===activeStrategy.value))activeStrategy.value='investment';notice.value=`已完成：${result.value.summary.eligible} 条候选，${result.value.plans.length} 个预算方案。`})}
 function goStep(value){step.value=value;error.value='';window.scrollTo({top:0,behavior:'smooth'})}
 function acceptCampaign(value){options.value.campaign_id=value?.id||'';evidenceChanged.value=true;const u=new URL(window.location.href);if(value)u.searchParams.set('campaign',value.id);else u.searchParams.delete('campaign');window.history.replaceState({},'',u);try{const key='pdooh-workflow-draft-'+project.value.id;const draft=JSON.parse(localStorage.getItem(key)||'null');if(draft){draft.options.campaign_id=options.value.campaign_id;localStorage.setItem(key,JSON.stringify(draft))}}catch{};if(value&&!campaigns.value.some(c=>c.id===value.id))campaigns.value.push({id:value.id,campaign:value.spec.campaign,scenes:value.spec.scene_ids.length})}
+function adSaved(id){simulationReady.value=false;options.value.campaign_id=id||'';evidenceChanged.value=true;const u=new URL(window.location.href);if(id)u.searchParams.set('campaign',id);else u.searchParams.delete('campaign');window.history.replaceState({},'',u);goStep(3)}
 async function beginAnalysis(){await task(async()=>{if(!Number.isFinite(Number(options.value.budget))||Number(options.value.budget)<=0)throw Error('请先填写有效的总预算');if(!/^[A-Z]{3}$/i.test(options.value.currency))throw Error('请填写三字母预算币种');const value=config();const days=value.days||value.planning_days;if(!Number.isFinite(Number(days))||Number(days)<1||Number(days)>366)throw Error('请填写1–366天的投放或估算周期');const inv=(await api.post('/api/world/geo-inventory',{project_id:project.value.id})).data;if(!inv.valid_coordinates)throw Error('库存没有可用坐标，请先修正后上传');localStorage.setItem('pdooh-workflow-draft-'+project.value.id,JSON.stringify({options:options.value,fx:fxText.value,bounds:boundsText.value,excluded:excludedText.value,alternative:alternativeText.value,custom:customEnabled.value,customWeights:customWeights.value}));const u=new URL(window.location.href);u.searchParams.set('project',project.value.id);if(options.value.campaign_id)u.searchParams.set('campaign',options.value.campaign_id);else u.searchParams.delete('campaign');window.history.replaceState({},'',u);goStep(2)})}
-async function finishAnalysis(){await calculate();if(error.value)return;if(!result.value)return;goStep(3)}
+async function finishAnalysis(){await calculate();if(error.value)return;if(!result.value)return;goStep(4)}
 async function exportExcel(strategy=activeStrategy.value){await task(async()=>{const blob=await api.get(`/api/planning/${project.value.id}/export`,{params:{strategy},responseType:'blob'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`pDOOH-${strategy}.xlsx`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)})}
 onMounted(async()=>{
   try{campaigns.value=(await api.get('/api/planning/campaigns')).data}catch(e){error.value=e.message}
   let id;try{id=new URLSearchParams(window.location.search).get('project')||localStorage.getItem('pdooh-planning-project')}catch{return}
   if(!id)return
   await task(async()=>{
-    const response=await api.get(`/api/planning/${id}`);setProject(response.data,true)
+    const response=await api.get(`/api/planning/${id}`);setProject(response.data,true);fillInventoryRegion();boundsText.value=inventoryBounds(project.value.frames)
     if(response.data.result){
       const saved=response.data.result;const o=saved.options
-      options.value={...options.value,...o,investment:{...investmentDefaults(),...o.investment,roi:{...investmentDefaults().roi,...o.investment?.roi,rates:{...investmentDefaults().roi.rates,...o.investment?.roi?.rates},overrides:{...o.investment?.roi?.overrides}}},filters:{...options.value.filters,...o.filters}}
+      options.value={...options.value,...o,investment:{...investmentDefaults(),...o.investment,roi:{...investmentDefaults().roi,...o.investment?.roi,rates:{...investmentDefaults().roi.rates,...o.investment?.roi?.rates},overrides:{...o.investment?.roi?.overrides}}},filters:{...options.value.filters,...(o.region_selection||o.filters)}}
       fxText.value=JSON.stringify(o.fx||{USD:1});boundsText.value=o.filters?.bounds?JSON.stringify(o.filters.bounds):''
       excludedText.value=(o.exclude_ids||[]).join('\n');alternativeText.value=(o.alternative_exclude_ids||[]).join('\n')
       customEnabled.value=!!o.custom_weights;if(o.custom_weights)customWeights.value=o.custom_weights
@@ -135,13 +159,18 @@ onMounted(async()=>{
     }
     const requested=new URLSearchParams(window.location.search).get('campaign');if(requested)options.value.campaign_id=requested
     sourceSheet.value='FilteredFrames'
-    const draft=JSON.parse(localStorage.getItem('pdooh-workflow-draft-'+id)||'null');if(draft){options.value=draft.options;fxText.value=draft.fx;boundsText.value=draft.bounds;excludedText.value=draft.excluded;alternativeText.value=draft.alternative;customEnabled.value=draft.custom;customWeights.value=draft.customWeights}
-    notice.value='已恢复项目与设置，请按三个阶段继续。'
+    const draft=JSON.parse(localStorage.getItem('pdooh-workflow-draft-'+id)||'null');if(draft){options.value={...draft.options,investment:{...investmentDefaults(),...draft.options.investment}};fxText.value=draft.fx;boundsText.value=draft.bounds;excludedText.value=draft.excluded;alternativeText.value=draft.alternative;customEnabled.value=draft.custom;customWeights.value=draft.customWeights}
+    for(const key of Object.keys(regionLabels)){if(Array.isArray(options.value.filters[key]))options.value.filters[key]=options.value.filters[key].join('\n')}
+    notice.value='已恢复项目与设置，请按四个阶段继续。'
   })
 })
 </script>
 <style scoped>
-.workflow-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}.workflow-steps button{display:flex;align-items:center;gap:12px;text-align:left;background:white;padding:18px;color:#718078}.workflow-steps span{display:grid;place-items:center;border-radius:50%;width:26px;height:26px;background:#eef3ef}.workflow-steps .current{border:2px solid #257455;color:#163a29}.workflow-steps .done{color:#257455}.workflow-steps button:disabled{opacity:1;cursor:default}.stage-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:24px 0;padding:18px 0;border-top:1px solid #dbe4dc}.stage-actions span{font-size:12px;color:#64746a}.stage-actions .next-step{background:#205b40;color:white;padding:14px 24px}.workspace.setup-stage,.workspace.report-stage{display:block}.setup-stage>aside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}.setup-stage>aside>.panel:first-child,.setup-stage>aside>.panel:last-child{grid-column:1/-1}.simulation-stage>h2{margin-top:28px}.simulation-stage>.coverage-task{margin-top:20px}@media(max-width:760px){.setup-stage>aside{display:block}.workflow-steps{gap:5px}.workflow-steps button{padding:10px 6px;font-size:11px;gap:5px}.stage-actions{flex-wrap:wrap}}
+.simulation-complete{padding:16px 20px;background:#e5f5eb;color:#17623b;border:1px solid #a4d6b7;border-radius:8px;font-weight:600}
+
+.import-source{display:flex;align-items:center;gap:12px;flex:1 1 100%;min-width:0}.import-source select{flex:1;min-width:140px;margin:0}.import-filename{overflow-wrap:anywhere;max-width:50%;font-size:14px}.import-success{background:#e5f5eb;color:#17623b;border:1px solid #a4d6b7;border-radius:6px;padding:10px 14px;font-size:13px;font-weight:600}.actions{max-width:620px}.fields textarea{box-sizing:border-box;max-height:140px}
+
+.workflow-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}.workflow-steps button{display:flex;align-items:center;gap:12px;text-align:left;background:white;padding:18px;color:#718078}.workflow-steps span{display:grid;place-items:center;border-radius:50%;width:26px;height:26px;background:#eef3ef}.workflow-steps .current{border:2px solid #257455;color:#163a29}.workflow-steps .done{color:#257455}.workflow-steps button:disabled{opacity:1;cursor:default}.stage-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:24px 0;padding:18px 0;border-top:1px solid #dbe4dc}.stage-actions span{font-size:12px;color:#64746a}.stage-actions .next-step{background:#205b40;color:white;padding:14px 24px}.workspace.setup-stage,.workspace.report-stage{display:block}.setup-stage>aside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}.setup-stage>aside>.panel:first-child,.setup-stage>aside>.panel:last-child{grid-column:1/-1}.simulation-stage>h2{margin-top:28px}.simulation-stage>.coverage-task{margin-top:20px}@media(max-width:760px){.setup-stage>aside{display:block}.workflow-steps{gap:5px}.workflow-steps button{padding:10px 6px;font-size:11px;gap:5px}.stage-actions{flex-wrap:wrap}}
 
 .planning{min-height:100vh;background:#f3f5ef;padding:28px 4%;font-family:Arial,'Noto Sans SC',sans-serif;color:#193c31}header{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #ced8cd;padding-bottom:24px}header span{font-weight:400;font-size:13px;letter-spacing:2px}nav{display:flex;gap:20px}a{color:#315749;font-size:13px}.hero{margin:44px 0 30px;max-width:900px}.hero small{letter-spacing:2px;color:#5c7567}h1{font-size:clamp(28px,3vw,44px);margin:14px 0}h2{font-size:18px;margin-bottom:14px}h3{font-size:15px;margin:22px 0 12px}p{font-size:13px;line-height:1.8;color:#627267;margin:10px 0}.panel{background:white;border:1px solid #dbe2d7;border-radius:12px;padding:22px;margin-bottom:20px;min-width:0}.import-panel,.actions,.section-heading,.toolbar,.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.workspace{display:grid;grid-template-columns:minmax(300px,360px) minmax(0,1fr);gap:22px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;font-size:12px;color:#4b6355;margin:10px 0}input,select,textarea{font:inherit;color:#193c31;padding:9px;border:1px solid #c9d5ca;border-radius:6px;background:white;width:100%;margin-top:6px}textarea{resize:vertical}button,.button{display:inline-block;border:1px solid #b8cbbd;border-radius:6px;background:white;color:#194f3e;cursor:pointer;padding:10px 12px;font-size:12px;font-weight:600}button:disabled,.button:has(input:disabled){opacity:.45;cursor:wait}.file{position:absolute;width:1px;height:1px;overflow:hidden;opacity:0}.button:focus-within{outline:2px solid #1b6047;outline-offset:3px}.primary{background:#194f3e;color:white;width:100%;padding:14px;margin-top:14px}.check{display:flex;align-items:center;gap:8px}input[type=checkbox]{width:auto;margin:0}.toolbar input{flex:1;min-width:180px}.toolbar select{width:auto}.table-wrap{overflow:auto;margin:18px 0;max-height:620px}thead{position:sticky;top:0;background:white;z-index:1}.main-results>.panel:last-child .table-wrap{max-height:420px}table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}td,th{border-bottom:1px solid #e0e6dc;padding:12px 8px;vertical-align:top}th{white-space:nowrap;color:#647969}td small{display:block;color:#6c7c71;font-size:11px;line-height:1.6;margin-top:5px}.screen-id{font-size:11px;overflow-wrap:anywhere;display:block;max-width:220px}.badge{font-size:11px;border-radius:20px;padding:4px 8px;white-space:nowrap}.good{background:#e5f0df;color:#35633b}.bad{background:#fbe9df;color:#9a4b32}.pager{justify-content:center}.error,.notice{border-radius:8px;padding:14px;overflow-wrap:anywhere}.error{background:#fee5df;color:#9b3529}.notice{background:#edf0db;color:#666c2d}.detail{background:#f6f8f2;padding:20px;margin-top:20px;border-radius:8px;overflow-wrap:anywhere}.detail .section-heading h3{margin:0}.score-line{margin:18px 0}.score-line div{display:flex;justify-content:space-between;font-size:12px}.score-line span{color:#758570}progress{width:100%;height:8px;accent-color:#347354;margin-top:8px}pre{font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:400px;overflow:auto}summary{cursor:pointer;font-size:13px;padding:14px 0}.summary{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin:20px 0}.plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}.plan-card{display:flex;align-items:start;flex-direction:column;gap:12px;text-align:left;padding:18px;font-weight:400}.plan-card strong{font-size:20px}.plan-card span{font-size:11px;color:#667761}.plan-card.active{background:#eff5e8;border:2px solid #366e4e}.empty{max-width:700px;padding:40px 0}li{font-size:12px;line-height:1.8;margin:8px 0}ul{padding-left:18px}dl{font-size:12px;line-height:1.8}dt{font-weight:bold;margin-top:8px}dd{color:#637362}aside,.main-results{min-width:0}@media(max-width:1000px){.workspace{grid-template-columns:minmax(0,1fr)}.fields{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}header{flex-direction:column}.planning{padding:20px}.panel{padding:18px}}
 </style>

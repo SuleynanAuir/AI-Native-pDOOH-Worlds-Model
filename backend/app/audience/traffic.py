@@ -101,7 +101,7 @@ def build_traffic(scene,options=None,snapshots=None):
         cars=connected_vehicles(slot,scene['seed'],options['vehicles_per_hour'],scene['neighborhood'],pool=pool) if scene['neighborhood'].get('geographic') else vehicles(slot,scene['seed'],options['vehicles_per_hour'])
         for car in cars:
             for encounter in opportunities(car['journey']['waypoints'],screens,scene['neighborhood']['view_radius']):
-                events.append(dict(**encounter,id=f'{index+1}:{car["id"]}:{encounter["screen_id"]}',round=index+1,actor_id=car['id'],kind='vehicle',count=car['occupants'],units=1))
+                events.append(dict(**encounter,id=f'{index+1}:{car["id"]}:{encounter["screen_id"]}',round=index+1,actor_id=car['id'],kind='vehicle',count=car['occupants']*car.get('represented_vehicles',1),units=car.get('represented_vehicles',1)))
         frames.append(dict(round=index+1,pedestrians=actors,vehicles=cars,
                            represented_pedestrians=sum(a['represented_population'] for a in actors)))
     events.sort(key=lambda e:(e['round'],e['minute'],e['id']))

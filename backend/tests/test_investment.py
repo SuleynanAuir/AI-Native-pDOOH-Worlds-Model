@@ -154,9 +154,8 @@ def test_api_binds_campaign_evidence_server_side_and_all_inventory(tmp_path):
     assert client.get('/api/planning/campaigns').json['data'][0]['id']==cid
     opts=dict(budget=10000,currency='USD',campaign_id=cid,investment={'fake_interest':100})
     r=client.post(f"/api/planning/{p['id']}/plan",json=opts)
-    assert r.status_code==200 and r.json['data']['investment']['coverage']['direct']==1
-    assert next(row for row in r.json['data']['investment']['rows'] if row['sim'])['sim']['interest']==50
-    assert client.get(f"/api/planning/{p['id']}/export?strategy=investment").status_code==200
+    assert r.status_code==400 and '全天模拟尚未完成' in r.json['error']
+    assert client.get(f"/api/planning/{p['id']}/export?strategy=investment").status_code==400
     opts['campaign_id']='../escape'
     assert client.post(f"/api/planning/{p['id']}/plan",json=opts).status_code==400
     state=json.loads((path/'state.json').read_text());state['status']='running';(path/'state.json').write_text(json.dumps(state))
@@ -179,3 +178,129 @@ def test_coverage_only_publishes_completed_same_campaign_snapshots(tmp_path):
     state['items']['s']['status']='completed';write_json(p/'state.json',state)
     supplement(tmp_path,pid,cid,evidence,90);assert evidence['screens']['s']['high_favorability']==0
     other={'fingerprint':'changed','screens':{}};supplement(tmp_path,pid,cid,other);assert other['screens']=={}
+
+
+def test_complete_trial_has_positive_allocation_without_fixed_target(inventory):
+    opts=dict(budget=50000,currency='USD',days=30,investment={'complete_report':True})
+    result=plan(inventory,opts)
+    evidence=dict(campaign_id=None,campaign=None,screens={},fingerprint=None)
+    forecasts={f['screen_id']:dict(favorability=55,interest=45,source='LLM逐屏预测 · 非直接模拟',reason='test',model='fixture') for f in result['frames']}
+    decision=report(result,evidence,opts,forecasts)
+    assert len(decision['rows'])==144
+    assert decision['coverage']['direct']==0 and decision['coverage']['predicted']==144
+    assert decision['allocation']['total']==50000 and decision['allocation']['utilization']==1
+    assert sum(Decimal(str(r['recommended_amount'])) for r in decision['rows'])==Decimal('50000')
+    for row in decision['rows']:
+        assert row['recommended_amount']>0 and 0<row['recommended_sot']<=1
+        assert row['returns']['base']['roi'] is not None
+        assert row['sim'] is None and row['metrics']['hours']==24
+        assert row['metrics']['total']==pytest.approx(row['inventory_exposures']/30)
+        assert row['metrics']['favorability']==55 and row['metrics']['interest']==45
+    assert decision['config']['roi']['demo_fields']
+
+
+def test_complete_trial_does_not_overbuy_or_fund_exclusions(inventory):
+    opts=dict(budget=1e9,currency='USD',days=30,investment={'complete_report':True},exclude_ids=[inventory['frames'][0]['screen_id']])
+    r=plan(inventory,opts);d=report(r,dict(campaign_id=None,campaign=None,screens={},fingerprint=None),opts)
+    assert d['allocation']['utilization']<.9 and len(d['allocation']['notes'])>1
+    assert all(x['recommended_amount']==0 for x in d['rows'] if not x['eligible'])
+    assert all(x['recommended_sot']<=1 for x in d['rows'])
+
+
+def test_forecast_cache_and_creative_invalidation(inventory):
+    from app.audience.investment_forecast import project_attitudes
+    inventory['ad_setup']={'campaign':{'title':'Test ad'}}
+    frames=plan(inventory,dict(budget=1000,currency='USD'))['frames'][:3];calls=[]
+    def model(config,prompt,payload,**kwargs):
+        calls.append(payload)
+        return {'screens':[dict(screen_id=f['screen_id'],favorability=60,interest=40,reason='本地点需求与广告诉求有待试投验证') for f in payload['screens']]}
+    evidence={'screens':{}}
+    a=project_attitudes(inventory,frames,evidence,{'LLM_MODEL_NAME':'fixture'},model)
+    b=project_attitudes(inventory,frames,evidence,{'LLM_MODEL_NAME':'fixture'},model)
+    assert a==b and len(calls)==1
+    inventory['ad_setup']['campaign']['title']='Changed'
+    project_attitudes(inventory,frames,evidence,{'LLM_MODEL_NAME':'fixture'},model)
+    assert len(calls)==2
+    def invalid(*args,**kwargs):return {'screens':[]}
+    inventory['ad_setup']['campaign']['title']='Again'
+    with pytest.raises(ValueError):project_attitudes(inventory,frames,evidence,{},invalid)
+
+
+def test_complete_preserves_direct_period_and_individual_dimensions(inventory):
+    opts=dict(budget=50000,currency='USD',investment={'complete_report':True})
+    r=plan(inventory,opts);sid=r['frames'][0]['screen_id'];sim=summarize(base(sid))
+    sim[sid]['hours']=48
+    d=report(r,dict(campaign_id=None,campaign=None,fingerprint=None,screens=sim),opts,{sid:dict(interest=20,favorability=20,source='prediction')})
+    row=next(x for x in d['rows'] if x['screen_id']==sid)
+    assert row['metrics']['hours']==48 and row['metrics']['total']==100
+    assert row['metrics']['interest']==50 and row['metrics']['favorability']==80
+    assert row['metrics']['opportunity_source']=='直接模拟'
+    assert row['metrics']['interest_coverage']==.4
+
+
+def test_complete_tiny_budget_reports_infeasibility(inventory):
+    opts=dict(budget=.01,currency='USD',investment={'complete_report':True})
+    d=report(plan(inventory,opts),dict(campaign_id=None,campaign=None,fingerprint=None,screens={}),opts)
+    assert d['allocation']['total']<=.01
+    assert any('无法' in r['reason'] for r in d['rows'])
+    assert len(d['allocation']['notes'])>1
+
+
+def calibration(**updates):
+    return dict(test_exposures=100000,control_exposures=100000,test_orders=60,control_orders=20,order_value=120,margin=.5,extra_cost=10,currency='USD',source='fixture matched groups, not real data',period='2026-10',**updates)
+
+
+def test_calibrated_roi_uses_incremental_orders_once_and_all_costs():
+    cfg=settings({'investment':{'complete_report':True,'roi':{'calibration':{'s':calibration()}}}})
+    value=returns(20000,100,cfg['roi'],'s')
+    assert value['calibrated']
+    assert value['base']['orders']==pytest.approx(8)
+    assert value['base']['revenue']==pytest.approx(960)
+    assert value['base']['contribution']==pytest.approx(480)
+    assert value['base']['roi']==pytest.approx((480-110)/110)
+    assert value['total_cost']==110
+    assert value['basis']['incrementality']==1
+    other=calibration();other['test_orders']=30
+    cfg=settings({'investment':{'complete_report':True,'roi':{'calibration':{'s':calibration(),'other':other}}}})
+    assert returns(20000,100,cfg['roi'],'other')['base']['roi']!=value['base']['roi']
+
+
+def test_adaptive_budget_respects_extra_cost_and_low_utility(inventory):
+    sid=inventory['frames'][0]['screen_id']
+    opts=dict(budget=50000,currency='USD',investment={'complete_report':True,'minimum_importance':100,'roi':{'calibration':{sid:calibration()}}})
+    d=report(plan(inventory,opts),dict(campaign_id=None,campaign=None,screens={},fingerprint=None),opts)
+    a=d['allocation']
+    assert a['overall_total']<50000*.9
+    assert a['total']+a['extra_cost_total']+a['remaining']==pytest.approx(50000)
+    assert a['extra_cost_total']==10
+    assert 'target_utilization' not in a
+    assert len(d['regions'])>1
+    assert set(s for g in d['regions'] for s in g['screen_ids'])=={r['screen_id'] for r in d['rows']}
+
+
+def test_calibration_rejects_unknown_id_wrong_currency_and_missing_source(inventory):
+    bad=calibration();bad['source']=''
+    with pytest.raises(ValueError):settings({'investment':{'roi':{'calibration':{'s':bad}}}})
+    opts=dict(budget=1000,currency='USD',investment={'roi':{'calibration':{'wrong-id':calibration()}}})
+    with pytest.raises(ValueError):report(plan(inventory,opts),dict(screens={}),opts)
+    sid=inventory['frames'][0]['screen_id'];row=calibration();row['currency']='CNY';opts['investment']['roi']['calibration']={sid:row}
+    with pytest.raises(ValueError):report(plan(inventory,opts),dict(screens={}),opts)
+
+
+def test_exact_creative_match_invalidates_changed_image():
+    from app.audience.investment_evidence import matches
+    campaign=dict(brand='Test',title='Ad',message='M',topic='T',source_url='https://example.org')
+    assert matches({'campaign':campaign},{'campaign':campaign})
+    assert not matches({'campaign':campaign},{'campaign':{**campaign,'message':'new'}})
+    assert not matches({'campaign':campaign},{'campaign':campaign,'creative':{'id':'new'}})
+
+
+def test_zombie_is_not_a_live_oasis_worker(monkeypatch):
+    from app.audience import process_health
+    from types import SimpleNamespace
+    monkeypatch.setattr(process_health.os,'kill',lambda *args:None)
+    monkeypatch.setattr(process_health.sys,'platform','darwin')
+    monkeypatch.setattr(process_health.subprocess,'run',lambda *a,**k:SimpleNamespace(stdout='Z\n'))
+    assert not process_health.alive(123)
+    monkeypatch.setattr(process_health.subprocess,'run',lambda *a,**k:SimpleNamespace(stdout='S\n'))
+    assert process_health.alive(123)

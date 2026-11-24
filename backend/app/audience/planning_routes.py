@@ -21,7 +21,8 @@ def body():
 
 
 def preview(project):
-    return dict(id=project['id'],filename=project['filename'],source_sheet=project.get('source_sheet','UnfilteredFrames'),headers=project['headers'],frames=clean(project,{}),documents=project.get('documents',[]),photos=project.get('photos',{}),analyses=project.get('analyses',{}),result=project.get('result'))
+    from .simulation_workflow import signature
+    return dict(id=project['id'],filename=project['filename'],source_sheet=project.get('source_sheet','UnfilteredFrames'),headers=project['headers'],frames=clean(project,{}),documents=project.get('documents',[]),photos=project.get('photos',{}),analyses=project.get('analyses',{}),result=project.get('result') if project.get('simulation_batch') and project['simulation_batch']['signature']==signature(project) and (project.get('result') or {}).get('options',{}).get('simulation_batch_id')==project['simulation_batch']['id'] else None)
 
 
 @planning_bp.errorhandler(ValueError)
@@ -170,11 +171,14 @@ def make_plan(pid):
     with store.locked(root(),pid) as (path,project):
         from .investment import campaign_evidence,settings,report,attach_plan
         cfg=settings(options)
-        evidence=campaign_evidence(root(),options.get('campaign_id'),cfg['threshold'])
-        from .coverage import supplement
-        supplement(root(),pid,options.get('campaign_id'),evidence,cfg['threshold'])
+        from .simulation_workflow import inspect
+        _,evidence=inspect(root(),project,cfg['threshold'],require_ready=True)
+        options['campaign_id']=evidence['campaign_id']
+        options['simulation_only']=True
+        options['simulation_batch_id']=evidence['batch']['id']
         result=plan(project,options)
-        result['investment']=report(result,evidence,options)
+        forecasts={}
+        result['investment']=report(result,evidence,options,forecasts)
         attach_plan(result)
         project['result']=result; store.save(path,project)
     return jsonify(success=True,data=result)
@@ -193,10 +197,23 @@ def campaigns():
 @planning_bp.get('/<pid>/export')
 def export(pid):
     with store.locked(root(),pid) as (path,project):
-        if not project.get('result'): raise ValueError('请先计算方案；资料或图片修改后需重新计算')
-        strategy=request.args.get('strategy','balanced')
+        from .simulation_workflow import inspect
+        _,evidence=inspect(root(),project,require_ready=True)
+        if not project.get('result') or project['result'].get('options',{}).get('simulation_batch_id')!=evidence['batch']['id']:raise ValueError('请先根据本轮已完成的全天模拟生成第四步报告')
+        strategy=request.args.get('strategy','investment')
         raw=export_plan(project,project['result'],strategy,path)
     return send_file(BytesIO(raw),mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',as_attachment=True,download_name=f'pDOOH-{strategy}.xlsx')
+
+
+@planning_bp.route('/<pid>/coverage',methods=['GET','POST'])
+def resolved_coverage(pid):
+    from .simulation_workflow import begin,inspect
+    from .coverage import start
+    if request.method=='POST':
+        batch=begin(root(),pid)
+        start(current_app._get_current_object(),pid,batch['id'])
+    with store.locked(root(),pid) as (_,project):value,_=inspect(root(),project)
+    return jsonify(success=True,data=value)
 
 
 @planning_bp.route('/<pid>/coverage/<cid>',methods=['GET','POST'])
@@ -204,3 +221,83 @@ def screen_coverage(pid,cid):
     from .coverage import start,status
     value=start(current_app._get_current_object(),pid,cid) if request.method=='POST' else status(root(),pid,cid)
     return jsonify(success=True,data={k:v for k,v in value.items() if k!='items'} | {'failures':[{ 'screen_id':sid,'error':i.get('error')} for sid,i in value.get('items',{}).items() if i.get('status')=='failed']})
+
+
+@planning_bp.route('/<pid>/ad-setup', methods=['GET','POST'])
+def ad_setup(pid):
+    from .campaign_research import validate_campaign
+    with store.locked(root(),pid) as (path,project):
+        if request.method=='POST':
+            value=body(); campaign=validate_campaign(value.get('campaign'))
+            flow=value.get('vehicles_per_hour')
+            if flow is not None and (type(flow) is not int or not 0<=flow<=3000):raise ValueError('车流须为0–3000的整数，或留空按地点估算')
+            changed=project.get('ad_setup',{}).get('campaign')!=campaign
+            project['ad_setup']={**project.get('ad_setup',{}),'campaign':campaign,'vehicles_per_hour':flow}
+            if changed:project['ad_setup']['campaign_id']=None
+            store.save(path,project)
+        from .ad_setup import core_regions
+        return jsonify(success=True,data={**{k:v for k,v in project.get('ad_setup',{}).items() if k!='traffic_estimates_before_road_evidence'},'core_regions':core_regions(clean(project,{}))})
+
+
+@planning_bp.post('/<pid>/creative')
+def upload_creative(pid):
+    upload=request.files.get('image')
+    if not upload:raise ValueError('请选择广告图片')
+    raw=upload.read(8_000_001)
+    if len(raw)>8_000_000:raise ValueError('广告图片不能超过8 MB')
+    mime=image_mime(raw); identifier=uuid.uuid4().hex
+    with store.locked(root(),pid) as (path,project):
+        name=f'creative-{identifier}';(path/name).write_bytes(raw)
+        asset={'id':identifier,'name':Path(upload.filename).name,'mime':mime,'url':f'/api/planning/{pid}/creative/{identifier}','status':'uploaded'}
+        project.setdefault('ad_setup',{})['creative']=asset;store.save(path,project)
+    return jsonify(success=True,data=asset)
+
+
+@planning_bp.get('/<pid>/creative/<identifier>')
+def creative_file(pid,identifier):
+    if not re.fullmatch('[0-9a-f]{32}',identifier):raise ValueError('图片 ID 无效')
+    with store.locked(root(),pid) as (path,project):
+        file=path/f'creative-{identifier}'
+        if not file.exists():raise FileNotFoundError()
+        return send_file(file,mimetype=image_mime(file.read_bytes()))
+
+
+@planning_bp.post('/<pid>/creative/analyze')
+def analyze_creative(pid):
+    from .ad_setup import describe_creative
+    with store.locked(root(),pid) as (path,project):
+        asset=project.get('ad_setup',{}).get('creative')
+        if not asset:raise ValueError('请先上传广告图片')
+        raw=(path/f'creative-{asset["id"]}').read_bytes()
+    try: result=describe_creative(raw,asset['mime'],current_app.config)
+    except Exception:raise ValueError('图片已保存，但图片理解暂不可用。可重试或手动描述物料内容。') from None
+    with store.locked(root(),pid) as (path,project):
+        if project['ad_setup']['creative']['id']!=asset['id']:raise ValueError('图片已更换，请重新分析')
+        asset.update(result,status='analyzed');project['ad_setup']['creative']=asset;store.save(path,project)
+    return jsonify(success=True,data=asset)
+
+
+@planning_bp.post('/<pid>/traffic-estimate')
+def traffic_estimate(pid):
+    from .ad_setup import estimate_traffic,core_regions
+    ids=body().get('screen_ids')
+    if not isinstance(ids,list) or not 1<=len(ids)<=12 or any(not isinstance(x,str) for x in ids):raise ValueError('每批选择1–12块屏幕')
+    with store.locked(root(),pid) as (_,project):
+        inventory=clean(project,{})
+        if not set(ids)<=set(f['screen_id'] for f in inventory):raise ValueError('屏幕 ID 不存在')
+        areas=[r for r in core_regions(inventory) if set(r['screen_ids']) & set(ids)]
+        expanded={sid for r in areas for sid in r['screen_ids']}
+        if not set(ids)<=expanded:raise ValueError('屏幕缺少有效坐标')
+        frames=[f for f in inventory if f['screen_id'] in expanded]
+    try:
+        result={}
+        for area in areas:
+            result.update(estimate_traffic([f for f in frames if f['screen_id'] in area['screen_ids']],current_app.config))
+    except ValueError:raise
+    except Exception:raise ValueError('车流估算服务暂不可用，可重试或手动设置，未填入默认预测值') from None
+    with store.locked(root(),pid) as (path,project):
+        setup=project.setdefault('ad_setup',{})
+        if any(v.get('method_version')==3 for v in result.values()) and 'traffic_estimates_before_road_evidence' not in setup:
+            setup['traffic_estimates_before_road_evidence']=dict(setup.get('traffic_estimates',{}))
+        setup.setdefault('traffic_estimates',{}).update(result);store.save(path,project)
+    return jsonify(success=True,data=result)
