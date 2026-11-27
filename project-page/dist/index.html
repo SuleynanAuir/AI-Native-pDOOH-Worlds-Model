@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI-Native pDOOH World-Model</title>
+<meta name="description" content="From street-level context to screen-level investment. A policy-driven world model for 24-hour audience simulation and evidence-based pDOOH planning.">
+<meta property="og:title" content="AI-Native pDOOH World-Model">
+<meta property="og:description" content="144 screens. A full day of simulated urban life. Four investment perspectives.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#175a46">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="top">
+<header class="hero wrap">
+<img class="section-brand" src="assets/Copy%20of%20VTM%20email%20header.png" alt="VIOOH Trading Manager +Intelligence" width="5469" height="2734">
+<p class="eyebrow">AI FOR THE PHYSICAL WORLD · PROJECT SHOWCASE</p>
+<h1>AI-Native pDOOH<br><span>World-Model</span></h1>
+<p class="author"><strong>Minghao LI</strong><a href="mailto:t330034027@mail.bnbu.edu.cn">t330034027@mail.bnbu.edu.cn</a></p>
+<div class="hero-actions"><a class="pill dark" href="https://github.com/SuleynanAuir/AI-Native-pDOOH-Worlds-Model" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5 2 12l6 7m8-14 6 7-6 7M14 3l-4 18"/></svg>Code</a><a class="pill" href="#simulation">Explore the workflow</a><a class="pill" href="#results">View results</a></div>
+</header>
+
+<section class="teaser wide" aria-label="Project overview">
+<div class="image-frame hero-image"><button class="zoom" data-image="assets/simulation-scenes.webp" data-caption="Actual application capture: two location-specific audience scenes with synchronized daily playback." aria-label="Enlarge two-scene simulation"><img src="assets/simulation-scenes.webp" alt="Two actual urban simulation maps with local streets, audience trajectories, and screen locations" fetchpriority="high" width="2070" height="908"></button><div class="image-label"><span>WORLD MODEL IN ACTION</span><strong>Two places. One simulated day.</strong></div></div>
+<p class="caption">Actual application capture. Two screen locations are replayed side by side; each retains its own routes, audience context, and hourly evidence.</p>
+<div class="stats"><div><strong>144</strong><span>screens processed</span></div><div><strong>24 h</strong><span>simulation horizon</span></div><div><strong>$10,000</strong><span>example campaign budget</span></div><div><strong>30 days</strong><span>planning period</span></div></div>
+</section>
+
+<section id="method" class="section band idea-method">
+<img class="section-brand" src="assets/Copy%20of%20VTM%20email%20header.png" alt="VIOOH Trading Manager +Intelligence" width="5469" height="2734">
+<div class="wrap">
+<div class="section-heading"><p class="eyebrow">THE IDEA & METHOD</p><h2>Plan media around the life<br>happening around it.</h2></div>
+<div class="idea-summary">
+<p><strong>AI-Native pDOOH World-Model</strong> connects a person's encounter with a screen to budget allocation across an inventory. It combines screen coordinates, local context, representative audiences, and road-network mobility in a spatially grounded simulation workflow.</p>
+<p>A language model proposes individual behavioral policies; a local simulator evolves them over 24 hours. Viewing opportunities and creative-response evidence then inform screen scores, share-of-time allocations, and campaign-period cost estimates.</p>
+</div>
+<div class="pipeline-heading"><h3>A city-to-campaign pipeline.</h3><p>Four connected stages carry evidence from the original screen record to the final quote.</p></div>
+<div class="pipeline">
+<article><div class="stage-icon">◎</div><h3>Ground the inventory</h3><p>Resolve coordinates, inspect streets and venues, and retain the original screen identifier.</p><div class="stage-output">Screen + location + context</div></article>
+<article><div class="stage-icon">◇</div><h3>Define the campaign</h3><p>Set the creative, budget, period, currency, and media-buying constraints.</p><div class="stage-output">Creative + commercial inputs</div></article>
+<article><div class="stage-icon">⌁</div><h3>Simulate the day</h3><p>Generate representative policies, then evolve movement and screen encounters locally.</p><div class="stage-output">Hourly opportunity evidence</div></article>
+<article><div class="stage-icon">▥</div><h3>Allocate investment</h3><p>Compare objectives, assign a budget and SOT, then export a screen-level proposal.</p><div class="stage-output">Allocation + quote + provenance</div></article>
+</div>
+<p class="method-outcome">A traceable planning scenario: where to invest, how much to allocate, and what evidence supports each decision.</p>
+</div></section>
+
+<section id="simulation" class="section wrap">
+<img class="section-brand" src="assets/Copy%20of%20VTM%20email%20header.png" alt="VIOOH Trading Manager +Intelligence" width="5469" height="2734">
+<div class="section-heading"><p class="eyebrow">SPATIALLY GROUNDED SIMULATION</p><h2>The street is part of the model.</h2><p>Screen location, movement, visibility, available attention, and repeat encounters shape the simulated opportunity to see.</p></div>
+<div class="gallery-tabs" role="group" aria-label="Runtime screenshot selection"><button class="active" data-gallery="simulation">Daily simulation</button><button data-gallery="map">Investment geography</button><button data-gallery="quote">Screen-level quote</button></div>
+<figure class="gallery"><button class="zoom" id="gallery-zoom" data-image="assets/simulation-scenes.webp" data-caption="Two independent local scenes in the real application." aria-label="Enlarge runtime screenshot"><img id="gallery-image" src="assets/simulation-scenes.webp" alt="Daily simulation with two independent location maps" loading="lazy" width="2070" height="908"></button><figcaption id="gallery-caption">Daily simulation · Two location-specific scenes share a playback clock, while their audience evidence remains separate.</figcaption></figure>
+<div class="split-text"><div><h3>Policies first. Local evolution next.</h3><p>The fast mode generates one behavioral policy per synthetic representative, then runs the 24-hour evolution locally. The implementation batches 25 profiles per request with up to four policy-generation workers.</p></div><div><h3>Opportunity is not conversion.</h3><p>A screen encounter depends on geometry and an attention window. The policy models noticing, dwell, and curiosity. Creative favorability and interest are recorded separately; neither is treated as a purchase probability.</p></div></div>
+<div class="formula-panel">
+<div><span class="formula-tag">Attention policy</span><h3>Context gates the encounter.</h3><p>When line of sight exists and viewing time is positive, the policy applies a bounded attention probability. Otherwise, the encounter remains a pass-by.</p></div>
+<div><div class="equation"><math display="block"><msub><mi>p</mi><mrow><mi>a</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>=</mo><msub><mi mathvariant="normal">clip</mi><mrow><mn>0</mn><mo>,</mo><mn>1</mn></mrow></msub><mo>(</mo><mfrac><mrow><msub><mi>p</mi><mi>a</mi></msub><mo>·</mo><mi mathvariant="normal">min</mi><mo>(</mo><mn>1</mn><mo>,</mo><mfrac><msub><mi>τ</mi><mrow><mi>a</mi><mo>,</mo><mi>t</mi></mrow></msub><mn>5</mn></mfrac><mo>)</mo></mrow><mrow><mn>1</mn><mo>+</mo><msub><mi>f</mi><mi>a</mi></msub><msub><mi>n</mi><mrow><mi>a</mi><mo>,</mo><mi>t</mi></mrow></msub></mrow></mfrac><mo>+</mo><msub><mi>β</mi><mi>a</mi></msub><msub><mi>q</mi><mrow><mi>a</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>)</mo></math></div><p class="formula-key"><i>p</i>: base notice probability · <i>τ</i>: available seconds · <i>f</i>: fatigue · <i>n</i>: previous encounters · <i>βq</i>: peer contribution. These are uncalibrated scenario parameters, not measured behavioral probabilities.</p></div>
+</div>
+</section>
+
+<section class="section band">
+<img class="section-brand" src="assets/Copy%20of%20VTM%20email%20header.png" alt="VIOOH Trading Manager +Intelligence" width="5469" height="2734">
+<div class="wrap"><div class="section-heading"><p class="eyebrow">FROM SIMULATION TO A QUOTE</p><h2>Every number has a denominator.</h2><p>Keep the observed simulation window, campaign duration, and purchased share of time explicit.</p></div>
+<div class="math-grid">
+<article><span class="formula-tag">Campaign impressions</span><div class="equation"><math display="block"><msub><mover><mi>I</mi><mo>^</mo></mover><mi>s</mi></msub><mo>=</mo><msub><mi>O</mi><mi>s</mi></msub><mo>·</mo><mfrac><mn>24</mn><msub><mi>H</mi><mi>s</mi></msub></mfrac><mo>·</mo><mi>D</mi><mo>·</mo><msub><mi>α</mi><mi>s</mi></msub></math></div><p><i>O<sub>s</sub></i> is the accumulated opportunity count over <i>H<sub>s</sub></i> simulated hours. <i>D</i> is the campaign length in days; <i>α<sub>s</sub></i> is SOT. Repeated encounters count again.</p></article>
+<article><span class="formula-tag">Media investment</span><div class="equation"><math display="block"><msub><mi>B</mi><mi>s</mi></msub><mo>≈</mo><mfrac><msub><mover><mi>I</mi><mo>^</mo></mover><mi>s</mi></msub><mn>1000</mn></mfrac><mo>·</mo><msub><mi>c</mi><mi>s</mi></msub><mo>·</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>δ</mi><mo>)</mo></math></div><p><i>c<sub>s</sub></i> is CPM after markup and currency conversion; <i>δ</i> is the DSP fee rate. Actual allocations are cent-based and capacity-constrained. The daily amount is <i>B<sub>s</sub> / D</i>.</p></article>
+<article><span class="formula-tag">Allocation preference</span><div class="equation"><math display="block"><msub><mi>w</mi><mi>s</mi></msub><mo>∝</mo><mfrac><msub><mi>u</mi><mi>s</mi></msub><mrow><msub><mi>c</mi><mrow><mi>s</mi><mo>,</mo><mi mathvariant="normal">all-in</mi></mrow></msub><mo>[</mo><mn>1</mn><mo>+</mo><mi>λ</mi><mo>(</mo><msub><mi>n</mi><mrow><mi>g</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></msub><mo>−</mo><mn>1</mn><mo>)</mo><mo>]</mo></mrow></mfrac></math></div><p>Objective-specific utility <i>u<sub>s</sub></i> is weighted against cost and regional concentration. A seed allocation precedes weighted redistribution under budget, per-screen, and inventory limits. This is a heuristic, not a global optimum.</p></article>
+<article><span class="formula-tag">Exposure efficiency</span><div class="equation"><math display="block"><msub><mi mathvariant="normal">CPM</mi><mi mathvariant="normal">plan</mi></msub><mo>=</mo><mn>1000</mn><mo>·</mo><mfrac><mrow><mo>∑</mo><msub><mi>B</mi><mi>s</mi></msub></mrow><mrow><mo>∑</mo><msub><mover><mi>I</mi><mo>^</mo></mover><mi>s</mi></msub></mrow></mfrac></math></div><p>This is a cost-per-exposure measure. Financial ROI requires incremental revenue and margin evidence: <i>ROI = (ΔR · m − C) / C</i>, with total cost <i>C</i> including supplied execution costs.</p></article>
+</div></div></section>
+
+<section id="results" class="section wrap">
+<img class="section-brand" src="assets/Copy%20of%20VTM%20email%20header.png" alt="VIOOH Trading Manager +Intelligence" width="5469" height="2734">
+<div class="section-heading"><p class="eyebrow">A REAL APPLICATION SNAPSHOT</p><h2>One inventory.<br>Four investment perspectives.</h2><p>San Francisco-area screen locations · 10,000 USD budget · 30-day planning horizon.<br>Compare saved allocations from the same completed simulation batch.</p></div>
+<div class="result-tabs" id="result-tabs" role="group" aria-label="Investment perspective"></div>
+<div class="results-board">
+<div class="result-story"><span class="formula-tag" id="strategy-label"></span><h3 id="strategy-title"></h3><p id="strategy-description"></p><dl><div><dt>Allocated media budget</dt><dd id="result-budget"></dd></div><div><dt>Predicted cumulative Impression</dt><dd id="result-impressions"></dd></div><div><dt>Cost per 1,000 impressions</dt><dd id="result-cpm"></dd></div><div><dt>Screens receiving allocation</dt><dd id="result-screens"></dd></div></dl><p class="small">144 screens were processed. 139 received positive allocation in this saved report. All four strategies share the same budget.</p></div>
+<div class="result-chart"><div class="chart-header"><h3>Screen-level allocation</h3><span>Each dot is one screen</span></div><svg id="strategy-chart" viewBox="0 0 680 400" role="img" aria-label="Actual screen investment versus predicted cumulative Impression"></svg><p id="chart-note" class="small">Horizontal: investment in USD. Vertical: campaign-period Impression. Hover or focus a point to inspect the screen.</p></div>
+</div>
+<div class="result-table-wrap"><table class="results-table"><caption>Saved strategy comparison — forecast opportunities, not measured campaign delivery</caption><thead><tr><th>Perspective</th><th>Budget</th><th>Cumulative Impression</th><th>Effective CPM</th><th>Funded screens</th></tr></thead><tbody id="comparison-body"></tbody></table></div>
+<figure class="full-figure"><button class="zoom" data-image="assets/investment-distribution.webp" data-caption="Actual report UI: investment distribution, single-screen spend versus Impression, and the exposure distribution." aria-label="Enlarge actual investment visualization"><img src="assets/investment-distribution.webp" alt="Actual investment report visualization with histograms and scatterplot" loading="lazy" width="2001" height="1253"></button><figcaption>Inside the application · Investment distribution and cumulative Impression are reviewed together, with click-through screen-level evidence.</figcaption></figure>
+</section>
+
+<section class="section band">
+<img class="section-brand" src="assets/Copy%20of%20VTM%20email%20header.png" alt="VIOOH Trading Manager +Intelligence" width="5469" height="2734">
+<div class="wrap"><div class="section-heading"><p class="eyebrow">OPERATIONAL OUTPUT</p><h2>A proposal you can inspect.</h2><p>Move from the spatial overview to a concrete screen-level recommendation.</p></div>
+<figure class="full-figure"><button class="zoom" data-image="assets/investment-map.webp" data-caption="Actual report map. Marker color encodes media investment; regional summaries retain screen-level drilldown." aria-label="Enlarge regional investment map"><img src="assets/investment-map.webp" alt="Actual regional screen investment map with color-coded allocation and regional ranking" loading="lazy" width="2001" height="588"></button><figcaption>Regional investment map · Coordinates anchor the recommendation. Marker color encodes investment; nearby screens can be inspected individually.</figcaption></figure>
+<figure class="full-figure quote"><button class="zoom" data-image="assets/investment-quote.webp" data-caption="Actual screen-level quote with campaign days, daily allocation, total investment, cumulative Impression, and share of time." aria-label="Enlarge screen-level quotation"><img src="assets/investment-quote.webp" alt="Actual quotation table showing days, daily prices, total funds, Impression and SOT" loading="lazy" width="2001" height="659"></button><figcaption>Screen-level quote · Duration, daily amount, total investment, SOT, and cumulative Impression stay visible. The application exports the selected proposal to Excel.</figcaption></figure>
+</div></section>
+
+<section class="closing wrap">
+<img class="section-brand" src="assets/Copy%20of%20VTM%20email%20header.png" alt="VIOOH Trading Manager +Intelligence" width="5469" height="2734"><p class="eyebrow">EXPLORE THE PROJECT</p><h2>See the city.<br>Understand the investment.</h2><p>Source code, simulation logic, and investment calculations.</p><a class="pill dark" href="https://github.com/SuleynanAuir/AI-Native-pDOOH-Worlds-Model" target="_blank" rel="noopener">Explore on GitHub</a></section>
+</main>
+<footer class="wrap"><span>AI-Native pDOOH World-Model</span><p>Original project-page design, with academic presentation inspiration from <a href="https://horwitz.ai/probex" target="_blank" rel="noopener">ProbeX</a>. Application screenshots and computed scenario results from this project.</p></footer>
+<dialog id="lightbox"><button class="close" aria-label="Close enlarged image">×</button><img alt=""><p></p></dialog>
+<script src="app.js"></script>
+</body></html>

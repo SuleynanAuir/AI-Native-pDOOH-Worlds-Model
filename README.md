@@ -1,20 +1,267 @@
-# AI-Native pDOOH Digital Twin & Optimization Platform
+<div align="center">
+  <img src="assets/Copy%20of%20VTM%20email%20header.png" alt="VIOOH Trading Manager +Intelligence" width="260">
 
-> 面向程序化数字户外广告（pDOOH）的城市数字孪生、合成人口仿真、效果预测与媒体组合优化平台。
+# AI-Native pDOOH World-Model
 
-> **项目状态：可运行的 pDOOH 规划与人群模拟工作台。** 当前实现使用 Flask、Vue 和 OASIS；本文后半部分保留目标架构，尚未实现的目标组件不代表当前服务。
+**面向程序化数字户外广告的全天人群模拟、屏幕投资分析与报价工作台**
 
-## 运行与使用
+Minghao LI · [t330034027@mail.bnbu.edu.cn](mailto:t330034027@mail.bnbu.edu.cn)
 
-当前支持 Excel 屏幕库存清洗与预算组合、按 GEOM 定位的街区场景、24 小时人车回放、四宫格对比、广告兴趣/好感分析，以及人物长文和群体投放建议。人群分析、场景详情和广告设置分别在独立弹窗中打开。
+[业务流程](#2-四阶段业务流程) · [计算方法](#4-核心指标与数学模型) · [部署运行](#6-安装配置与运行) · [接口与验收](#7-接口交付与验收)
 
-![四宫格工作台](output/modal-ui/desktop.png)
+</div>
 
-[人群分析窗口](output/modal-ui/audience.png) · [场景详情窗口](output/modal-ui/scene.png) · [广告设置窗口](output/modal-ui/advertising.png) · [功能与验证说明](docs/IMPLEMENTATION.md)
+本文面向媒体策划、广告运营、数据分析及技术实施人员，按八个章节说明当前实现。内容以仓库代码和已保存运行报告为依据；Markdown 无固定纸张，正文按约 7–8 页技术说明的内容量组织，实际打印页数取决于图片、公式及纸张设置。
 
-### 本地启动
+## 1. 产品定位与业务应用
 
-推荐 Node.js 22.12+、Python 3.11 或 3.12。规划后端与 OASIS worker 使用独立 Python 环境。
+### 1.1 解决什么问题
+
+pDOOH（programmatic Digital Out-of-Home，程序化数字户外广告）采购通常需要把屏幕清单、位置、媒体价格、广告创意和预算放在一起比较。仅按 CPM 或库存曝光排序，无法说明某个地点的人群是否有机会看到屏幕，也无法解释不同投资侧重点如何改变资金分配。
+
+本项目将这些工作组织为一条可操作的流程：导入库存，准备广告及投放条件，逐屏运行全天场景，汇总模拟证据，计算投资方案，最后生成逐屏报价和 Excel 文件。核心交付是**可追溯的投放规划建议**：每块屏幕对应明确的 ID、地点、观测周期、投放天数、SOT、资金、累计曝光及计算依据。
+
+| 使用角色 | 实际工作 | 系统输出 | 下一步业务动作 |
+| --- | --- | --- | --- |
+| 媒体策划 | 在预算内比较库存与投放侧重点 | 四种预算分配方案、地图、曝光效率图 | 与广告主确认目标和备选资源 |
+| 广告运营 | 核对地点、创意、日期与资金 | 逐屏投资表、日均金额、SOT、Excel | 向 DSP 或媒体方确认可售份额与价格 |
+| 数据分析 | 检查模拟证据和效果假设 | 小时回放、态度覆盖、收益情景 | 设计现场验证或投放对照试验 |
+| 技术实施 | 接入库存、模型及地图服务 | 项目 API、任务进度、运行记录 | 部署服务、监控任务并保留审计材料 |
+
+适用业务包括区域品牌活动的选屏规划、固定预算下的资源组合比较、创意与场景适配分析，以及小规模试投前的候选筛选。系统目前**不直接连接 DSP 完成竞价或下单**，也不承担广告订单、播放凭证、账单结算和真实归因平台的职责。
+
+### 1.2 当前可用能力
+
+- 库存导入与校验：读取 Excel 工作表，检查 ID、坐标、可售状态、曝光、价格及币种，保留原始记录和排除原因。
+- 场景构建与全天模拟：将屏幕映射到街区，生成代表性人群和出行路线，处理行人及车内观看机会，记录 24 个小时的结果。
+- 创意分析：结合广告输入与代表画像形成好感、兴趣等模型态度；评分来源及覆盖范围可查。
+- 全库存任务管理：显示已处理屏幕数与完成状态；处理期间双场景循环回放，全部完成后开放报告。
+- 投资与报价：按不同侧重点分配资金，展示全周期累计 Impression、日均单价、SOT、收益情景及方案差异。
+
+![真实双场景全天回放](project-page/dist/assets/simulation-scenes.webp)
+
+*运行截图：两个不同地点共用回放时间，各自保留场景与统计证据。图中的人群和车流为模拟情景。*
+
+## 2. 四阶段业务流程
+
+### 2.1 数据与设置
+
+访问 `/planning`，上传含 `FilteredFrames` 的 `.xlsx` 文件；界面兼容工作表名称 `filtered_frames`。也可载入仓库的 `data/test.xlsx`，先验证部署和数据链路。
+
+录入总预算、预算币种、开始日期及投放天数，并按业务需要补充地域筛选、汇率、DSP 费率、CPM 加价和单屏限制。规划天数与库存曝光统计周期是两个不同参数：前者决定活动持续多久，后者说明原始 `IMPRESSIONS` 覆盖多少天。未填写明确投放天数时，界面默认以 30 天作预算估算。
+
+### 2.2 广告设置
+
+保存广告活动信息与创意素材，核对地区背景、交通估计和手工输入的车流参数。广告文本、图片和场景资料是模型推演的输入，不能把图片中可见的少量人物直接换算为街区客流。
+
+业务上应先完成创意、目标区域和流量假设确认，再启动批次。改变库存、广告、创意、交通参数或相关文档可能使现有批次与当前输入不再匹配，需要重新生成有效证据。
+
+### 2.3 人群模拟分析
+
+系统对本轮全部屏幕逐一准备地点、人口、路线和广告分析，并记录全天结果。多个屏幕通过后台并行任务处理；前端的 `x / N 块屏幕已处理` 表示后台屏幕处理进度，不表示视频播放进度。
+
+双场景播放器用于观察不同地点的小时演化。拖动到 `23:59` 只改变回放位置，不会自动宣告全库存完成。报告就绪要求每个屏幕具备本轮匹配的完整记录，包括正确的运行引擎、完成状态、24 小时排程和第 1–24 轮快照。旧批次、预览场景和未完成运行不能冒充本轮结果。
+
+### 2.4 报告与投放建议
+
+确认全部屏幕完成后，生成综合报告，检查资金、累计曝光、评分与数据来源。投资地图支持按区域查看投入及单屏依据；分布图把资金分布、曝光分布与单屏散点关系放在一起查看。投资明细、库存评分卡和方案明细均按每页 5 块屏幕分页。
+
+“方案对比”提供综合建议、曝光效率优先、人群兴趣优先、区域分散优先。切换方案后，资金明细、累计曝光及可视化同步更新。最后导出对应策略的 Excel；上线采购前，由运营确认实际价格、最低采购份额、排期和剩余库存。
+
+## 3. 输入契约、数据来源与任务追溯
+
+### 3.1 库存字段
+
+| 字段 | 业务含义与处理要求 |
+| --- | --- |
+| `VIOOH_ID` | 屏幕唯一 ID；支持 `SCREENID` 等别名。重复 ID 的所有重复行暂不参与投放，不能只取第一条。 |
+| `GEOM` | 地理点，常见形式为 `POINT(经度 纬度)`；用于地点解析和一致性检查。 |
+| `LATITUDE`、`LONGITUDE` | WGS84 经纬度；需合法且与目标地点一致。地点解析与规划清洗仍会分别检查坐标。 |
+| `ADDRESS_*`、`CLOSEST_POI` | 地址、城市、国家及邻近地点，用于检索、显示和区域理解。 |
+| `VENUE_TAXONOMY_VALUE` | 场所类型，例如交通、零售或街道环境。 |
+| `IMPRESSIONS` | 库存提供的曝光量，必须同时说明统计周期；不默认等于每日曝光。 |
+| `FLOORCPM`、`MEDIAOWNERCURRENCY` | 媒体 CPM 及原币种；报价前按输入汇率换算。 |
+| `VIOOHSELECTOPTIN` | 可售确认；未确认可售的资源保留记录并给出排除原因。 |
+| `FRAMEIMAGEPATH` | 现场图像线索；图片分析还受链接可访问性和视觉模型能力影响。 |
+
+原始行、规范化字段与计算结果分开保留。`SCORE_P` 等原字段可作为参考查看，不应直接被解释为本系统的最终综合评分。缺失值也不等于零：未知态度在重要度计算中可用中性先验，但原始态度列与来源仍需保持未知标记。
+
+### 3.2 统计量的三个层次
+
+| 层次 | 典型数据 | 正确用途 |
+| --- | --- | --- |
+| 输入证据 | 库存、坐标、现场照片、地域资料、流量参数 | 决定候选范围和模拟条件 |
+| 模拟观测 | 实际记录小时数、加权观看机会、好感和兴趣评分 | 比较本轮场景、创意及屏幕差异 |
+| 商业测算 | 投放天数、SOT、累计 Impression、资金与 ROI 情景 | 形成预算方案、报价和试投验证计划 |
+
+三层不能混为一个“效果分数”。例如，一个屏幕模拟了 24 小时，输出 30 天预算建议，并不意味着运行了 30 天独立模拟；它是对单日结果按指定周期和 SOT 作线性延展。
+
+### 3.3 批次一致性与落盘
+
+项目签名由库存、广告、创意、交通参数、资料和全天排程等输入生成。报告接口在服务器端重新检查当前批次，再绑定 `campaign_id`、`simulation_batch_id` 和证据指纹，避免客户端随意拼接不同活动的结果。坐标与模拟证据不一致时，不能继续按同一屏幕引用。
+
+主要运行数据位于 `backend/uploads/`：`planning/` 保存项目和覆盖任务，`campaign_experiments/` 保存广告实验，`scene_library/` 保存回放场景。逐屏大体积输入已独立归档，进度状态保持轻量；轮询部分进度时不反复解析所有已完成场景，最终就绪和报告生成仍执行完整校验。
+
+## 4. 核心指标与数学模型
+
+以下符号与当前实现口径对应。$s$ 表示屏幕，$a$ 表示合成代表，$t$ 表示小时，$D$ 表示规划天数，$\alpha_s$ 表示屏幕 SOT，$B$ 表示总预算。
+
+### 4.1 策略驱动的注意力决策
+
+快速模式先为每个代表生成策略参数，再由本地算法执行全天演化。参数包括基础注意概率 $p_a$、兴趣概率、期望停留时间、疲劳系数 $f_a$ 和同伴影响系数 $\beta_a$。
+
+当代表与屏幕存在视线且可观看时间 $\tau_{a,t}>0$ 时：
+
+$$
+p_{a,t}=\operatorname{clip}_{[0,1]}\left(
+\frac{p_a\min(1,\tau_{a,t}/5)}{1+f_a n_{a,t}}
++\beta_a q_{a,t}\right).
+$$
+
+其中 $n_{a,t}$ 为此前产生关注的累计次数，$q_{a,t}$ 为上一轮同屏其他代表的关注比例。没有视线或可用时间时，决策为经过；没有出行或路线不接触屏幕时，分别记录缺席或未曝光。停留时间受可用时间上限约束，随后区分短暂瞥视、观看和兴趣反应。
+
+随机数由种子、代表 ID 和轮次确定。固定策略、场景和种子有利于复现本地轨迹；如果重新调用模型生成策略，结果仍可能变化。`policy_simulation_v1` 是明确标注的方法版本，不等同于逐小时、逐人独立调用语言模型。
+
+### 4.2 全周期累计 Impression
+
+设屏幕在 $H_s$ 个模拟小时内记录的加权机会总量为 $O_s$。事件权重反映代表人口或车内机会规模，而不是画面上图标的数量：
+
+$$
+O_s=\sum_{e\in\mathcal E_s}w_e,\qquad
+\widehat I_s=O_s\frac{24}{H_s}D\alpha_s.
+$$
+
+$\widehat I_s$ 是建议 SOT 下整个规划周期的累计机会。表格中的 `recommended_exposures` 已完成天数和 SOT 折算，前端不应再次乘以 $D$。原始观测总量与小时数单独显示。
+
+在底层库存规划路径中，若库存量 $I_s^{\mathrm{inv}}$ 对应 $P$ 天，则使用 $I_s^{\mathrm{inv}}D\alpha_s/P$。当前四阶段最终报告强制使用本轮直接模拟，不在缺失屏幕时自动改用库存或预测补齐。跨屏相加得到总机会次数，不是去重触达人数。
+
+### 4.3 CPM、投放资金与日均单价
+
+设媒体原币 CPM 为 $c_s^0$，加价率为 $m$，原币与预算币种各自的“每单位货币对应 USD”汇率为 $r_s,r_B$，DSP 费率为 $\delta$：
+
+$$
+c_s=c_s^0(1+m)\frac{r_s}{r_B},\qquad
+c_s^{\mathrm{all}}=c_s(1+\delta).
+$$
+
+$$
+M_s=\frac{\widehat I_s}{1000}c_s,\qquad
+F_s=M_s\delta,\qquad
+A_s\approx M_s+F_s,\qquad
+\overline A_s=\frac{A_s}{D}.
+$$
+
+$M_s$ 为媒体预算，$F_s$ 为 DSP 费用，$A_s$ 为建议投放资金。金额以分为单位处理，导出可保留舍入预留；日均单价 $\overline A_s$ 是建议 SOT 下的总资金除以天数，**不是媒体另行承诺的固定日租价**。额外执行成本单独计入整体预算，不混入日均媒体单价。
+
+例如：单日机会 $O_s=200{,}000$、$H_s=24$、$D=30$、SOT 为 $0.2\%$，则累计 Impression 为 $12{,}000$。若换算后 CPM 为 10 USD、DSP 费率 10%，媒体预算为 120 USD、DSP 费用为 12 USD、对应资金为 132 USD，日均 4.40 USD。这是公式示例，不是实际供应商报价。
+
+### 4.4 重要度与预算分配
+
+综合重要度由曝光、好感、兴趣、可见性、位置、市场匹配和成本七个维度组成：
+
+$$
+S_s=\sum_{k=1}^{7}\omega_k z_{s,k},\qquad
+\sum_k\omega_k=1,\quad z_{s,k}\in[0,100].
+$$
+
+默认原始权重依次为 20、15、20、15、15、10、5，归一化后参与计算。未知维度使用 50 作为排序先验；未知敏感性上下界不是统计置信区间。最终报告的曝光维度按本轮屏幕模拟机会相对最大值进行归一化。
+
+完整报告使用“试投种子 + 受约束加权再分配”。效果目标下 $u_s=S_s/100$，用于分配的相对权重为：
+
+$$
+v_s=\frac{\max\{\varepsilon,u_s/\max(0.01,c_s^{\mathrm{all}})\}}
+{1+\lambda(n_{g(s)}-1)},\qquad \varepsilon=10^{-6}.
+$$
+
+$n_{g(s)}$ 为该屏幕所在分配网格中的候选数量，$\lambda$ 为区域重复惩罚。这里的分配网格按经纬度约 $0.01$ 度划分，不等同于报告地图约 400 米的展示分组，也不是真实人群重复率。
+
+令 $C_s^{\mathrm{full}}$ 为完整周期全 SOT 成本，$\rho$ 为单屏预算占比上限，$E_s$ 为额外执行成本，则分配须满足：
+
+$$
+0\le A_s\le\min\{\alpha_{\max}C_s^{\mathrm{full}},\max(0,\rho B-E_s)\},\qquad
+\sum_s A_s+\sum_{s:A_s>0}E_s\le B.
+$$
+
+程序先为具备至少 0.01 货币单位容量的候选分配小额种子，再按 $v_s$ 将余额分给未触顶且达到重要度门槛的屏幕；利润目标还检查基准回报条件。达到容量上限或没有合格候选时停止，不强制花满预算。最终 $\alpha_s=A_s/C_s^{\mathrm{full}}$。这是可复算的分配启发式，不保证全局最优；连续 SOT 还需确认媒体的最小购买份额。
+
+### 4.5 曝光效率与收益情景
+
+方案曝光效率以加权 CPM 表示，而不是直接平均每块屏幕的 CPM：
+
+$$
+\operatorname{CPM}_{\mathrm{plan}}=
+1000\frac{\sum_s A_s}{\sum_s\widehat I_s}.
+$$
+
+财务测算需要另行提供千次曝光订单假设 $r_s$、增量归因比例 $\gamma$、客单价 $V$、毛利率 $\mu$ 和整体成本 $C$：
+
+$$
+\Delta Q=\sum_s\frac{\widehat I_s}{1000}r_s\gamma,\quad
+\Delta R=V\Delta Q,\quad
+\operatorname{ROI}=\frac{\mu\Delta R-C}{C},\quad
+\operatorname{ROAS}=\frac{\Delta R}{C}.
+$$
+
+完整报告在缺少收益参数时可填入明确标注的演示假设：客单价 100、毛利率 0.45、增量比例 0.25，低、中、高每千次订单分别为 0.05、0.1、0.2。这些数值用于情景计算，不是行业基准或已验证转化率。
+
+提供逐屏投放组与对照组时，千次增量订单可按下式计算：
+
+$$
+r_s^\Delta=1000\left(\frac{Q_s^T}{I_s^T}-\frac{Q_s^C}{I_s^C}\right).
+$$
+
+此时已得到增量差值，代码将归因比例设为 1，避免重复折减。低高区间使用带稳定项的近似泊松敏感性计算；组间可比性、曝光口径和样本独立性仍需由业务验证。
+
+## 5. 投资方案、可视化与运行案例
+
+### 5.1 四种侧重点
+
+| 方案 | 当前分配特征 | 业务适用问题 |
+| --- | --- | --- |
+| 综合投资建议 | 七维重要度及当前成本、区域、单屏约束 | 在现有证据下如何形成基础计划？ |
+| 曝光效率优先 | 曝光权重 70%、成本 30%，区域惩罚为 0 | 哪些屏幕更值得按曝光与成本追加预算？ |
+| 人群兴趣优先 | 兴趣 65%、好感 25%、市场匹配 10%，区域惩罚 0.5 | 如何更多投入与创意反应相匹配的场景？ |
+| 区域分散优先 | 位置 50%、曝光 30%、可见性 20%，区域惩罚 4 | 如何降低候选密集区域对预算的吸收？ |
+
+四种方案共享同一轮模拟与商业输入，不需要为切换侧重点重跑全天任务。权重变化不保证每项指标都改善：当单屏容量、费用或门槛起主导作用时，多个方案可能接近；“曝光效率优先”也不是累计曝光全局最优的承诺。
+
+### 5.2 可核对的报告快照
+
+以下来自本地应用已保存的 144 屏报告及项目页数据，预算 10,000 USD，规划 30 天。144 块屏幕均有直接模拟，139 块获得正向资金分配，139 块有直接态度评分，校准收益证据覆盖为 0。新克隆仓库不包含这一完整后台运行状态。
+
+| 方案 | 媒体投入（USD，含 DSP） | 周期累计 Impression | 加权 CPM（USD） | 获分配屏幕 |
+| --- | ---: | ---: | ---: | ---: |
+| 综合投资建议 | 10,000.00 | 1,029,742 | 9.71 | 139 |
+| 曝光效率优先 | 10,000.00 | 1,014,841 | 9.85 | 139 |
+| 人群兴趣优先 | 10,000.00 | 1,000,774 | 9.99 | 139 |
+| 区域分散优先 | 10,000.00 | 1,030,606 | 9.70 | 139 |
+
+曝光为模拟机会经周期和 SOT 折算后的结果；表中四舍五入只用于展示。可核对的数据保存在 [项目页结果文件](project-page/dist/assets/results.json)。
+
+![投资金额、累计曝光及单屏关系](project-page/dist/assets/investment-distribution.webp)
+
+阅读图表时，应同时检查总额、分布与单屏点位。地图用于检查投入的空间分布；直方图显示资金和累计曝光集中在哪些区间；散点图用于观察同等投入下的曝光差异。低 CPM 并不自动说明品牌效果或购买回报更好。
+
+## 6. 安装、配置与运行
+
+### 6.1 技术构成与目录
+
+前端使用 Vue 3、Vite 和 MapLibre；后端使用 Flask；快速模拟由独立 Python 进程执行。模型请求、地图查证与本地确定性计算分开组织。旧版社交模拟和图谱服务属于可选模块，不是本 README 推荐的四阶段主路径。
+
+```text
+backend/app/audience/       数据、地图、人群、模拟、评分及预算计算
+backend/scripts/           策略模拟与其他 worker 入口
+backend/tests/             规划、模拟、覆盖与数据一致性测试
+frontend/src/views/        ScreenPlanning.vue 四阶段入口
+frontend/src/components/   回放、地图、报告、分布图等组件
+backend/uploads/           本地运行数据和结果，不随 Git 分发
+data/test.xlsx             测试库存
+project-page/              独立项目展示页、截图与结果数据
+```
+
+### 6.2 安装依赖
+
+建议使用 Python 3.11 或 3.12、Node.js 22.12+，并为项目单独创建虚拟环境。依赖版本以仓库清单及锁文件为准。
 
 ```bash
 git clone https://github.com/SuleynanAuir/AI-Native-pDOOH-Worlds-Model.git
@@ -25,572 +272,132 @@ python3.11 -m venv .venv
 npm ci --prefix frontend
 ```
 
-在 `.env` 中填写自己的 `LLM_API_KEY`、`LLM_BASE_URL` 和 `LLM_MODEL_NAME`。图片模型按供应商实际能力配置。需要坐标/周边查询时，填写 `MAPRICOT_API_KEY` 并将 `LOCATION_LOOKUP_ENABLED` 改为 `true`。Zep 仅供可选的旧版图谱/社交模块使用。
+在项目根目录 `.env` 中配置实际使用的服务。以下是字段示意，不包含可直接调用的凭据：
 
-分别在两个终端启动：
+```dotenv
+LLM_API_KEY=<你的模型服务密钥>
+LLM_BASE_URL=<兼容接口的服务地址>
+LLM_MODEL_NAME=<实际可用的文本模型>
+MULTIMODAL_ENABLED=true
+MULTIMODAL_VISION_API_KEY=<视觉服务密钥>
+MULTIMODAL_VISION_BASE_URL=<视觉接口地址>
+MULTIMODAL_VISION_MODEL=<支持图片输入的模型>
+MULTIMODAL_VISION_API_STYLE=chat
+LOCATION_PROVIDER=mapricot
+MAPRICOT_API_KEY=<地图服务密钥>
+LOCATION_LOOKUP_ENABLED=true
+PDOOH_POLICY_SIMULATION=true
+```
+
+`PDOOH_POLICY_SIMULATION=true` 需要显式配置；不要假定新克隆会自动采用本机曾启用的模式。该模式使用当前后端 Python 环境，不要求安装 OASIS worker。若要运行其他路径，再按 `backend/requirements-world.txt` 建立 `backend/.venv-oasis` 并配置 `OASIS_PYTHON`；默认旧版图谱服务不启用。
+
+模型策略、人口准备和创意分析需要模型服务；周边查询和底图需要对应地图能力。更换服务地址后应以实际接口响应验证，不能只检查变量是否存在。密钥留在服务器端，不使用 `VITE_` 变量暴露到浏览器。
+
+### 6.3 启动与健康检查
+
+分别在两个终端执行：
 
 ```bash
-# 终端一：后端，默认 http://localhost:5001
+# 终端一：后端，默认端口 5001
 .venv/bin/python backend/run.py
+```
 
-# 终端二：前端，默认 http://localhost:3000
+```bash
+# 终端二：前端，优先尝试端口 3000
 npm --prefix frontend run dev
 ```
 
-前端端口占用时，以 Vite 输出的实际地址为准。`/world` 为人群模拟，`/planning` 为库存与预算规划。
-
-需要运行 OASIS 人群决策时，另外安装 worker：
-
 ```bash
-python3.11 -m venv backend/.venv-oasis
-backend/.venv-oasis/bin/python -m pip install -r backend/requirements-world.txt
+# 验证后端进程响应
+curl http://127.0.0.1:5001/health
 ```
 
-首次克隆不带本机的模拟记录、地图缓存和已生成报告。可使用 `data/test.xlsx`，在工作台「场景设置」中从库存添加地点，再配置广告并运行分析；也可在单场景中设置地区与人群后运行 OASIS。地图查证、人物生成及广告分析会使用你配置的外部 API，结果保存在 `backend/uploads/`。
+前端端口占用时，Vite 会选择后续端口，以终端实际输出为准。访问 `http://127.0.0.1:<前端端口>/planning`；`/world` 是独立模拟工作台。开发代理将 `/api` 转发到 `http://localhost:5001`，改后端端口时须同步调整代理。
 
-`.env`、虚拟环境、上传数据和运行日志不提交到仓库。`output/` 仅保留最新界面展示；详细开发说明里的其他产物链接指向本地验收文件。
+展示页可单独运行，不需要后台模拟服务：
 
-### 验证
+```bash
+python3 -m http.server 4178 --bind 127.0.0.1 --directory project-page/dist
+```
+
+运行截图与项目页中的示例数据不等于预装后台任务。新项目应从导入库存开始，完成自己的批次。
+
+## 7. 接口、交付与验收
+
+### 7.1 常用 API
+
+业务接口统一以 `/api` 为前缀。除健康检查及文件下载外，常见返回结构为 `success` 加 `data`，失败时返回 `error`。以下表格只说明用途；请求字段以对应路由和前端实际调用为准。
+
+| 方法与路径 | 用途 |
+| --- | --- |
+| `POST /api/planning/import` | 上传工作簿，multipart 字段 `workbook`，可带 `source_sheet` |
+| `POST /api/planning/sample` | 创建测试库存项目 |
+| `GET /api/planning/<pid>` | 读取项目、库存与当前有效报告 |
+| `GET/POST /api/planning/<pid>/ad-setup` | 读取或保存广告设置 |
+| `POST /api/planning/<pid>/creative` | 上传广告创意素材 |
+| `GET/POST /api/planning/<pid>/coverage` | 查询或启动本轮全库存处理 |
+| `POST /api/planning/<pid>/plan` | 校验全部屏幕完成后生成投资方案 |
+| `GET /api/planning/<pid>/export?strategy=investment` | 导出指定方案 Excel |
+
+生成报告必须先满足本轮覆盖要求。不能只提交预算参数，就要求接口跳过缺失的全天证据；也不应把前端传入的历史活动 ID 当成当前有效批次。
+
+### 7.2 Excel 与采购交接
+
+导出工作簿包含所选策略的 Proposal 及相关审计内容，并附综合投资排名、收益情景和投资假设等工作表。一个重要口径是：**Proposal 对应当前选择的比较策略，而 Investment Ranking 与 Return Scenarios 描述综合投资策略**。跨工作表核对时必须先确认策略，不能把不同表直接拼为同一方案。
+
+交接给采购或运营时，至少核对以下内容：屏幕 ID 和地点、日期与天数、币种与汇率、CPM 和 DSP 费用、单屏金额、SOT、周期累计曝光、额外执行成本及未分配原因。总金额与导出公式应可复算；日均显示值经过舍入时，以周期总额为准。
+
+### 7.3 建议验收顺序
+
+1. **库存验收**：导入数量正确，重复 ID、无效坐标、不可售和币种问题均可定位到原始行。
+2. **模拟验收**：所有目标屏幕属于同一有效批次，具有完整 24 轮记录；中断记录不计完成。
+3. **报告验收**：观测周期与投放周期分别显示，累计曝光没有重复乘天数；资金与单屏容量不越界。
+4. **交互验收**：总进度、完成提示、双场景回放、分页、地图点选及四方案切换正常。
+5. **交付验收**：所选策略与 Excel Proposal 一致；媒体金额、DSP、执行成本与预算余额能够对账。
 
 ```bash
 npm --prefix frontend run build
-PYTHONPATH=backend .venv/bin/python -m pytest backend/tests/test_campaign.py backend/tests/test_campaign_narratives.py backend/tests/test_comparison.py -q
+PYTHONPATH=backend .venv/bin/python -m pytest \
+  backend/tests/test_investment.py \
+  backend/tests/test_policy_simulation.py \
+  backend/tests/test_coverage_parallel.py \
+  backend/tests/test_simulation_workflow.py -q
 ```
 
-曝光数字表示模拟的经过机会，兴趣与好感是模型推测；人数、车流和消费能力需用现场数据校准，不能当成真实观看、购买率或预算回报承诺。
+上述测试验证代码逻辑，不代替实际模型服务、地图服务和全库存端到端验收。外部服务失败、限流或配置变化可能影响完整运行。
 
-## 目标架构与研发契约
+## 8. 性能、运维与业务验证
 
-以下保留原设计文档；实际可用功能及运行边界以以上启动说明和 [实现与验证说明](docs/IMPLEMENTATION.md) 为准。
+### 8.1 性能设计
 
-## 1. 核心设计
+策略模式把按人按小时的模型交互改为批量策略生成。以 100 个代表为例，每批 25 个、最多 4 个生成线程，通常需要 4 批初始策略请求，随后在本地执行 24 小时演化；格式校验失败可能触发重试。人口准备、地图查询、广告态度分析和结果加工仍有独立成本，因此不能把“4 批策略”解释为单屏全程只调用 4 次服务。
 
-本项目保留 NEXUS 的多源接入、Agent 协作和闭环决策思想，但不使用 Knowledge Graph。世界模型由 **DOOH Digital Twin 状态空间**表达：
+逐屏覆盖目前最多并行 3 个屏幕任务，并将可独立执行的广告分析与仿真重叠处理。路线缓存减少重复寻路，轻量进度与完整检查点分开写入，车辆回放使用带权样本控制规模。处理时间应从任务开始到最终回放和报告证据就绪完整计量，不只统计模型请求耗时，也不承诺固定倍数的加速。
 
-$$
-World_t=\{S_t,A_t,E_t\}
-$$
+### 8.2 常见问题处理
 
-其中的状态变量为：
+| 现象 | 优先检查 | 处理方式 |
+| --- | --- | --- |
+| 页面出现 `Network Error` | 后端健康检查、前端实际端口、代理目标、过期 API 地址 | 先恢复 API 连通，再刷新界面；不要重复创建项目掩盖问题。 |
+| 地图只有坐标点、无街道 | 地图服务权限、密钥、瓦片请求及网络 | 等待加载或修复配置；坐标回退图不表示底图已查证完成。 |
+| 总进度停止增长 | 当前屏幕错误、模型限流、地图失败、worker 状态 | 读取项目任务状态和日志，修复后在界面重试，保留已完成记录。 |
+| 播放到日末但报告仍灰色 | 全库存是否全部完成、批次签名是否匹配 | 以后台 `ready` 为准，不手工篡改完成计数。 |
+| SOT 很小，资金不为零 | 连续份额与显示精度 | 用高精度比例和总资金核对，采购前确认实际最小份额。 |
+| 多个方案相近 | 容量上限、预算、门槛及成本分布 | 比较逐屏资金而非只看总额；不要人为制造方案差异。 |
 
-$$
-S_t,\quad A_t,\quad E_t
-$$
+### 8.3 从规划走向实际投放
 
-- Environment State：必选字段包含 location、screen、POI、price、impressions、availability 和 photo context；traffic、weather、urban event 仅在有额外数据源时启用。
-- Representative Agent/Cohort State：position、activity、mode、route 和 cohort weight。
-- Event State：movement、screen passage 和 view opportunity。
+首轮业务验证应选取可控的一组屏幕，核对现场位置、真实人车流、屏幕朝向和可见性，再记录试投的实际播放、消耗及曝光口径。若业务目标是转化或增量收入，应设计时间和区域可比的对照，明确订单归属、重复曝光及归因窗口，将结果按屏幕 ID 回填校准数据。
 
-状态通过版本化转移函数演进：
+对外部署前，需要补齐访问认证、授权、TLS、持久化备份、服务进程管理、API 限流和日志保留策略。当前本地文件状态与 Flask 工作台不应直接按多租户生产平台开放；地图、图片和模型请求也应遵守各服务的使用条款与数据处理要求。原始上传资料、凭据、日志和本地运行状态不提交到 Git。
 
-$$
-World_{t+1}=F_\theta(World_t,U_t,\epsilon_t)
-$$
+### 8.4 代码入口与许可
 
-$$
-U_t,\quad \epsilon_t,\quad F_\theta
-$$
+- 数据清洗与传统库存规划：[planning.py](backend/app/audience/planning.py)。
+- 全库存报告、策略方案与收益情景：[investment.py](backend/app/audience/investment.py)。
+- 连续 SOT 资金分配：[investment_allocation.py](backend/app/audience/investment_allocation.py)。
+- 个人行为策略与校验：[policy_simulation.py](backend/app/audience/policy_simulation.py)。
+- 批次签名、全天完成检查：[simulation_workflow.py](backend/app/audience/simulation_workflow.py)。
+- 四阶段界面：[ScreenPlanning.vue](frontend/src/views/ScreenPlanning.vue)。
 
-三者依次表示 Budget/SOT 等规划条件、固定 seed 控制的随机扰动，以及 State Reducer、Mobility、Exposure 和 Screen Scoring 模型的组合。
-
-```text
-City
-  -> Region
-     -> Location Cell
-        -> Screen Object
-        -> Audience Flow
-           -> Exposure Event
-```
-
-这些层级通过外键、H3、PostGIS 空间关系和时间索引组织，不构建语义图谱。
-
-## 2. 总体架构
-
-```mermaid
-flowchart TB
-    SRC[Original Frames / Photos / Sociology Docs / Optional Research / Budget]
-    ING[Ingestion & Validation]
-    PG[(PostgreSQL + PostGIS + TimescaleDB)]
-    OBJ[(S3 + Iceberg + Parquet)]
-    EVT[State Event Journal]
-    TWIN[Digital Twin State Reducer]
-    SNAP[Immutable World Snapshot]
-    POP[Synthetic Population]
-    SIM[Ray Simulation]
-    PRED[Exposure & Screen Scoring]
-    OPT[OR-Tools / Gurobi]
-    AGENT[Typed Decision Agents]
-    API[FastAPI]
-    UI[Next.js Planner]
-
-    SRC --> ING
-    ING --> PG
-    ING --> OBJ
-    ING --> EVT
-    EVT --> TWIN
-    PG --> TWIN
-    OBJ --> TWIN
-    TWIN --> SNAP
-    SNAP --> POP
-    POP --> SIM
-    SNAP --> SIM
-    SIM --> PRED
-    PRED --> OPT
-    API --> SIM
-    API --> OPT
-    AGENT --> API
-    OPT --> UI
-```
-
-端到端流程：
-
-```text
-Raw Data
-  -> Parse / Map / Validate
-  -> Canonical Objects
-  -> Observation Events
-  -> World Snapshot
-  -> Synthetic Population
-  -> Mobility & Exposure Simulation
-  -> Exposure Potential & Screen Scoring
-  -> Budget / Screen / SOT Optimization
-  -> Human Approval
-  -> FilteredFrames / Proposal / PICS
-```
-
-## 3. 技术栈
-
-| 层 | 技术 | 用途 |
-|---|---|---|
-| API | Python 3.12、FastAPI、Pydantic v2 | 类型化 REST API 和 OpenAPI |
-| Workflow | Temporal | 长任务、重试、补偿和人工审批 |
-| Batch | Polars、GeoPandas；规模化后 Spark | 库存、GIS、日志和特征处理 |
-| Streaming | Kafka API / Redpanda | Observation 和 State Change 事件 |
-| OLTP/Geo/Time | PostgreSQL、PostGIS、TimescaleDB | Canonical facts、空间和近期状态 |
-| State History | S3、Iceberg、Parquet | 不可变状态、事件和训练数据 |
-| Evidence Search | PostgreSQL FTS、Qdrant | 社会学文献、内部调研和图片证据检索 |
-| Simulation | Ray、Arrow | 分布式状态转移和场景并行 |
-| ML | PyTorch、PyG、scikit-learn、MLflow | Screen scoring、曝光估计、校准和模型治理 |
-| Optimization | OR-Tools；可选 Gurobi | MILP/CP-SAT 与鲁棒优化 |
-| Agent | LangGraph + Typed Tools | 决策编排、解释和审批 |
-| Frontend | TypeScript、Next.js、React、MapLibre | 地图、场景、方案对比 |
-| Observability | OpenTelemetry、Prometheus、Grafana、Loki、Tempo | Metrics、logs 和 traces |
-| Deployment | Docker Compose、Kubernetes、Helm、Terraform | 本地与生产部署 |
-
-## 4. Digital Twin 状态模型
-
-### 4.1 状态对象
-
-| 状态 | 主键 | 核心字段 |
-|---|---|---|
-| LocationCellState | `cell_id + time_bucket` | location、POI、venue、photo context；可选 traffic/weather/event |
-| ScreenState | `screen_id + time_bucket` | availability、SOT、price、brightness、media capability |
-| AudienceFlowState | `cell_id + segment_id + time_bucket` | inflow、outflow、dwell、mode |
-| Agent/CohortState | `id + time_bucket` | position、activity、mode、route、cohort weight |
-| TwinEvent | `event_id` | event_time、source、object、payload、revision |
-| WorldSnapshot | `snapshot_id` | parent、state_at、partitions、offsets、versions、hash |
-
-所有对象使用 UUIDv7；坐标统一 WGS84；距离使用 PostGIS `geography`；金额使用 `NUMERIC/Decimal`。
-
-### 4.2 事件来源
-
-```text
-OBSERVED      真实库存、价格、可售状态和环境资料
-INTERVENTION  Budget、SOT、供应或情景修改
-DERIVED       确定性特征和聚合结果
-SIMULATED     仿真生成的移动、曝光机会和评分
-CORRECTION    经过审批的历史事实更正
-```
-
-State Reducer 按 `(event_time, priority, event_id)` 稳定排序：
-
-```text
-load parent snapshot
-  -> validate event schema and revision
-  -> apply reducers and model transitions
-  -> validate state invariants
-  -> write immutable partitions
-  -> compute hashes
-  -> publish snapshot atomically
-```
-
-反事实 Scenario 从生产 Snapshot 创建 copy-on-write branch，绝不修改生产状态。
-
-### 4.3 Snapshot 契约
-
-```json
-{
-  "world_snapshot_id": "019...",
-  "parent_snapshot_id": "019...",
-  "city_id": "gb-london",
-  "state_at": "2026-10-01T17:00:00Z",
-  "schema_version": "world-state.v1",
-  "reducer_version": "twin-reducer-4",
-  "partition_manifest_uri": "s3://.../manifest.json",
-  "event_offsets": {"partition-0": 48192},
-  "model_versions": ["mobility-12", "viewability-7"],
-  "state_sha256": "..."
-}
-```
-
-仿真必须绑定一个 `PUBLISHED` Snapshot，不允许读取未固定的“最新数据”。
-
-## 5. 数据接入
-
-### 5.1 用户提供的输入
-
-```text
-Required
-├── Original Frame Excel
-├── 目标国家/地区的消费力、观念与文化价值观文献
-├── Total Budget + Currency
-└── 每块屏幕的现场照片
-
-Optional
-└── 公司内部对该地区消费者的群体画像调研
-```
-
-当前不把完整 Campaign Brief、广告创意、个人轨迹或历史投放反馈设为必选输入。若没有投放日期或 Campaign days，只输出预算级建议；最终交易结果需补充日期参数。
-
-### 5.2 Original Frame Schema
-
-`data/test.xlsx` 的 `UnfilteredFrames` 表头是库存接入契约：
-
-```text
-Identity
-  GEOM, SSP, MARKET, VIOOH_ID, ASSETUUID, VISUAL_UNIT_CODE
-
-Region
-  ADDRESS_THOROUGHFARE, ADDRESS_ADMINISTRATIVE_AREA, ADDRESS_LOCALITY
-  ADDRESS_POSTAL_CODE, ADDRESS_COUNTRY, ADDRESS_ISO3_COUNTRY_CODE
-  LATITUDE, LONGITUDE, IATA
-
-Screen Specification
-  PRODUCT_FORMAT_NAME, DIGITAL_SPEC_WIDTH, DIGITAL_SPEC_HEIGHT
-  WIDTHXHEIGHT, ASPECT_RATIO, DIGITAL_SPEC_MOTION_TYPE
-  DIGITAL_SPEC_FPS, DIGITAL_SPEC_ROTATION, SLOT_DURATION
-
-Venue / POI
-  VENUE_TAXONOMY_ID, VENUE_TAXONOMY_VALUE
-  CLOSEST_POI, DISTANCE_TO_CLOSEST_POI
-
-Commercial / Reach
-  IMPRESSIONS, FLOORCPM, MEDIAOWNERCURRENCY
-  VIOOHSELECTOPTIN, SCORE_P
-
-Photo
-  FRAMEIMAGEPATH
-```
-
-源文件中的 `CLOEST_POI` 作为 `CLOSEST_POI` 的兼容别名处理。原始列保持不变，标准化值写入处理层。
-
-同一工作簿还定义了下游契约：`FilteredFrames` 继承 Frame 字段；`POI` 使用 `ADDRESS_COUNTRY, Location, POI` 补充目标范围；`Proposal` 和 `PICS` 作为最终导出，字段见优化输出。
-
-### 5.3 接入流程
-
-1. 原始文件写入不可变 S3 路径并计算 SHA-256。
-2. 解析 XLSX、照片、PDF/DOCX/PPTX，执行安全检查。
-3. 使用国家、行政区、城市、邮编、IATA 和经纬度锁定目标区域。
-4. 校验屏幕 ID、坐标、尺寸、曝光、底价、币种、POI 和可售状态。
-5. 错误记录进入 quarantine，不用默认值掩盖异常。
-6. 使用 PostGIS/H3 计算邻近关系和 Screen Exposure Zone；额外 POI、道路或客流数据只有在明确接入并记录来源后才参与计算。
-7. VLM 从现场照片提取可见性与环境特征，不识别照片中的个人。
-8. 社会学文献和可选内部调研按 page/bbox 建立 Evidence Index。
-9. Canonical change 转换为 Observation Candidate；审核后进入 Reducer。
-
-文档抽取只生成带原文引用的 `EvidenceClaim`，必须经过单位、时间、地域和置信度校验，不能直接修改 Twin 状态。
-
-## 6. Representative Population 与 Mobility
-
-平台根据国家社会学文献、可选内部消费者调研，以及 Frame 中的 Venue/POI/位置和照片环境，构建代表性人群 Cohort。它不复制或跟踪真实个人。
-
-```text
-国家/区域消费与文化资料
-+ 可选内部群体画像
-+ Venue / POI / Location Context
--> Representative Cohorts
--> 可能的活动、移动方式与经过场景
-```
-
-如果后续获得合法的人口统计、道路网络、OD 或客流聚合表，可使用 IPF/IPU 和 Mobility Calibration 进行量化校准；在没有这些数据时，系统必须降低置信度，不能把文献推断描述为精确人口分布或真实路线。
-
-Mobility 状态：
-
-$$
-M_{c,t}=(location\_cell,venue,activity,mode,dwell\_band,weight)
-$$
-
-基线模型按 Location Cell、Venue 与 Cohort 推演经过概率；只有接入道路网络和聚合客流后，才启用 route 与 Screen Exposure Zone 相交计算。道路仅作为路径算法的封闭拓扑数据，不承担语义推理。
-
-## 7. Exposure 与 Screen Importance
-
-### 7.1 Exposure Opportunity
-
-对每个 Agent、Screen 和时间点：
-
-$$
-p_{view}=\sigma(\beta_0+\beta_1\log(1+\omega)+\beta_2\cos\theta-\beta_3\log(1+d)+\beta_4\Delta t-\beta_5 occlusion)\times p_{slot}
-$$
-
-输入包括距离、角度、屏幕视角面积、移动速度、停留、遮挡、环境和播放时长。`IMPRESSIONS` 是原始曝光基准；照片和空间环境用于修正屏幕是否容易被看见。
-
-### 7.2 Screen Importance Score
-
-$$
-Score_s=w_EE_s+w_VV_s+w_LL_s+w_MM_s+w_CC_s+w_AA_s-w_UU_s
-$$
-
-$$
-(E_s,V_s,L_s,M_s,C_s,A_s,U_s)
-$$
-
-- Exposure Potential：`IMPRESSIONS` 与可能经过人群。
-- Visibility：尺寸、比例、位置、照片视线与遮挡。
-- Location Value：Venue、POI、距离和区域角色。
-- Market Relevance：当地消费力、观念、文化价值观与可选内部画像。
-- Cost Efficiency：`FLOORCPM + MEDIAOWNERCURRENCY`。
-- Availability：`VIOOHSELECTOPTIN`、资源状态和字段完整性。
-- Uncertainty：缺失数据和推断风险。
-
-各维度先在目标区域内归一化。MVP 权重由可审计配置给出，并满足：
-
-$$
-\sum_k w_k=1,\quad w_k\ge0
-$$
-
-`SCORE_P` 只用于对照和异常检查；没有历史效果标签时，不把这些权重描述为从效果数据中学习得到。
-
-### 7.3 指标
-
-```text
-raw_impressions
--> adjusted_exposure_opportunity
--> visibility_score
--> location_score
--> market_relevance_score
--> cost_efficiency
--> screen_importance_score
--> confidence_range
-```
-
-由于当前输入不包含广告创意、个人级触达或投后结果，MVP 不直接承诺 Creative Attention、Unique Reach、Recall、Conversion 或 Uplift。它输出屏幕层面的曝光机会、环境适配度、重要性和不确定性。
-
-## 8. 仿真引擎
-
-Simulation Agent 是轻量状态行或 Cohort，不是 LLM Agent。
-
-```text
-load World Snapshot and population partitions
-for each time window:
-  update mobility state
-  generate route-screen intersections
-  calculate view opportunity
-  aggregate screen × location × cohort metrics
-  calculate screen importance dimensions
-persist metric cube and quality report
-```
-
-Ray Task 只传 manifest URI 和 partition ID；中间状态使用 Arrow/Parquet。随机流由 `scenario_seed + partition + module + replicate` 派生，保证重试可复现。
-
-输出 Metric Cube：
-
-```text
-scenario_id, screen_id, location_cell, cohort_id
-raw_impressions, exposure_opportunity, visibility_score
-location_score, market_score, cost_efficiency
-screen_importance_score, uncertainty, quality_flags
-```
-
-## 9. Budget / Screen / SOT Optimization
-
-决策变量：
-
-$$
-x_s\in\{0,1\},\quad q_s\in[0,1],\quad b_s\ge0
-$$
-
-三者依次表示是否选择该 Screen、Suggested SOT，以及分配给该 Screen 的预算。
-
-目标：
-
-$$
-\max \sum_s x_s q_s\left(w_E Exposure_s+w_V Visibility_s+w_L Location_s+w_M Market_s-w_C Cost_s-w_U Uncertainty_s\right)
-$$
-
-硬约束：
-
-$$
-TotalCost \le Budget
-$$
-
-$$
-0\le q_s\le AvailableSOT_s
-$$
-
-- Screen 必须位于 Excel 锁定的目标区域。
-- Screen 必须满足 `VIOOHSELECTOPTIN` 和资源完整性要求。
-- 成本必须使用 `FLOORCPM`、媒体币种、预算币种与统一汇率时点计算。
-- 若提供 Date/Campaign days，交付曝光按周期和 Suggested SOT 调整。
-
-求解流程：
-
-```text
-eligibility filter
--> dominance pruning
--> OR-Tools/Gurobi solve
--> top-K exposure simulation
--> nonlinear re-ranking
--> independent constraint validation
--> human approval
-```
-
-返回求解状态、optimality gap、预算 slack、建议屏幕数、Suggested SOT、Impression deliverable、Media Budget、DSP fee 与 Total investment。不可行时返回预算或可售资源限制，不自动修改输入预算。
-
-导出字段严格对齐工作簿：
-
-```text
-Proposal
-  Date, Country, POI, Venue type
-  Floor price 2026 CPM, VIOOHSELECTCPMLOCAL
-  Floor price 2026 CPM (VS), Floor price 2026 CPM (USD)
-  Screen no., Monthly impressions, Campaign days
-  Suggested screen no, Suggested SOT, Impression deliverable
-  Media Budget (USD), DSP fee, Total investment
-
-PICS
-  Market, Country, VenueType, PickedImageCount, Image1, Image2, Image3
-```
-
-当预算币种不是 USD 时，计算与主结果使用用户币种，并保留工作簿要求的 USD 参考列及汇率时点。
-
-## 10. Decision Agents
-
-| Agent | 作用 | 主要工具 |
-|---|---|---|
-| Input | 校验 Original Frames、照片、文献、预算和币种 | Schema parser、quality rules |
-| Inventory | 区域筛选、库存与数据质量查询 | SQL/PostGIS |
-| Market | 提取消费力、观念、文化价值观与内部画像证据 | Evidence API |
-| Screen Context | 解释 Venue、POI、照片与 Visibility | Twin State Query |
-| Simulation | 推演代表性路人与曝光机会 | Snapshot/Simulation API |
-| Optimization | 提交求解 | Solver API |
-| Recommendation | 生成 FilteredFrames、Proposal、PICS 和说明 | Proposal/Evidence reader |
-| Critic | 校验数字与证据 | Deterministic validators |
-
-规则：
-
-- Agent 无数据库直连权限，只能调用类型化只读工具。
-- 世界状态数值必须携带 `world_snapshot_id + state_key + event_time`。
-- 文档结论必须携带 `evidence_id + page/bbox`。
-- Agent 不得修改原始 Frame、用户预算或求解结果。
-- 写操作采用 prepare → human approve → commit，并绑定 payload hash。
-- LLM 不可用时，仿真和优化主链仍可运行。
-
-## 11. API 与事件
-
-主要 API：
-
-```text
-POST /v1/ingestion-jobs
-GET  /v1/screens
-GET  /v1/world-snapshots/{id}
-POST /v1/world-snapshots/{id}:branch
-POST /v1/twin-events:batch
-POST /v1/twin-state:reduce
-POST /v1/twin-state:query
-POST /v1/planning-runs
-POST /v1/planning-runs/{id}/simulation-runs
-POST /v1/planning-runs/{id}/optimization-runs
-GET  /v1/proposals/{id}
-POST /v1/proposals/{id}:validate
-POST /v1/proposals/{id}:approve
-POST /v1/proposals/{id}:export
-```
-
-长任务返回 `202 Accepted + job_id`。POST 支持 `Idempotency-Key`；资源使用 `ETag/If-Match`；时间使用 RFC 3339；金额使用字符串 Decimal + ISO-4217。
-
-事件采用 Transactional Outbox：
-
-```text
-inventory.screen.upserted.v1
-twin.observation.received.v1
-world.snapshot.published.v1
-simulation.run.completed.v1
-optimization.run.completed.v1
-proposal.generated.v1
-proposal.approved.v1
-```
-
-Consumer 通过 `event_id` 幂等去重；迟到事件重建受影响时间窗并生成新 Snapshot，不原地改写历史。
-
-## 12. 目标仓库结构
-
-```text
-apps/
-  api/ planner-web/ ingestion-worker/
-  simulation-worker/ optimization-worker/ agent-service/
-packages/
-  contracts/ domain/ twin-schema/ twin-store/
-  geo/ population/ mobility/ exposure/
-  screen-scoring/ simulation/ optimization/ agents/
-pipelines/
-  inventory/ geography/ documents/ images/ proposal/
-schemas/
-  canonical/ twin-state/ events/ mappings/
-db/
-  migrations/ queries/ seeds/
-infra/
-  compose/ helm/ terraform/
-tests/
-  unit/ contract/ integration/ simulation/ optimization/ e2e/
-```
-
-## 13. 开发、部署与质量
-
-目标开发命令：
-
-```bash
-make bootstrap
-make infra-up
-make migrate
-make seed-demo
-make dev
-make test
-make test-integration
-make lint
-```
-
-生产部署使用 Kubernetes，将 API、Ingestion、Ray Simulation、ML Inference、Solver 和 Agent 分到独立工作池。
-
-关键测试：
-
-- Schema、Mapping、PostGIS 和 API contract。
-- State Reducer 幂等性、事件重放和 Snapshot hash。
-- 固定 seed 的 Simulation golden test。
-- 小型优化问题与穷举结果对比。
-- 所有 Proposal 的预算、SOT、库存、币种与费用独立复算。
-- ML leakage、calibration、OOD 和 segment performance。
-- Agent citation、numeric consistency 和 prompt injection。
-- Tenant isolation、权限、删除和审计。
-
-安全要求：
-
-- OIDC、RBAC + ABAC、PostgreSQL RLS、S3 prefix policy。
-- TLS、KMS、Secret Manager、审计日志和签名导出。
-- Mobility 数据聚合/去标识化，禁止真实个人轨迹和敏感画像。
-- 文档、模型和外部 Provider 均按租户与用途控制访问。
-
-## 14. 研发顺序
-
-1. **Foundation**：Monorepo、CI、PostGIS、S3、Outbox、权限。
-2. **Inventory & Geo**：供应商映射、质量、POI、地图。
-3. **Digital Twin**：State Schema、Event Journal、Reducer、Snapshot。
-4. **Population & Mobility**：代表性 Cohort、路线与曝光机会；有额外人口/OD 数据时再校准。
-5. **Screen Scoring**：Exposure、Visibility、Location、Market、Cost、Availability 和不确定性。
-6. **Optimization**：Budget、Screen、SOT、费用、验证、审批与导出。
-7. **Agents & Proposal**：类型化工具、FilteredFrames、Proposal、PICS 和证据解释。
-
-优先证明“数据可用 → 状态可重放 → 仿真可解释 → 方案可执行”，再引入复杂 GNN、Transformer 和 RL。
-
-## License
-
-[MIT](LICENSE)
+仓库根目录 [LICENSE](LICENSE) 当前为 MIT；部分包元数据仍保留不同的历史许可字段，正式分发前应统一确认。第三方模型、地图、原始媒体数据和品牌标识不因代码许可自动获得再分发授权。

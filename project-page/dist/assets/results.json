@@ -1,0 +1,3391 @@
+{
+  "title": "AI-Native pDOOH World-Model",
+  "captured": "2026-11-27",
+  "source": "Saved local application report; simulated scenario, not measured campaign delivery",
+  "currency": "USD",
+  "days": 30,
+  "budget": 10000.0,
+  "coverage": {
+    "attitude": 139,
+    "calibrated": 0,
+    "direct": 144,
+    "eligible": 144,
+    "missing": 0,
+    "predicted": 0,
+    "total": 144
+  },
+  "plans": [
+    {
+      "strategy": "investment",
+      "total": 10000.0,
+      "impressions": 1029741.923076923,
+      "screen_count": 139,
+      "region_cells": 24,
+      "items": [
+        {
+          "address": "Laguna St Es 60ft N/O Hayes St F/S - 1",
+          "amount": 113.66,
+          "impressions": 11365.999999999998,
+          "sot": 0.00140437498764407
+        },
+        {
+          "address": "Us 101 & South Airport Blvd",
+          "amount": 279.99,
+          "impressions": 43075.38461538462,
+          "sot": 0.0046066185652700545
+        },
+        {
+          "address": "Mcallister St Ns 64ft W/O Larkin St F/E - 1",
+          "amount": 270.95,
+          "impressions": 27095.0,
+          "sot": 0.0037491351874913517
+        },
+        {
+          "address": "Mission St Ss 78ft E/O South Van Ness St F/S - 1",
+          "amount": 182.84,
+          "impressions": 18284.0,
+          "sot": 0.002182317309700713
+        },
+        {
+          "address": "Fillmore St Ws 52ft N/O Sacramento St F/S - 2",
+          "amount": 59.22,
+          "impressions": 5922.0,
+          "sot": 0.0006809127127852228
+        },
+        {
+          "address": "Filmore St Ws 57ft S/O Jackson St F/N - 1",
+          "amount": 59.13,
+          "impressions": 5913.000000000001,
+          "sot": 0.0006532460129124631
+        },
+        {
+          "address": "Stockton St Es 50ft S/O Clay St F/S - 1",
+          "amount": 37.7,
+          "impressions": 3770.0,
+          "sot": 0.0003997031382527566
+        },
+        {
+          "address": "Hayes St Ns 19ft E/O Laguna St F/E-1",
+          "amount": 110.64,
+          "impressions": 11064.0,
+          "sot": 0.0015325988937694537
+        },
+        {
+          "address": "E/L Us 101 & South Airport Blvd",
+          "amount": 272.36,
+          "impressions": 41901.538461538454,
+          "sot": 0.004854755279675596
+        },
+        {
+          "address": "Fillmore St Ws 52ft N/O Sacramento St F/N - 1",
+          "amount": 58.82,
+          "impressions": 5881.999999999999,
+          "sot": 0.0006759474411217831
+        },
+        {
+          "address": "Hayes St Ns 19ft E/O Laguna St F/W-2",
+          "amount": 110.11,
+          "impressions": 11010.999999999998,
+          "sot": 0.0014178178147243939
+        },
+        {
+          "address": "Market St Ns 66ft W/O Grant St (K) F/Sw - 2",
+          "amount": 30.55,
+          "impressions": 3055.0,
+          "sot": 0.00034339462730723536
+        },
+        {
+          "address": "18th St Ns 36ft W/O Dolores St F/E - 1",
+          "amount": 135.2,
+          "impressions": 13520.0,
+          "sot": 0.0014443564868378742
+        },
+        {
+          "address": "Sacramento St Ns 50ft W/O Polk St F/E - 1",
+          "amount": 58.3,
+          "impressions": 5830.000000000001,
+          "sot": 0.0007047241905342124
+        },
+        {
+          "address": "Market St Ns 76ft E/O Castro St F/Se - 1",
+          "amount": 58.27,
+          "impressions": 5826.999999999999,
+          "sot": 0.0006662459038511231
+        },
+        {
+          "address": "Fillmore St Ws 57ft S/O Jackson St F/S - 2",
+          "amount": 58.19,
+          "impressions": 5819.0,
+          "sot": 0.0006268069576757193
+        },
+        {
+          "address": "4th St Es 127ft N/O King St (K) F/Sw - 2",
+          "amount": 53.54,
+          "impressions": 5354.0,
+          "sot": 0.0005781251855907103
+        },
+        {
+          "address": "Sacramento St Ss 38ft E/O Fillmore St F/E - 2",
+          "amount": 108.98,
+          "impressions": 10898.000000000002,
+          "sot": 0.0012885132203253563
+        },
+        {
+          "address": "Fillmore St Es 43ft N/O Jackson St F/S - 1",
+          "amount": 58.04,
+          "impressions": 5804.0,
+          "sot": 0.0006746217166821258
+        },
+        {
+          "address": "Stockton St Es 23ft S/O Columbus Ave F/S - 1",
+          "amount": 36.97,
+          "impressions": 3696.9999999999995,
+          "sot": 0.00040232887147676567
+        },
+        {
+          "address": "Polk St Ws 60ft S/O Broadway St F/S - 2",
+          "amount": 57.8,
+          "impressions": 5780.0,
+          "sot": 0.000678406144622575
+        },
+        {
+          "address": "Grove St Ss 42ft W/O Gough St F/E - 2",
+          "amount": 108.41,
+          "impressions": 10841.0,
+          "sot": 0.002019112752575342
+        },
+        {
+          "address": "Mission St Ns 60ft W/O 3rd St F/E - 1",
+          "amount": 30.19,
+          "impressions": 3019.0000000000005,
+          "sot": 0.0003525650008875436
+        },
+        {
+          "address": "Chestnut St Ss 45ft W/O Van Ness Ave F/E - 2",
+          "amount": 133.13,
+          "impressions": 13312.999999999998,
+          "sot": 0.0015962944577538926
+        },
+        {
+          "address": "Mission St Ns 75ft W/O 4th St F/E - 1",
+          "amount": 30.08,
+          "impressions": 3008.0000000000005,
+          "sot": 0.0003566102112868081
+        },
+        {
+          "address": "Fillmore St Es 22ft N/O Pine St F/S - 1",
+          "amount": 107.9,
+          "impressions": 10790.000000000002,
+          "sot": 0.001353860824612914
+        },
+        {
+          "address": "Geary Blvd Ns 32ft E/O Stockton St F/W - 2",
+          "amount": 29.98,
+          "impressions": 2998.0,
+          "sot": 0.00035732078539060954
+        },
+        {
+          "address": "18th St Ns 31ft W/O Valencia St F/E - 1",
+          "amount": 132.44,
+          "impressions": 13243.999999999998,
+          "sot": 0.0015999632747783498
+        },
+        {
+          "address": "Fillmore St Ws 47ft S/O Lombard St F/N - 1",
+          "amount": 57.28,
+          "impressions": 5728.0,
+          "sot": 0.0006431698572517739
+        },
+        {
+          "address": "Sacramento St Ss 38ft E/O Fillmore St F/W - 1",
+          "amount": 107.3,
+          "impressions": 10729.999999999998,
+          "sot": 0.0013605856224267114
+        },
+        {
+          "address": "Market St Ns 66ft W/O Grant St (K) F/Se - 1",
+          "amount": 29.93,
+          "impressions": 2993.0,
+          "sot": 0.00035596119035895827
+        },
+        {
+          "address": "Castro St Es 26ft S/O 18th St F/N - 2",
+          "amount": 57.09,
+          "impressions": 5709.000000000001,
+          "sot": 0.0006660763100142456
+        },
+        {
+          "address": "Chestnut St Ns 50ft E/O Pierce F/E - 1",
+          "amount": 78.41,
+          "impressions": 7841.0,
+          "sot": 0.0008978586968968281
+        },
+        {
+          "address": "California St Ns 82ft W/O Divisadero St F/E - 1",
+          "amount": 131.61,
+          "impressions": 13161.000000000002,
+          "sot": 0.0016165583925064212
+        },
+        {
+          "address": "Embarcadero/King St Ns 516ft W/O 2nd St (K) F/Sw - 2",
+          "amount": 52.41,
+          "impressions": 5240.999999999999,
+          "sot": 0.000614113718252922
+        },
+        {
+          "address": "Market St Ss 223ft E/O 4th St (K) F/Nw - 1",
+          "amount": 29.77,
+          "impressions": 2977.0,
+          "sot": 0.0004048687610499116
+        },
+        {
+          "address": "Castro St Es 40ft S/O 17th St F/N - 2",
+          "amount": 56.83,
+          "impressions": 5682.999999999999,
+          "sot": 0.0006467133465566468
+        },
+        {
+          "address": "Geary Blvd Ns 36ft E/O Laguna St F/E - 1",
+          "amount": 106.03,
+          "impressions": 10603.0,
+          "sot": 0.0014031758383257701
+        },
+        {
+          "address": "Stockton St Ws 62ft S/O Broadway St F/N - 1",
+          "amount": 36.25,
+          "impressions": 3625.0,
+          "sot": 0.00044309986554210974
+        },
+        {
+          "address": "Stockton St Ws 45ft S/O Green St F/S - 2",
+          "amount": 36.21,
+          "impressions": 3621.0,
+          "sot": 0.00042333795135296285
+        },
+        {
+          "address": "16th St Ns 73ft W/O 4th St F/E - 1",
+          "amount": 253.54,
+          "impressions": 25354.0,
+          "sot": 0.0028779607955312946
+        },
+        {
+          "address": "4th St Es 127ft N/O King St (K) F/Nw - 1",
+          "amount": 51.9,
+          "impressions": 5189.999999999999,
+          "sot": 0.0006466685356508737
+        },
+        {
+          "address": "Lombard St (Us101) Ns 64ft W/O Divisadero St F/W - 2",
+          "amount": 170.94,
+          "impressions": 17094.0,
+          "sot": 0.002092137777076074
+        },
+        {
+          "address": "Kearny St Es 20ft S/O Jackson St F/N - 2",
+          "amount": 36.02,
+          "impressions": 3602.0,
+          "sot": 0.0004388449678419963
+        },
+        {
+          "address": "Geary Blvd Ns 114ft W/O Gough St F/E - 1",
+          "amount": 105.2,
+          "impressions": 10520.000000000002,
+          "sot": 0.0016275407117241722
+        },
+        {
+          "address": "Chestnut St Ss 49ft W/O Pierce St F/E - 1",
+          "amount": 77.13,
+          "impressions": 7712.999999999999,
+          "sot": 0.00092499649213699
+        },
+        {
+          "address": "Market St Ss 223ft E/O 4th St (K) F/Ne - 2",
+          "amount": 29.44,
+          "impressions": 2944.0,
+          "sot": 0.00041586150003955204
+        },
+        {
+          "address": "Kearny St Es 20ft S/O Jackson St F/S - 1",
+          "amount": 35.95,
+          "impressions": 3595.0000000000005,
+          "sot": 0.00040835057038453114
+        },
+        {
+          "address": "Polk St Es 65ft N/O Broadway St F/S - 1",
+          "amount": 56.08,
+          "impressions": 5608.0,
+          "sot": 0.0006989468436467875
+        },
+        {
+          "address": "Sutter St Ns 20ft W/O Stockton St F/E - 1",
+          "amount": 29.37,
+          "impressions": 2937.0,
+          "sot": 0.00037833555542673855
+        },
+        {
+          "address": "Lombard St Ns 75ft W/O Laguna St F/E - 1",
+          "amount": 76.9,
+          "impressions": 7690.000000000001,
+          "sot": 0.0009541428286054254
+        },
+        {
+          "address": "Chestnut St Ns 50ft E/O Pierce F/W - 2",
+          "amount": 76.8,
+          "impressions": 7679.999999999999,
+          "sot": 0.0008955746020640195
+        },
+        {
+          "address": "Sacramento St Ns 35ft E/O Van Ness Ave F/E - 1",
+          "amount": 55.86,
+          "impressions": 5586.0,
+          "sot": 0.0007640196790460833
+        },
+        {
+          "address": "California St Cl 32ft E/O Van Ness St F/E - 1",
+          "amount": 55.81,
+          "impressions": 5581.0,
+          "sot": 0.0008309696631304672
+        },
+        {
+          "address": "The Embarcadero Ws 90ft S/O Don Chee Way (K) F/Ne - 1",
+          "amount": 37.56,
+          "impressions": 3756.0,
+          "sot": 0.0004442079120099344
+        },
+        {
+          "address": "Castro St Ws 96ft S/O Market St F/S - 2",
+          "amount": 55.77,
+          "impressions": 5577.0,
+          "sot": 0.0007030880656568522
+        },
+        {
+          "address": "18th St Ss 40ft E/O Castro St F/W - 1",
+          "amount": 55.77,
+          "impressions": 5577.0,
+          "sot": 0.0007013770986606301
+        },
+        {
+          "address": "1st St Ws 25ft S/O Mission St (K) F/Nw - 1",
+          "amount": 76.59,
+          "impressions": 7659.000000000001,
+          "sot": 0.0010555038759689924
+        },
+        {
+          "address": "Chestnut St Ss 45ft W/O Van Ness Ave F/W - 1",
+          "amount": 128.56,
+          "impressions": 12856.0,
+          "sot": 0.001603732395244689
+        },
+        {
+          "address": "Divisadero St Ws 84ft S/O Geary Blvd F/N - 1",
+          "amount": 104.22,
+          "impressions": 10422.0,
+          "sot": 0.0013724661327981478
+        },
+        {
+          "address": "Polk St Ws 60ft S/O Broadway St F/N - 1",
+          "amount": 55.63,
+          "impressions": 5563.000000000001,
+          "sot": 0.0006711935735296602
+        },
+        {
+          "address": "Pacific Ave Ns 22ft E/O Polk St F/E - 1",
+          "amount": 55.61,
+          "impressions": 5560.999999999999,
+          "sot": 0.0007245102292610412
+        },
+        {
+          "address": "Columbus Ave Ws 180ft S/O North Point St F/W - 1",
+          "amount": 87.82,
+          "impressions": 8782.0,
+          "sot": 0.0010161352841464614
+        },
+        {
+          "address": "California St Ss 20ft E/O Grant St F/W - 1",
+          "amount": 35.61,
+          "impressions": 3561.0,
+          "sot": 0.000460113187068765
+        },
+        {
+          "address": "Kearny St Es 20ft S/O Sutter St F/S - 1",
+          "amount": 29.14,
+          "impressions": 2914.0,
+          "sot": 0.000403220226877105
+        },
+        {
+          "address": "Union St Ns 40ft E/O Columbus Ave F/E - 1",
+          "amount": 87.55,
+          "impressions": 8755.0,
+          "sot": 0.0010802640508359553
+        },
+        {
+          "address": "Fillmore St Ws 47ft S/O Lombard St F/S - 2",
+          "amount": 55.4,
+          "impressions": 5540.0,
+          "sot": 0.0006848129743627778
+        },
+        {
+          "address": "Geary Blvd Ns 38ft W/O Powell St F/E - 1",
+          "amount": 29.09,
+          "impressions": 2909.0,
+          "sot": 0.0003968351408498738
+        },
+        {
+          "address": "4th St Ws 34ft N/O Folsom St F/N 鈥?1",
+          "amount": 29.04,
+          "impressions": 2904.0,
+          "sot": 0.0004035754786205056
+        },
+        {
+          "address": "Stockton St Ws 45ft S/O Green St F/N - 1",
+          "amount": 35.46,
+          "impressions": 3546.0,
+          "sot": 0.00044469525959367945
+        },
+        {
+          "address": "The Embarcadero/King St Cl 280ft W/O 2nd St (K) F/E - 2",
+          "amount": 50.88,
+          "impressions": 5088.0,
+          "sot": 0.0006440025365194246
+        },
+        {
+          "address": "Lombard St (Us 101) Ns 64ft W/O Divisadero St F/E - 1",
+          "amount": 167.08,
+          "impressions": 16708.0,
+          "sot": 0.002071292735599011
+        },
+        {
+          "address": "California St Ss 46ft W/O Divisadero St F/W - 1",
+          "amount": 127.08,
+          "impressions": 12708.0,
+          "sot": 0.0016642242852596717
+        },
+        {
+          "address": "Fillmore St Es 18ft N/O Union St F/N - 2",
+          "amount": 55.09,
+          "impressions": 5509.000000000001,
+          "sot": 0.0007543361663729563
+        },
+        {
+          "address": "Castro St Es 40ft S/O 17th St F/S - 1",
+          "amount": 55.07,
+          "impressions": 5506.999999999999,
+          "sot": 0.0007241260060775565
+        },
+        {
+          "address": "Castro St Es 26ft S/O 18th St F/S - 1",
+          "amount": 55.06,
+          "impressions": 5506.0,
+          "sot": 0.000742815359252274
+        },
+        {
+          "address": "Clay St Ss 82ft E/O Montgomery St F/W - 1",
+          "amount": 35.35,
+          "impressions": 3535.0,
+          "sot": 0.0004441931329123865
+        },
+        {
+          "address": "Stockton St Es 23ft S/O Columbus Ave F/N - 2",
+          "amount": 35.33,
+          "impressions": 3532.9999999999995,
+          "sot": 0.0004756807701369955
+        },
+        {
+          "address": "Broadway Ns 168ft W/O Columbus Ave F/W - 2",
+          "amount": 35.24,
+          "impressions": 3524.0000000000005,
+          "sot": 0.00045045217780334264
+        },
+        {
+          "address": "The Embarcadero/King St Cl 280ft W/O 2nd St (K) F/W - 1",
+          "amount": 50.53,
+          "impressions": 5052.999999999999,
+          "sot": 0.0006715601646405564
+        },
+        {
+          "address": "Market St Ns 69ft E/O Church St (K) F/Sw - 2",
+          "amount": 125.97,
+          "impressions": 12597.0,
+          "sot": 0.0016677589117267402
+        },
+        {
+          "address": "Embarcadero/King St Ns 516ft W/O 2nd St (K) F/Se - 1",
+          "amount": 50.35,
+          "impressions": 5035.0,
+          "sot": 0.0006917396530997768
+        },
+        {
+          "address": "Market St (Ia) Ss 240ft W/O 1st St (K) F/Ne - 2",
+          "amount": 36.74,
+          "impressions": 3674.0000000000005,
+          "sot": 0.0005303791474667684
+        },
+        {
+          "address": "California St Ns 31ft E/O Sansome St F/E - 1",
+          "amount": 34.97,
+          "impressions": 3497.0,
+          "sot": 0.0005008772872130913
+        },
+        {
+          "address": "Haight St \t Ss 89ft E/O Masonic Ave F/W - 1",
+          "amount": 243.39,
+          "impressions": 24339.0,
+          "sot": 0.0032079366083573213
+        },
+        {
+          "address": "Mission Bay Blvd Ss 81ft E/O 4th St F/E - 1",
+          "amount": 50.08,
+          "impressions": 5008.0,
+          "sot": 0.0006301749087706053
+        },
+        {
+          "address": "Market St Ns 94ft E/O Powell St (K) F/Se - 1",
+          "amount": 28.61,
+          "impressions": 2861.0000000000005,
+          "sot": 0.0004865249095311948
+        },
+        {
+          "address": "California St Ss 65ft E/O Spruce St F/E - 2",
+          "amount": 242.13,
+          "impressions": 24212.999999999996,
+          "sot": 0.0030057687222782912
+        },
+        {
+          "address": "Columbus Ave Es 126ft N/O Union St F/S - 1",
+          "amount": 85.42,
+          "impressions": 8541.999999999998,
+          "sot": 0.0011484146446394767
+        },
+        {
+          "address": "Drumm St Es 28ft N/O California St F/N - 1",
+          "amount": 36.51,
+          "impressions": 3650.9999999999995,
+          "sot": 0.0005139900749656847
+        },
+        {
+          "address": "Market St Ns 67ft E/O Front St (K) F/Sw - 2",
+          "amount": 36.48,
+          "impressions": 3647.9999999999995,
+          "sot": 0.0005116230146208057
+        },
+        {
+          "address": "Fillmore St Es 18ft N/O Union St F/S - 1",
+          "amount": 54.06,
+          "impressions": 5406.000000000001,
+          "sot": 0.000758938160438348
+        },
+        {
+          "address": "California St Ss 59ft E/O Kearny St F/W - 1",
+          "amount": 34.74,
+          "impressions": 3474.0,
+          "sot": 0.0004921774388922183
+        },
+        {
+          "address": "18th St Ss 40ft E/O Castro St F/E - 2",
+          "amount": 53.91,
+          "impressions": 5390.999999999999,
+          "sot": 0.000719951923076923
+        },
+        {
+          "address": "Sutter St Ns 20ft W/O Polk St F/E - 1",
+          "amount": 100.58,
+          "impressions": 10057.999999999998,
+          "sot": 0.0018203800029682074
+        },
+        {
+          "address": "11th St Ws 117ft S/O Market St F/N - 1",
+          "amount": 162.5,
+          "impressions": 16250.0,
+          "sot": 0.0032768703367614437
+        },
+        {
+          "address": "King St Ns 53ft E/O 3rd St (K) F/Se - 1",
+          "amount": 49.49,
+          "impressions": 4949.0,
+          "sot": 0.0007183395021409391
+        },
+        {
+          "address": "Mission St Ns 135ft W/O 5th St F/E - 1",
+          "amount": 28.33,
+          "impressions": 2833.0,
+          "sot": 0.000482788002726653
+        },
+        {
+          "address": "Market St Ns 67ft E/O Front St (K) F/Se - 1",
+          "amount": 36.21,
+          "impressions": 3621.0,
+          "sot": 0.0005364444444444444
+        },
+        {
+          "address": "Steuart St Ws 37ft N/O Mission St F/N",
+          "amount": 36.13,
+          "impressions": 3613.0,
+          "sot": 0.0005037470807626617
+        },
+        {
+          "address": "2nd St. Ws 180ft N/O Howard St. (K) F/N - 1",
+          "amount": 72.87,
+          "impressions": 7287.0,
+          "sot": 0.0010651826904523847
+        },
+        {
+          "address": "Steuart St Ws 37ft N/O Mission St F/S - 2",
+          "amount": 35.9,
+          "impressions": 3589.9999999999995,
+          "sot": 0.000518037518037518
+        },
+        {
+          "address": "Sacramento St Ns 42ft E/O Davis St F/E - 1",
+          "amount": 35.83,
+          "impressions": 3583.0,
+          "sot": 0.0005446116431068552
+        },
+        {
+          "address": "Union St Ss 35ft W/O Polk St F/W - 1",
+          "amount": 52.99,
+          "impressions": 5299.0,
+          "sot": 0.0008035179498843778
+        },
+        {
+          "address": "California St Ns 31ft E/O Sansome St F/W - 2",
+          "amount": 34.13,
+          "impressions": 3413.0,
+          "sot": 0.0005132114738026068
+        },
+        {
+          "address": "Taylor St Ws 70ft S/O Bay St F/N - 1",
+          "amount": 83.5,
+          "impressions": 8350.0,
+          "sot": 0.0012635835228708618
+        },
+        {
+          "address": "Market St Ns 187ft W/O Montgomery St (K) F/Sw - 2",
+          "amount": 27.95,
+          "impressions": 2795.0,
+          "sot": 0.00045677099675766133
+        },
+        {
+          "address": "2nd St Ws 80ft S/O Howard St F/W - 2",
+          "amount": 72.44,
+          "impressions": 7244.000000000001,
+          "sot": 0.0011719805403341537
+        },
+        {
+          "address": "Market St Ss 240ft W/O 1st St (K) F/Nw - 1",
+          "amount": 35.73,
+          "impressions": 3572.9999999999995,
+          "sot": 0.0005453945982580343
+        },
+        {
+          "address": "California St Ns 46ft E/O Laurel St F/W- 2",
+          "amount": 121.32,
+          "impressions": 12131.999999999998,
+          "sot": 0.00174919547389183
+        },
+        {
+          "address": "Broadway St Ss 41ft W/O Montgomery St F/W- 1",
+          "amount": 33.94,
+          "impressions": 3394.0,
+          "sot": 0.0005130763416477702
+        },
+        {
+          "address": "California St Ss 20ft W/O Montgomery St F/W - 1",
+          "amount": 33.91,
+          "impressions": 3391.0,
+          "sot": 0.0004736900187045395
+        },
+        {
+          "address": "Castro St Ws 96ft S/O Market St F/N - 1",
+          "amount": 52.58,
+          "impressions": 5258.0,
+          "sot": 0.0008606057630142479
+        },
+        {
+          "address": "Market St Ns 170ft E/O Drumm St (K) F/Se - 1",
+          "amount": 35.47,
+          "impressions": 3547.0,
+          "sot": 0.0005620122796593385
+        },
+        {
+          "address": "Powell St Ws 34ft N/O Francisco St F/N - 1",
+          "amount": 82.23,
+          "impressions": 8223.0,
+          "sot": 0.0012559222162147302
+        },
+        {
+          "address": "Market St Ns 170ft E/O Drumm St (K) F/Sw - 2",
+          "amount": 35.31,
+          "impressions": 3531.0000000000005,
+          "sot": 0.0005157191368167379
+        },
+        {
+          "address": "Beach St Ns 252ft E/O Polk St F/E - 1",
+          "amount": 119.61,
+          "impressions": 11960.999999999998,
+          "sot": 0.0017205219822898864
+        },
+        {
+          "address": "Market St (Ia) Ss 212ft E/O 3rd St (K) F/Ne - 2",
+          "amount": 27.58,
+          "impressions": 2757.9999999999995,
+          "sot": 0.0004683331720148005
+        },
+        {
+          "address": "Market St Ss 61ft W/O Steuart St (K) F/Nw - 1",
+          "amount": 35.06,
+          "impressions": 3506.0,
+          "sot": 0.0005760525775313206
+        },
+        {
+          "address": "Union St Ss 40ft W/O Gough St F/W - 1",
+          "amount": 51.66,
+          "impressions": 5165.999999999999,
+          "sot": 0.0008687404776559141
+        },
+        {
+          "address": "Marina St Ss 25ft W/O Laguna St F/W - 1",
+          "amount": 70.71,
+          "impressions": 7071.0,
+          "sot": 0.0011291017964071856
+        },
+        {
+          "address": "King St Ns 53ft E/O 3rd St (K) F/Sw - 2",
+          "amount": 47.5,
+          "impressions": 4750.0,
+          "sot": 0.000777000777000777
+        },
+        {
+          "address": "Division St Ss 37ft W/O Rhode Island St F/E - 2",
+          "amount": 154.77,
+          "impressions": 15477.000000000002,
+          "sot": 0.002621562977981717
+        },
+        {
+          "address": "Division St Ss 37ft W/O Rhode Island St F/W - 1",
+          "amount": 153.87,
+          "impressions": 15387.000000000002,
+          "sot": 0.00264516428486702
+        },
+        {
+          "address": "2nd St Ws 80ft S/O Howard St F/E - 1",
+          "amount": 69.85,
+          "impressions": 6985.0,
+          "sot": 0.0012672857044366793
+        },
+        {
+          "address": "Market St Ss 212ft E/O 3rd St (K) F/Nw - 1",
+          "amount": 27.09,
+          "impressions": 2708.9999999999995,
+          "sot": 0.0005378457579872774
+        },
+        {
+          "address": "O' Farrell St Ss 84ft E/O Stockton St F/W - 1",
+          "amount": 27.05,
+          "impressions": 2705.0,
+          "sot": 0.0005324279106387167
+        },
+        {
+          "address": "Main St Es 369ft S/O Howard St F/S - 1",
+          "amount": 34.42,
+          "impressions": 3442.0000000000005,
+          "sot": 0.0006435750011686066
+        },
+        {
+          "address": "2nd St Ss 55ft E/O South Park St F/Nw - 1",
+          "amount": 68.85,
+          "impressions": 6884.999999999999,
+          "sot": 0.0013243466268112387
+        },
+        {
+          "address": "2nd St Ss 55ft E/O South Park St F/Ne - 2",
+          "amount": 68.79,
+          "impressions": 6878.999999999999,
+          "sot": 0.0012593573048765082
+        },
+        {
+          "address": "Market St Ss 61ft W/O Steuart St (K) F/Ne - 2",
+          "amount": 34.14,
+          "impressions": 3414.0,
+          "sot": 0.0006163011102085026
+        },
+        {
+          "address": "Mission St Ns 93ft W/O 2nd St F/E - 1",
+          "amount": 26.43,
+          "impressions": 2643.0,
+          "sot": 0.0005628601730108228
+        },
+        {
+          "address": "Marina St Ss 25ft W/O Laguna St F/E - 2",
+          "amount": 67.56,
+          "impressions": 6756.0,
+          "sot": 0.0011829284307288248
+        },
+        {
+          "address": "Van Ness Ave Cl 140ft N/O Bush St F/N - 1",
+          "amount": 90.79,
+          "impressions": 9079.0,
+          "sot": 0.003471003605194845
+        },
+        {
+          "address": "Market St Ns 187ft W/O Montgomery St (K) F/Se - 1",
+          "amount": 26.17,
+          "impressions": 2617.0000000000005,
+          "sot": 0.0006684188076757059
+        },
+        {
+          "address": "Stockton St Ws 77ft N/O Sutter St F/N - 1",
+          "amount": 25.9,
+          "impressions": 2590.0,
+          "sot": 0.0006569019085663559
+        },
+        {
+          "address": "Steuart St Es 24ft S/O Market St F/S - 1",
+          "amount": 32.76,
+          "impressions": 3276.0,
+          "sot": 0.0007395618163963292
+        },
+        {
+          "address": "Mission St Ns 109ft W/O 5th St F/E - 1",
+          "amount": 25.08,
+          "impressions": 2508.0,
+          "sot": 0.0009129129129129129
+        },
+        {
+          "address": "Townsend St Ss 214ft W/O 4th St F/Ne - 2",
+          "amount": 42.68,
+          "impressions": 4268.0,
+          "sot": 0.001230946715696878
+        }
+      ]
+    },
+    {
+      "strategy": "sim_exposure",
+      "total": 10000.0,
+      "impressions": 1014840.5384615385,
+      "screen_count": 139,
+      "region_cells": 24,
+      "items": [
+        {
+          "address": "Laguna St Es 60ft N/O Hayes St F/S - 1",
+          "amount": 77.02,
+          "impressions": 7701.999999999999,
+          "sot": 0.0009516537176521755
+        },
+        {
+          "address": "Us 101 & South Airport Blvd",
+          "amount": 141.42,
+          "impressions": 21756.923076923074,
+          "sot": 0.0023267545180202546
+        },
+        {
+          "address": "Mcallister St Ns 64ft W/O Larkin St F/E - 1",
+          "amount": 71.36,
+          "impressions": 7136.0,
+          "sot": 0.0009874083298740833
+        },
+        {
+          "address": "Mission St Ss 78ft E/O South Van Ness St F/S - 1",
+          "amount": 78.87,
+          "impressions": 7887.0,
+          "sot": 0.0009413660370602453
+        },
+        {
+          "address": "Fillmore St Ws 52ft N/O Sacramento St F/S - 2",
+          "amount": 80.95,
+          "impressions": 8095.0,
+          "sot": 0.0009307646757845961
+        },
+        {
+          "address": "Filmore St Ws 57ft S/O Jackson St F/N - 1",
+          "amount": 83.26,
+          "impressions": 8326.0,
+          "sot": 0.000919825182396274
+        },
+        {
+          "address": "Stockton St Es 50ft S/O Clay St F/S - 1",
+          "amount": 85.73,
+          "impressions": 8573.0,
+          "sot": 0.0009089270568278202
+        },
+        {
+          "address": "Hayes St Ns 19ft E/O Laguna St F/E-1",
+          "amount": 71.31,
+          "impressions": 7131.000000000002,
+          "sot": 0.000987794894384488
+        },
+        {
+          "address": "E/L Us 101 & South Airport Blvd",
+          "amount": 134.19,
+          "impressions": 20644.615384615383,
+          "sot": 0.0023919063407977243
+        },
+        {
+          "address": "Fillmore St Ws 52ft N/O Sacramento St F/N - 1",
+          "amount": 80.98,
+          "impressions": 8097.999999999999,
+          "sot": 0.0009306056406331519
+        },
+        {
+          "address": "Hayes St Ns 19ft E/O Laguna St F/W-2",
+          "amount": 74.89,
+          "impressions": 7488.999999999999,
+          "sot": 0.0009643118349351545
+        },
+        {
+          "address": "Market St Ns 66ft W/O Grant St (K) F/Sw - 2",
+          "amount": 82.25,
+          "impressions": 8225.0,
+          "sot": 0.0009245239965964029
+        },
+        {
+          "address": "18th St Ns 36ft W/O Dolores St F/E - 1",
+          "amount": 85.27,
+          "impressions": 8527.0,
+          "sot": 0.000910948799058177
+        },
+        {
+          "address": "Sacramento St Ns 50ft W/O Polk St F/E - 1",
+          "amount": 78.18,
+          "impressions": 7818.000000000001,
+          "sot": 0.0009450315131383316
+        },
+        {
+          "address": "Market St Ns 76ft E/O Castro St F/Se - 1",
+          "amount": 81.27,
+          "impressions": 8126.999999999998,
+          "sot": 0.0009292226635658274
+        },
+        {
+          "address": "Fillmore St Ws 57ft S/O Jackson St F/S - 2",
+          "amount": 84.77,
+          "impressions": 8477.0,
+          "sot": 0.0009131195360400536
+        },
+        {
+          "address": "4th St Es 127ft N/O King St (K) F/Sw - 2",
+          "amount": 84.62,
+          "impressions": 8462.0,
+          "sot": 0.0009137271797662665
+        },
+        {
+          "address": "Sacramento St Ss 38ft E/O Fillmore St F/E - 2",
+          "amount": 79.39,
+          "impressions": 7939.000000000001,
+          "sot": 0.0009386590618611674
+        },
+        {
+          "address": "Fillmore St Es 43ft N/O Jackson St F/S - 1",
+          "amount": 80.34,
+          "impressions": 8034.000000000001,
+          "sot": 0.0009338233755727428
+        },
+        {
+          "address": "Stockton St Es 23ft S/O Columbus Ave F/S - 1",
+          "amount": 84.15,
+          "impressions": 8415.0,
+          "sot": 0.0009157688540646425
+        },
+        {
+          "address": "Polk St Ws 60ft S/O Broadway St F/S - 2",
+          "amount": 79.79,
+          "impressions": 7979.000000000001,
+          "sot": 0.0009365056449729284
+        },
+        {
+          "address": "Grove St Ss 42ft W/O Gough St F/E - 2",
+          "amount": 59.26,
+          "impressions": 5926.0,
+          "sot": 0.00110370465563707
+        },
+        {
+          "address": "Mission St Ns 60ft W/O 3rd St F/E - 1",
+          "amount": 80.07,
+          "impressions": 8007.0,
+          "sot": 0.0009350738529667311
+        },
+        {
+          "address": "Chestnut St Ss 45ft W/O Van Ness Ave F/E - 2",
+          "amount": 78.62,
+          "impressions": 7861.999999999999,
+          "sot": 0.0009426926332803353
+        },
+        {
+          "address": "Mission St Ns 75ft W/O 4th St F/E - 1",
+          "amount": 79.24,
+          "impressions": 7924.000000000001,
+          "sot": 0.00093942131457336
+        },
+        {
+          "address": "Fillmore St Es 22ft N/O Pine St F/S - 1",
+          "amount": 76.21,
+          "impressions": 7620.999999999999,
+          "sot": 0.0009562347863183517
+        },
+        {
+          "address": "Geary Blvd Ns 32ft E/O Stockton St F/W - 2",
+          "amount": 78.95,
+          "impressions": 7895.000000000001,
+          "sot": 0.0009409765178982197
+        },
+        {
+          "address": "18th St Ns 31ft W/O Valencia St F/E - 1",
+          "amount": 78.22,
+          "impressions": 7821.999999999999,
+          "sot": 0.0009449496175865488
+        },
+        {
+          "address": "Fillmore St Ws 47ft S/O Lombard St F/N - 1",
+          "amount": 82.31,
+          "impressions": 8231.000000000002,
+          "sot": 0.000924219814078099
+        },
+        {
+          "address": "Sacramento St Ss 38ft E/O Fillmore St F/W - 1",
+          "amount": 75.67,
+          "impressions": 7566.999999999999,
+          "sot": 0.000959510848546405
+        },
+        {
+          "address": "Market St Ns 66ft W/O Grant St (K) F/Se - 1",
+          "amount": 79.07,
+          "impressions": 7906.999999999999,
+          "sot": 0.0009403892857227807
+        },
+        {
+          "address": "Castro St Es 26ft S/O 18th St F/N - 2",
+          "amount": 80.13,
+          "impressions": 8013.0,
+          "sot": 0.0009348869280336573
+        },
+        {
+          "address": "Chestnut St Ns 50ft E/O Pierce F/E - 1",
+          "amount": 81.18,
+          "impressions": 8118.000000000001,
+          "sot": 0.0009295774647887325
+        },
+        {
+          "address": "California St Ns 82ft W/O Divisadero St F/E - 1",
+          "amount": 77.33,
+          "impressions": 7733.0,
+          "sot": 0.0009498401374707205
+        },
+        {
+          "address": "Embarcadero/King St Ns 516ft W/O 2nd St (K) F/Sw - 2",
+          "amount": 79.89,
+          "impressions": 7989.0,
+          "sot": 0.0009361103787679058
+        },
+        {
+          "address": "Market St Ss 223ft E/O 4th St (K) F/Nw - 1",
+          "amount": 72.18,
+          "impressions": 7218.000000000001,
+          "sot": 0.000981640146878825
+        },
+        {
+          "address": "Castro St Es 40ft S/O 17th St F/N - 2",
+          "amount": 81.54,
+          "impressions": 8154.0,
+          "sot": 0.0009279079056524545
+        },
+        {
+          "address": "Geary Blvd Ns 36ft E/O Laguna St F/E - 1",
+          "amount": 73.52,
+          "impressions": 7352.0,
+          "sot": 0.0009729462193125589
+        },
+        {
+          "address": "Stockton St Ws 62ft S/O Broadway St F/N - 1",
+          "amount": 77.59,
+          "impressions": 7759.0,
+          "sot": 0.0009484170639286151
+        },
+        {
+          "address": "Stockton St Ws 45ft S/O Green St F/S - 2",
+          "amount": 80.01,
+          "impressions": 8001.0,
+          "sot": 0.0009354120267260579
+        },
+        {
+          "address": "16th St Ns 73ft W/O 4th St F/E - 1",
+          "amount": 81.68,
+          "impressions": 8168.000000000002,
+          "sot": 0.0009271587827522134
+        },
+        {
+          "address": "4th St Es 127ft N/O King St (K) F/Nw - 1",
+          "amount": 76.58,
+          "impressions": 7658.0,
+          "sot": 0.0009541787371896707
+        },
+        {
+          "address": "Lombard St (Us101) Ns 64ft W/O Divisadero St F/W - 2",
+          "amount": 77.52,
+          "impressions": 7752.0,
+          "sot": 0.0009487686935704766
+        },
+        {
+          "address": "Kearny St Es 20ft S/O Jackson St F/N - 2",
+          "amount": 77.76,
+          "impressions": 7776.0,
+          "sot": 0.0009473788089781687
+        },
+        {
+          "address": "Geary Blvd Ns 114ft W/O Gough St F/E - 1",
+          "amount": 66.39,
+          "impressions": 6639.0,
+          "sot": 0.0010271143331879067
+        },
+        {
+          "address": "Chestnut St Ss 49ft W/O Pierce St F/E - 1",
+          "amount": 78.61,
+          "impressions": 7860.999999999999,
+          "sot": 0.0009427456793321508
+        },
+        {
+          "address": "Market St Ss 223ft E/O 4th St (K) F/Ne - 2",
+          "amount": 70.4,
+          "impressions": 7040.0,
+          "sot": 0.0009944514131380593
+        },
+        {
+          "address": "Kearny St Es 20ft S/O Jackson St F/S - 1",
+          "amount": 81.64,
+          "impressions": 8164.000000000001,
+          "sot": 0.0009273363161667071
+        },
+        {
+          "address": "Polk St Es 65ft N/O Broadway St F/S - 1",
+          "amount": 76.56,
+          "impressions": 7656.0,
+          "sot": 0.0009541970461768555
+        },
+        {
+          "address": "Sutter St Ns 20ft W/O Stockton St F/E - 1",
+          "amount": 74.86,
+          "impressions": 7486.0,
+          "sot": 0.0009643241293580405
+        },
+        {
+          "address": "Lombard St Ns 75ft W/O Laguna St F/E - 1",
+          "amount": 76.8,
+          "impressions": 7680.0,
+          "sot": 0.000952902070700867
+        },
+        {
+          "address": "Chestnut St Ns 50ft E/O Pierce F/W - 2",
+          "amount": 80.16,
+          "impressions": 8016.0,
+          "sot": 0.0009347559909043204
+        },
+        {
+          "address": "Sacramento St Ns 35ft E/O Van Ness Ave F/E - 1",
+          "amount": 71.91,
+          "impressions": 7190.999999999999,
+          "sot": 0.0009835419821017516
+        },
+        {
+          "address": "California St Cl 32ft E/O Van Ness St F/E - 1",
+          "amount": 68.04,
+          "impressions": 6804.0,
+          "sot": 0.0010130653266331659
+        },
+        {
+          "address": "The Embarcadero Ws 90ft S/O Don Chee Way (K) F/Ne - 1",
+          "amount": 79.38,
+          "impressions": 7937.999999999999,
+          "sot": 0.0009387972325705161
+        },
+        {
+          "address": "Castro St Ws 96ft S/O Market St F/S - 2",
+          "amount": 75.97,
+          "impressions": 7597.0,
+          "sot": 0.0009577478993715449
+        },
+        {
+          "address": "18th St Ss 40ft E/O Castro St F/W - 1",
+          "amount": 76.09,
+          "impressions": 7609.0,
+          "sot": 0.0009569263660944476
+        },
+        {
+          "address": "1st St Ws 25ft S/O Mission St (K) F/Nw - 1",
+          "amount": 71.55,
+          "impressions": 7154.999999999999,
+          "sot": 0.000986046511627907
+        },
+        {
+          "address": "Chestnut St Ss 45ft W/O Van Ness Ave F/W - 1",
+          "amount": 76.51,
+          "impressions": 7651.0,
+          "sot": 0.0009544303481656126
+        },
+        {
+          "address": "Divisadero St Ws 84ft S/O Geary Blvd F/N - 1",
+          "amount": 73.76,
+          "impressions": 7376.0,
+          "sot": 0.0009713404524581788
+        },
+        {
+          "address": "Polk St Ws 60ft S/O Broadway St F/N - 1",
+          "amount": 78.29,
+          "impressions": 7829.000000000001,
+          "sot": 0.0009445936521955259
+        },
+        {
+          "address": "Pacific Ave Ns 22ft E/O Polk St F/E - 1",
+          "amount": 74.3,
+          "impressions": 7429.999999999999,
+          "sot": 0.0009680113295107959
+        },
+        {
+          "address": "Columbus Ave Ws 180ft S/O North Point St F/W - 1",
+          "amount": 80.59,
+          "impressions": 8059.0,
+          "sot": 0.0009324794186900857
+        },
+        {
+          "address": "California St Ss 20ft E/O Grant St F/W - 1",
+          "amount": 74.71,
+          "impressions": 7470.999999999999,
+          "sot": 0.0009653203090678863
+        },
+        {
+          "address": "Kearny St Es 20ft S/O Sutter St F/S - 1",
+          "amount": 71.36,
+          "impressions": 7136.0,
+          "sot": 0.000987432923471181
+        },
+        {
+          "address": "Union St Ns 40ft E/O Columbus Ave F/E - 1",
+          "amount": 77.09,
+          "impressions": 7709.0,
+          "sot": 0.0009511999506447036
+        },
+        {
+          "address": "Fillmore St Ws 47ft S/O Lombard St F/S - 2",
+          "amount": 76.99,
+          "impressions": 7698.999999999999,
+          "sot": 0.0009516922544438675
+        },
+        {
+          "address": "Geary Blvd Ns 38ft W/O Powell St F/E - 1",
+          "amount": 72.04,
+          "impressions": 7204.000000000001,
+          "sot": 0.0009827433326512517
+        },
+        {
+          "address": "4th St Ws 34ft N/O Folsom St F/N 鈥?1",
+          "amount": 71.16,
+          "impressions": 7116.0,
+          "sot": 0.0009889266893469415
+        },
+        {
+          "address": "Stockton St Ws 45ft S/O Green St F/N - 1",
+          "amount": 76.24,
+          "impressions": 7623.999999999999,
+          "sot": 0.0009561073488838725
+        },
+        {
+          "address": "The Embarcadero/King St Cl 280ft W/O 2nd St (K) F/E - 2",
+          "amount": 75.76,
+          "impressions": 7576.000000000001,
+          "sot": 0.0009589157265470048
+        },
+        {
+          "address": "Lombard St (Us 101) Ns 64ft W/O Divisadero St F/E - 1",
+          "amount": 76.84,
+          "impressions": 7684.0,
+          "sot": 0.0009525863885768974
+        },
+        {
+          "address": "California St Ss 46ft W/O Divisadero St F/W - 1",
+          "amount": 74.04,
+          "impressions": 7404.000000000001,
+          "sot": 0.0009696188706375992
+        },
+        {
+          "address": "Fillmore St Es 18ft N/O Union St F/N - 2",
+          "amount": 71.86,
+          "impressions": 7186.000000000001,
+          "sot": 0.000983964365866049
+        },
+        {
+          "address": "Castro St Es 40ft S/O 17th St F/S - 1",
+          "amount": 73.84,
+          "impressions": 7384.0,
+          "sot": 0.0009709363408165386
+        },
+        {
+          "address": "Castro St Es 26ft S/O 18th St F/S - 1",
+          "amount": 72.57,
+          "impressions": 7257.000000000001,
+          "sot": 0.0009790430552295227
+        },
+        {
+          "address": "Clay St Ss 82ft E/O Montgomery St F/W - 1",
+          "amount": 76.14,
+          "impressions": 7614.0,
+          "sot": 0.0009567430025445293
+        },
+        {
+          "address": "Stockton St Es 23ft S/O Columbus Ave F/N - 2",
+          "amount": 72.67,
+          "impressions": 7267.000000000001,
+          "sot": 0.00097842404658521
+        },
+        {
+          "address": "Broadway Ns 168ft W/O Columbus Ave F/W - 2",
+          "amount": 75.26,
+          "impressions": 7526.0,
+          "sot": 0.0009620042821078197
+        },
+        {
+          "address": "The Embarcadero/King St Cl 280ft W/O 2nd St (K) F/W - 1",
+          "amount": 73.3,
+          "impressions": 7329.999999999999,
+          "sot": 0.0009741808839927327
+        },
+        {
+          "address": "Market St Ns 69ft E/O Church St (K) F/Sw - 2",
+          "amount": 73.49,
+          "impressions": 7349.0,
+          "sot": 0.0009729586601793929
+        },
+        {
+          "address": "Embarcadero/King St Ns 516ft W/O 2nd St (K) F/Se - 1",
+          "amount": 71.7,
+          "impressions": 7170.000000000001,
+          "sot": 0.0009850592478104071
+        },
+        {
+          "address": "Market St (Ia) Ss 240ft W/O 1st St (K) F/Ne - 2",
+          "amount": 69.41,
+          "impressions": 6941.0,
+          "sot": 0.001002003718717158
+        },
+        {
+          "address": "California St Ns 31ft E/O Sansome St F/E - 1",
+          "amount": 69.77,
+          "impressions": 6977.0,
+          "sot": 0.0009993196548143373
+        },
+        {
+          "address": "Haight St \t Ss 89ft E/O Masonic Ave F/W - 1",
+          "amount": 73.72,
+          "impressions": 7372.0,
+          "sot": 0.0009716466854353167
+        },
+        {
+          "address": "Mission Bay Blvd Ss 81ft E/O 4th St F/E - 1",
+          "amount": 76.06,
+          "impressions": 7606.0,
+          "sot": 0.0009570907260601485
+        },
+        {
+          "address": "Market St Ns 94ft E/O Powell St (K) F/Se - 1",
+          "amount": 62.59,
+          "impressions": 6259.000000000001,
+          "sot": 0.001064368895056186
+        },
+        {
+          "address": "California St Ss 65ft E/O Spruce St F/E - 2",
+          "amount": 76.77,
+          "impressions": 7676.999999999999,
+          "sot": 0.0009530122860005138
+        },
+        {
+          "address": "Columbus Ave Es 126ft N/O Union St F/S - 1",
+          "amount": 72.74,
+          "impressions": 7273.999999999999,
+          "sot": 0.0009779405437962483
+        },
+        {
+          "address": "Drumm St Es 28ft N/O California St F/N - 1",
+          "amount": 70.56,
+          "impressions": 7056.0,
+          "sot": 0.0009933481152993348
+        },
+        {
+          "address": "Market St Ns 67ft E/O Front St (K) F/Sw - 2",
+          "amount": 70.73,
+          "impressions": 7073.0,
+          "sot": 0.0009919708285123243
+        },
+        {
+          "address": "Fillmore St Es 18ft N/O Union St F/S - 1",
+          "amount": 70.69,
+          "impressions": 7069.000000000001,
+          "sot": 0.0009924035989897673
+        },
+        {
+          "address": "California St Ss 59ft E/O Kearny St F/W - 1",
+          "amount": 70.27,
+          "impressions": 7026.999999999999,
+          "sot": 0.000995547168421306
+        },
+        {
+          "address": "18th St Ss 40ft E/O Castro St F/E - 2",
+          "amount": 73.06,
+          "impressions": 7306.0,
+          "sot": 0.0009756944444444445
+        },
+        {
+          "address": "Sutter St Ns 20ft W/O Polk St F/E - 1",
+          "amount": 60.28,
+          "impressions": 6027.999999999999,
+          "sot": 0.0010909972815562094
+        },
+        {
+          "address": "11th St Ws 117ft S/O Market St F/N - 1",
+          "amount": 56.59,
+          "impressions": 5659.0,
+          "sot": 0.0011411574914297238
+        },
+        {
+          "address": "King St Ns 53ft E/O 3rd St (K) F/Se - 1",
+          "amount": 69.17,
+          "impressions": 6917.0,
+          "sot": 0.0010039915813919733
+        },
+        {
+          "address": "Mission St Ns 135ft W/O 5th St F/E - 1",
+          "amount": 62.51,
+          "impressions": 6251.0,
+          "sot": 0.0010652692569870484
+        },
+        {
+          "address": "Market St Ns 67ft E/O Front St (K) F/Se - 1",
+          "amount": 68.26,
+          "impressions": 6826.0,
+          "sot": 0.0010112592592592593
+        },
+        {
+          "address": "Steuart St Ws 37ft N/O Mission St F/N",
+          "amount": 71.01,
+          "impressions": 7101.000000000001,
+          "sot": 0.0009900658789082925
+        },
+        {
+          "address": "2nd St. Ws 180ft N/O Howard St. (K) F/N - 1",
+          "amount": 68.85,
+          "impressions": 6884.999999999999,
+          "sot": 0.0010064200389412197
+        },
+        {
+          "address": "Steuart St Ws 37ft N/O Mission St F/S - 2",
+          "amount": 69.43,
+          "impressions": 6943.000000000001,
+          "sot": 0.001001875901875902
+        },
+        {
+          "address": "Sacramento St Ns 42ft E/O Davis St F/E - 1",
+          "amount": 67.14,
+          "impressions": 6714.000000000001,
+          "sot": 0.0010205198358413134
+        },
+        {
+          "address": "Union St Ss 35ft W/O Polk St F/W - 1",
+          "amount": 67.25,
+          "impressions": 6725.0,
+          "sot": 0.001019750559156905
+        },
+        {
+          "address": "California St Ns 31ft E/O Sansome St F/W - 2",
+          "amount": 67.61,
+          "impressions": 6761.0,
+          "sot": 0.001016648923052864
+        },
+        {
+          "address": "Taylor St Ws 70ft S/O Bay St F/N - 1",
+          "amount": 67.33,
+          "impressions": 6733.000000000001,
+          "sot": 0.0010188871688011393
+        },
+        {
+          "address": "Market St Ns 187ft W/O Montgomery St (K) F/Sw - 2",
+          "amount": 64.15,
+          "impressions": 6415.0,
+          "sot": 0.0010483670641146324
+        },
+        {
+          "address": "2nd St Ws 80ft S/O Howard St F/W - 2",
+          "amount": 64.55,
+          "impressions": 6455.0,
+          "sot": 0.0010443310861205082
+        },
+        {
+          "address": "Market St Ss 240ft W/O 1st St (K) F/Nw - 1",
+          "amount": 66.96,
+          "impressions": 6695.999999999998,
+          "sot": 0.0010220997005137972
+        },
+        {
+          "address": "California St Ns 46ft E/O Laurel St F/W- 2",
+          "amount": 69.47,
+          "impressions": 6946.999999999999,
+          "sot": 0.0010016205866408294
+        },
+        {
+          "address": "Broadway St Ss 41ft W/O Montgomery St F/W- 1",
+          "amount": 67.38,
+          "impressions": 6737.999999999999,
+          "sot": 0.0010185941043083899
+        },
+        {
+          "address": "California St Ss 20ft W/O Montgomery St F/W - 1",
+          "amount": 70.92,
+          "impressions": 7092.000000000002,
+          "sot": 0.0009906840497353568
+        },
+        {
+          "address": "Castro St Ws 96ft S/O Market St F/N - 1",
+          "amount": 64.09,
+          "impressions": 6409.000000000001,
+          "sot": 0.0010489962600148946
+        },
+        {
+          "address": "Market St Ns 170ft E/O Drumm St (K) F/Se - 1",
+          "amount": 65.4,
+          "impressions": 6540.0,
+          "sot": 0.0010362448009506833
+        },
+        {
+          "address": "Powell St Ws 34ft N/O Francisco St F/N - 1",
+          "amount": 66.94,
+          "impressions": 6693.999999999999,
+          "sot": 0.0010223936903005475
+        },
+        {
+          "address": "Market St Ns 170ft E/O Drumm St (K) F/Sw - 2",
+          "amount": 68.89,
+          "impressions": 6889.0,
+          "sot": 0.0010061708109687078
+        },
+        {
+          "address": "Beach St Ns 252ft E/O Polk St F/E - 1",
+          "amount": 69.57,
+          "impressions": 6956.999999999999,
+          "sot": 0.0010007249754026201
+        },
+        {
+          "address": "Market St (Ia) Ss 212ft E/O 3rd St (K) F/Ne - 2",
+          "amount": 62.65,
+          "impressions": 6264.999999999999,
+          "sot": 0.0010638532714549401
+        },
+        {
+          "address": "Market St Ss 61ft W/O Steuart St (K) F/Nw - 1",
+          "amount": 63.93,
+          "impressions": 6393.0,
+          "sot": 0.0010504004929143562
+        },
+        {
+          "address": "Union St Ss 40ft W/O Gough St F/W - 1",
+          "amount": 63.02,
+          "impressions": 6302.0,
+          "sot": 0.001059775936931392
+        },
+        {
+          "address": "Marina St Ss 25ft W/O Laguna St F/W - 1",
+          "amount": 65.08,
+          "impressions": 6507.999999999999,
+          "sot": 0.001039201596806387
+        },
+        {
+          "address": "King St Ns 53ft E/O 3rd St (K) F/Sw - 2",
+          "amount": 64.11,
+          "impressions": 6411.0,
+          "sot": 0.0010487056802846277
+        },
+        {
+          "address": "Division St Ss 37ft W/O Rhode Island St F/E - 2",
+          "amount": 62.75,
+          "impressions": 6275.0,
+          "sot": 0.00106288736104124
+        },
+        {
+          "address": "Division St Ss 37ft W/O Rhode Island St F/W - 1",
+          "amount": 62.18,
+          "impressions": 6218.0,
+          "sot": 0.0010689303648081581
+        },
+        {
+          "address": "2nd St Ws 80ft S/O Howard St F/E - 1",
+          "amount": 60.19,
+          "impressions": 6019.0,
+          "sot": 0.0010920247179676983
+        },
+        {
+          "address": "Market St Ss 212ft E/O 3rd St (K) F/Nw - 1",
+          "amount": 57.1,
+          "impressions": 5709.999999999999,
+          "sot": 0.0011336652927675726
+        },
+        {
+          "address": "O' Farrell St Ss 84ft E/O Stockton St F/W - 1",
+          "amount": 57.38,
+          "impressions": 5738.0,
+          "sot": 0.0011294163960240133
+        },
+        {
+          "address": "Main St Es 369ft S/O Howard St F/S - 1",
+          "amount": 59.13,
+          "impressions": 5913.0,
+          "sot": 0.0011055952881783761
+        },
+        {
+          "address": "2nd St Ss 55ft E/O South Park St F/Nw - 1",
+          "amount": 58.16,
+          "impressions": 5815.999999999999,
+          "sot": 0.0011187218564319772
+        },
+        {
+          "address": "2nd St Ss 55ft E/O South Park St F/Ne - 2",
+          "amount": 59.87,
+          "impressions": 5986.999999999999,
+          "sot": 0.0010960564303380803
+        },
+        {
+          "address": "Market St Ss 61ft W/O Steuart St (K) F/Ne - 2",
+          "amount": 60.37,
+          "impressions": 6037.0,
+          "sot": 0.0010898095495983392
+        },
+        {
+          "address": "Mission St Ns 93ft W/O 2nd St F/E - 1",
+          "amount": 54.88,
+          "impressions": 5488.0,
+          "sot": 0.0011687387928427527
+        },
+        {
+          "address": "Marina St Ss 25ft W/O Laguna St F/E - 2",
+          "amount": 61.49,
+          "impressions": 6149.0,
+          "sot": 0.001076646968702123
+        },
+        {
+          "address": "Van Ness Ave Cl 140ft N/O Bush St F/N - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.0002748817702538929
+        },
+        {
+          "address": "Market St Ns 187ft W/O Montgomery St (K) F/Se - 1",
+          "amount": 49.8,
+          "impressions": 4980.0,
+          "sot": 0.001271962423471538
+        },
+        {
+          "address": "Stockton St Ws 77ft N/O Sutter St F/N - 1",
+          "amount": 49.97,
+          "impressions": 4997.0,
+          "sot": 0.0012673895123961703
+        },
+        {
+          "address": "Steuart St Es 24ft S/O Market St F/S - 1",
+          "amount": 53.15,
+          "impressions": 5315.0,
+          "sot": 0.0011998690641472803
+        },
+        {
+          "address": "Mission St Ns 109ft W/O 5th St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.0002617162617162617
+        },
+        {
+          "address": "Townsend St Ss 214ft W/O 4th St F/Ne - 2",
+          "amount": 46.88,
+          "impressions": 4688.0,
+          "sot": 0.0013520801788160647
+        }
+      ]
+    },
+    {
+      "strategy": "sim_interest",
+      "total": 10000.0,
+      "impressions": 1000774.3076923077,
+      "screen_count": 139,
+      "region_cells": 24,
+      "items": [
+        {
+          "address": "Laguna St Es 60ft N/O Hayes St F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.883913567799459e-05
+        },
+        {
+          "address": "Us 101 & South Airport Blvd",
+          "amount": 7.19,
+          "impressions": 1106.1538461538462,
+          "sot": 0.00011829560871563874
+        },
+        {
+          "address": "Mcallister St Ns 64ft W/O Larkin St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 9.948803099488032e-05
+        },
+        {
+          "address": "Mission St Ss 78ft E/O South Van Ness St F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.581744397696417e-05
+        },
+        {
+          "address": "Fillmore St Ws 52ft N/O Sacramento St F/S - 2",
+          "amount": 351.12,
+          "impressions": 35112.00000000001,
+          "sot": 0.00403718459495352
+        },
+        {
+          "address": "Filmore St Ws 57ft S/O Jackson St F/N - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 7.943241726434314e-05
+        },
+        {
+          "address": "Stockton St Es 50ft S/O Clay St F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 7.622985581000849e-05
+        },
+        {
+          "address": "Hayes St Ns 19ft E/O Laguna St F/E-1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 9.959676469814148e-05
+        },
+        {
+          "address": "E/L Us 101 & South Airport Blvd",
+          "amount": 7.19,
+          "impressions": 1106.1538461538462,
+          "sot": 0.0001281601206523261
+        },
+        {
+          "address": "Fillmore St Ws 52ft N/O Sacramento St F/N - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.26260132891129e-05
+        },
+        {
+          "address": "Hayes St Ns 19ft E/O Laguna St F/W-2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.258114692460624e-05
+        },
+        {
+          "address": "Market St Ns 66ft W/O Grant St (K) F/Sw - 2",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.081857186052447e-05
+        },
+        {
+          "address": "18th St Ns 36ft W/O Dolores St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 7.681156168908518e-05
+        },
+        {
+          "address": "Sacramento St Ns 50ft W/O Polk St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.691195420138915e-05
+        },
+        {
+          "address": "Market St Ns 76ft E/O Castro St F/Se - 1",
+          "amount": 350.71,
+          "impressions": 35070.99999999999,
+          "sot": 0.004009938234762782
+        },
+        {
+          "address": "Fillmore St Ws 57ft S/O Jackson St F/S - 2",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 7.744873733783161e-05
+        },
+        {
+          "address": "4th St Es 127ft N/O King St (K) F/Sw - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 7.763765566673902e-05
+        },
+        {
+          "address": "Sacramento St Ss 38ft E/O Fillmore St F/E - 2",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.501018585189312e-05
+        },
+        {
+          "address": "Fillmore St Es 43ft N/O Jackson St F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.357219405486707e-05
+        },
+        {
+          "address": "Stockton St Es 23ft S/O Columbus Ave F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 7.824572858852977e-05
+        },
+        {
+          "address": "Polk St Ws 60ft S/O Broadway St F/S - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.438996850927879e-05
+        },
+        {
+          "address": "Grove St Ss 42ft W/O Gough St F/E - 2",
+          "amount": 712.26,
+          "impressions": 71226.0,
+          "sot": 0.013265688120554498
+        },
+        {
+          "address": "Mission St Ns 60ft W/O 3rd St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.396629202985885e-05
+        },
+        {
+          "address": "Chestnut St Ss 45ft W/O Van Ness Ave F/E - 2",
+          "amount": 887.45,
+          "impressions": 88745.0,
+          "sot": 0.010640963843864584
+        },
+        {
+          "address": "Mission St Ns 75ft W/O 4th St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000002,
+          "sot": 8.52402732430901e-05
+        },
+        {
+          "address": "Fillmore St Es 22ft N/O Pine St F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.021556375316821e-05
+        },
+        {
+          "address": "Geary Blvd Ns 32ft E/O Stockton St F/W - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.569501157299809e-05
+        },
+        {
+          "address": "18th St Ns 31ft W/O Valencia St F/E - 1",
+          "amount": 844.92,
+          "impressions": 84492.0,
+          "sot": 0.010207195485697096
+        },
+        {
+          "address": "Fillmore St Ws 47ft S/O Lombard St F/N - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.073308787779773e-05
+        },
+        {
+          "address": "Sacramento St Ss 38ft E/O Fillmore St F/W - 1",
+          "amount": 672.57,
+          "impressions": 67257.0,
+          "sot": 0.008528323132111215
+        },
+        {
+          "address": "Market St Ns 66ft W/O Grant St (K) F/Se - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.551155892685967e-05
+        },
+        {
+          "address": "Castro St Es 26ft S/O 18th St F/N - 2",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.388664685588415e-05
+        },
+        {
+          "address": "Chestnut St Ns 50ft E/O Pierce F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.233138669414863e-05
+        },
+        {
+          "address": "California St Ns 82ft W/O Divisadero St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.831437460771346e-05
+        },
+        {
+          "address": "Embarcadero/King St Ns 516ft W/O 2nd St (K) F/Sw - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.424876233998301e-05
+        },
+        {
+          "address": "Market St Ss 223ft E/O 4th St (K) F/Nw - 1",
+          "amount": 163.81,
+          "impressions": 16381.000000000002,
+          "sot": 0.0022277981776145793
+        },
+        {
+          "address": "Castro St Es 40ft S/O 17th St F/N - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.182067502625886e-05
+        },
+        {
+          "address": "Geary Blvd Ns 36ft E/O Laguna St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.515075240556718e-05
+        },
+        {
+          "address": "Stockton St Ws 62ft S/O Broadway St F/N - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.788656643442122e-05
+        },
+        {
+          "address": "Stockton St Ws 45ft S/O Green St F/S - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.405964844594871e-05
+        },
+        {
+          "address": "16th St Ns 73ft W/O 4th St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.161449128291398e-05
+        },
+        {
+          "address": "4th St Es 127ft N/O King St (K) F/Nw - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.958664299286672e-05
+        },
+        {
+          "address": "Lombard St (Us101) Ns 64ft W/O Divisadero St F/W - 2",
+          "amount": 1147.71,
+          "impressions": 114771.0,
+          "sot": 0.014046843618392308
+        },
+        {
+          "address": "Kearny St Es 20ft S/O Jackson St F/N - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.759842639600093e-05
+        },
+        {
+          "address": "Geary Blvd Ns 114ft W/O Gough St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00011123590986023573
+        },
+        {
+          "address": "Chestnut St Ss 49ft W/O Pierce St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.622747022513884e-05
+        },
+        {
+          "address": "Market St Ss 223ft E/O 4th St (K) F/Ne - 2",
+          "amount": 161.07,
+          "impressions": 16106.999999999998,
+          "sot": 0.002275231379462318
+        },
+        {
+          "address": "Kearny St Es 20ft S/O Jackson St F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.167011407690623e-05
+        },
+        {
+          "address": "Polk St Es 65ft N/O Broadway St F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.961176543902288e-05
+        },
+        {
+          "address": "Sutter St Ns 20ft W/O Stockton St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.261942946946715e-05
+        },
+        {
+          "address": "Lombard St Ns 75ft W/O Laguna St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.921049333775045e-05
+        },
+        {
+          "address": "Chestnut St Ns 50ft E/O Pierce F/W - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.384350766719142e-05
+        },
+        {
+          "address": "Sacramento St Ns 35ft E/O Van Ness Ave F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.834052080811562e-05
+        },
+        {
+          "address": "California St Cl 32ft E/O Van Ness St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00010705378745579752
+        },
+        {
+          "address": "The Embarcadero Ws 90ft S/O Don Chee Way (K) F/Ne - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.503341020637455e-05
+        },
+        {
+          "address": "Castro St Ws 96ft S/O Market St F/S - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.064377249547727e-05
+        },
+        {
+          "address": "18th St Ss 40ft E/O Castro St F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.042319059296988e-05
+        },
+        {
+          "address": "1st St Ws 25ft S/O Mission St (K) F/Nw - 1",
+          "amount": 509.1,
+          "impressions": 50910.0,
+          "sot": 0.007016020671834626
+        },
+        {
+          "address": "Chestnut St Ss 45ft W/O Van Ness Ave F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.969225203647568e-05
+        },
+        {
+          "address": "Divisadero St Ws 84ft S/O Geary Blvd F/N - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.468462382286206e-05
+        },
+        {
+          "address": "Polk St Ws 60ft S/O Broadway St F/N - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.674962778497676e-05
+        },
+        {
+          "address": "Pacific Ave Ns 22ft E/O Polk St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.367431304418066e-05
+        },
+        {
+          "address": "Columbus Ave Ws 180ft S/O North Point St F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 8.319303909147185e-05
+        },
+        {
+          "address": "California St Ss 20ft E/O Grant St F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.290125849549061e-05
+        },
+        {
+          "address": "Kearny St Es 20ft S/O Sutter St F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.949050896521569e-05
+        },
+        {
+          "address": "Union St Ns 40ft E/O Columbus Ave F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.871614535134802e-05
+        },
+        {
+          "address": "Fillmore St Ws 47ft S/O Lombard St F/S - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.887735172686593e-05
+        },
+        {
+          "address": "Geary Blvd Ns 38ft W/O Powell St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 9.808335038537618e-05
+        },
+        {
+          "address": "4th St Ws 34ft N/O Folsom St F/N 鈥?1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.992106374936072e-05
+        },
+        {
+          "address": "Stockton St Ws 45ft S/O Green St F/N - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.016804614998746e-05
+        },
+        {
+          "address": "The Embarcadero/King St Cl 280ft W/O 2nd St (K) F/E - 2",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 9.100586158755233e-05
+        },
+        {
+          "address": "Lombard St (Us 101) Ns 64ft W/O Divisadero St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.913451501650042e-05
+        },
+        {
+          "address": "California St Ss 46ft W/O Divisadero St F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 9.415936898817312e-05
+        },
+        {
+          "address": "Fillmore St Es 18ft N/O Union St F/N - 2",
+          "amount": 343.42,
+          "impressions": 34342.00000000001,
+          "sot": 0.004702380218838276
+        },
+        {
+          "address": "Castro St Es 40ft S/O 17th St F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 9.45426908243623e-05
+        },
+        {
+          "address": "Castro St Es 26ft S/O 18th St F/S - 1",
+          "amount": 343.06,
+          "impressions": 34306.0,
+          "sot": 0.004628228062932893
+        },
+        {
+          "address": "Clay St Ss 82ft E/O Montgomery St F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.034649577482487e-05
+        },
+        {
+          "address": "Stockton St Es 23ft S/O Columbus Ave F/N - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.680568177993201e-05
+        },
+        {
+          "address": "Broadway Ns 168ft W/O Columbus Ave F/W - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.190553797973988e-05
+        },
+        {
+          "address": "The Embarcadero/King St Cl 280ft W/O 2nd St (K) F/W - 1",
+          "amount": 7.19,
+          "impressions": 718.9999999999999,
+          "sot": 9.555744278182467e-05
+        },
+        {
+          "address": "Market St Ns 69ft E/O Church St (K) F/Sw - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.519081190216132e-05
+        },
+        {
+          "address": "Embarcadero/King St Ns 516ft W/O 2nd St (K) F/Se - 1",
+          "amount": 311.57,
+          "impressions": 31157.0,
+          "sot": 0.004280542675596771
+        },
+        {
+          "address": "Market St (Ia) Ss 240ft W/O 1st St (K) F/Ne - 2",
+          "amount": 216.73,
+          "impressions": 21673.0,
+          "sot": 0.0031287172735566873
+        },
+        {
+          "address": "California St Ns 31ft E/O Sansome St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00010298277652451034
+        },
+        {
+          "address": "Haight St \t Ss 89ft E/O Masonic Ave F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 9.476586636299414e-05
+        },
+        {
+          "address": "Mission Bay Blvd Ss 81ft E/O 4th St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.04743928526488e-05
+        },
+        {
+          "address": "Market St Ns 94ft E/O Powell St (K) F/Se - 1",
+          "amount": 160.61,
+          "impressions": 16061.000000000002,
+          "sot": 0.0027312396266971407
+        },
+        {
+          "address": "California St Ss 65ft E/O Spruce St F/E - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 8.92556771700364e-05
+        },
+        {
+          "address": "Columbus Ave Es 126ft N/O Union St F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 9.666473068318706e-05
+        },
+        {
+          "address": "Drumm St Es 28ft N/O California St F/N - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00010122127195297927
+        },
+        {
+          "address": "Market St Ns 67ft E/O Front St (K) F/Sw - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00010083797903299324
+        },
+        {
+          "address": "Fillmore St Es 18ft N/O Union St F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00010093905611453426
+        },
+        {
+          "address": "California St Ss 59ft E/O Kearny St F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00010186401225201639
+        },
+        {
+          "address": "18th St Ss 40ft E/O Castro St F/E - 2",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 9.602029914529915e-05
+        },
+        {
+          "address": "Sutter St Ns 20ft W/O Polk St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.0001301305649367808
+        },
+        {
+          "address": "11th St Ws 117ft S/O Market St F/N - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.0001449889090542448
+        },
+        {
+          "address": "King St Ns 53ft E/O 3rd St (K) F/Se - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00010436170984831991
+        },
+        {
+          "address": "Mission St Ns 135ft W/O 5th St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.0001225289706884799
+        },
+        {
+          "address": "Market St Ns 67ft E/O Front St (K) F/Se - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00010651851851851853
+        },
+        {
+          "address": "Steuart St Ws 37ft N/O Mission St F/N",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00010024748161316184
+        },
+        {
+          "address": "2nd St. Ws 180ft N/O Howard St. (K) F/N - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00010510036426996907
+        },
+        {
+          "address": "Steuart St Ws 37ft N/O Mission St F/S - 2",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00010375180375180376
+        },
+        {
+          "address": "Sacramento St Ns 42ft E/O Davis St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00010928712570299439
+        },
+        {
+          "address": "Union St Ss 35ft W/O Polk St F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.0001090261192615338
+        },
+        {
+          "address": "California St Ns 31ft E/O Sansome St F/W - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00010811574850983718
+        },
+        {
+          "address": "Taylor St Ws 70ft S/O Bay St F/N - 1",
+          "amount": 563.85,
+          "impressions": 56385.000000000015,
+          "sot": 0.00853259364515851
+        },
+        {
+          "address": "Market St Ns 187ft W/O Montgomery St (K) F/Sw - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00011750209183139839
+        },
+        {
+          "address": "2nd St Ws 80ft S/O Howard St F/W - 2",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00011632440757872123
+        },
+        {
+          "address": "Market St Ss 240ft W/O 1st St (K) F/Nw - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00010975055027918464
+        },
+        {
+          "address": "California St Ns 46ft E/O Laurel St F/W- 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00010366564010288707
+        },
+        {
+          "address": "Broadway St Ss 41ft W/O Montgomery St F/W- 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00010869236583522298
+        },
+        {
+          "address": "California St Ss 20ft W/O Montgomery St F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00010043737052449542
+        },
+        {
+          "address": "Castro St Ws 96ft S/O Market St F/N - 1",
+          "amount": 345.1,
+          "impressions": 34510.0,
+          "sot": 0.005648441400080201
+        },
+        {
+          "address": "Market St Ns 170ft E/O Drumm St (K) F/Se - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00011392354921766687
+        },
+        {
+          "address": "Powell St Ws 34ft N/O Francisco St F/N - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.0001098149183337457
+        },
+        {
+          "address": "Market St Ns 170ft E/O Drumm St (K) F/Sw - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00010501332749114544
+        },
+        {
+          "address": "Beach St Ns 252ft E/O Polk St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.0001034240703341216
+        },
+        {
+          "address": "Market St (Ia) Ss 212ft E/O 3rd St (K) F/Ne - 2",
+          "amount": 7.19,
+          "impressions": 718.9999999999999,
+          "sot": 0.0001220926579690506
+        },
+        {
+          "address": "Market St Ss 61ft W/O Steuart St (K) F/Nw - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00011813514068597248
+        },
+        {
+          "address": "Union St Ss 40ft W/O Gough St F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00012091064719988431
+        },
+        {
+          "address": "Marina St Ss 25ft W/O Laguna St F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00011481037924151697
+        },
+        {
+          "address": "King St Ns 53ft E/O 3rd St (K) F/Sw - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00011761338077127551
+        },
+        {
+          "address": "Division St Ss 37ft W/O Rhode Island St F/E - 2",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00012178741236472537
+        },
+        {
+          "address": "Division St Ss 37ft W/O Rhode Island St F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00012360259445112027
+        },
+        {
+          "address": "2nd St Ws 80ft S/O Howard St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00013044787709233678
+        },
+        {
+          "address": "Market St Ss 212ft E/O 3rd St (K) F/Nw - 1",
+          "amount": 7.19,
+          "impressions": 718.9999999999999,
+          "sot": 0.000142750498336232
+        },
+        {
+          "address": "O' Farrell St Ss 84ft E/O Stockton St F/W - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00014152150378899715
+        },
+        {
+          "address": "Main St Es 369ft S/O Howard St F/S - 1",
+          "amount": 216.71,
+          "impressions": 21671.000000000004,
+          "sot": 0.004051979619501707
+        },
+        {
+          "address": "2nd St Ss 55ft E/O South Park St F/Nw - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.0001383014124440495
+        },
+        {
+          "address": "2nd St Ss 55ft E/O South Park St F/Ne - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00013162929236897942
+        },
+        {
+          "address": "Market St Ss 61ft W/O Steuart St (K) F/Ne - 2",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00012979510786172038
+        },
+        {
+          "address": "Mission St Ns 93ft W/O 2nd St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00015312011517017843
+        },
+        {
+          "address": "Marina St Ss 25ft W/O Laguna St F/E - 2",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00012589188006128257
+        },
+        {
+          "address": "Van Ness Ave Cl 140ft N/O Bush St F/N - 1",
+          "amount": 683.33,
+          "impressions": 68333.0,
+          "sot": 0.02612447288839953
+        },
+        {
+          "address": "Market St Ns 187ft W/O Montgomery St (K) F/Se - 1",
+          "amount": 159.29,
+          "impressions": 15929.0,
+          "sot": 0.004068491856120106
+        },
+        {
+          "address": "Stockton St Ws 77ft N/O Sutter St F/N - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00018236002789930888
+        },
+        {
+          "address": "Steuart St Es 24ft S/O Market St F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00016231530707843737
+        },
+        {
+          "address": "Mission St Ns 109ft W/O 5th St F/E - 1",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.0002617162617162617
+        },
+        {
+          "address": "Townsend St Ss 214ft W/O 4th St F/Ne - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00020736895233975053
+        }
+      ]
+    },
+    {
+      "strategy": "sim_coverage",
+      "total": 10000.0,
+      "impressions": 1030605.6153846153,
+      "screen_count": 139,
+      "region_cells": 24,
+      "items": [
+        {
+          "address": "Laguna St Es 60ft N/O Hayes St F/S - 1",
+          "amount": 89.82,
+          "impressions": 8982.0,
+          "sot": 0.00110980961983275
+        },
+        {
+          "address": "Us 101 & South Airport Blvd",
+          "amount": 289.89,
+          "impressions": 44598.46153846153,
+          "sot": 0.004769501253209529
+        },
+        {
+          "address": "Mcallister St Ns 64ft W/O Larkin St F/E - 1",
+          "amount": 1191.97,
+          "impressions": 119196.99999999999,
+          "sot": 0.01649328905493289
+        },
+        {
+          "address": "Mission St Ss 78ft E/O South Van Ness St F/S - 1",
+          "amount": 217.43,
+          "impressions": 21743.000000000004,
+          "sot": 0.0025951720227971238
+        },
+        {
+          "address": "Fillmore St Ws 52ft N/O Sacramento St F/S - 2",
+          "amount": 35.06,
+          "impressions": 3506.0,
+          "sot": 0.0004031205624831123
+        },
+        {
+          "address": "Filmore St Ws 57ft S/O Jackson St F/N - 1",
+          "amount": 34.95,
+          "impressions": 3495.0,
+          "sot": 0.0003861144622237542
+        },
+        {
+          "address": "Stockton St Es 50ft S/O Clay St F/S - 1",
+          "amount": 22.5,
+          "impressions": 2250.0,
+          "sot": 0.00023854961832061068
+        },
+        {
+          "address": "Hayes St Ns 19ft E/O Laguna St F/E-1",
+          "amount": 86.18,
+          "impressions": 8618.000000000002,
+          "sot": 0.0011937759640731338
+        },
+        {
+          "address": "E/L Us 101 & South Airport Blvd",
+          "amount": 278.5,
+          "impressions": 42846.15384615384,
+          "sot": 0.004964199388271601
+        },
+        {
+          "address": "Fillmore St Ws 52ft N/O Sacramento St F/N - 1",
+          "amount": 35.06,
+          "impressions": 3506.0,
+          "sot": 0.00040290236799948517
+        },
+        {
+          "address": "Hayes St Ns 19ft E/O Laguna St F/W-2",
+          "amount": 88.5,
+          "impressions": 8849.999999999998,
+          "sot": 0.0011395593188911893
+        },
+        {
+          "address": "Market St Ns 66ft W/O Grant St (K) F/Sw - 2",
+          "amount": 18.86,
+          "impressions": 1886.0,
+          "sot": 0.00021199419545055512
+        },
+        {
+          "address": "18th St Ns 36ft W/O Dolores St F/E - 1",
+          "amount": 107.98,
+          "impressions": 10798.0,
+          "sot": 0.0011535622296505448
+        },
+        {
+          "address": "Sacramento St Ns 50ft W/O Polk St F/E - 1",
+          "amount": 35.92,
+          "impressions": 3592.0000000000005,
+          "sot": 0.0004341971342022112
+        },
+        {
+          "address": "Market St Ns 76ft E/O Castro St F/Se - 1",
+          "amount": 33.32,
+          "impressions": 3331.9999999999995,
+          "sot": 0.0003809732884214762
+        },
+        {
+          "address": "Fillmore St Ws 57ft S/O Jackson St F/S - 2",
+          "amount": 35.31,
+          "impressions": 3531.0000000000005,
+          "sot": 0.0003803497796104081
+        },
+        {
+          "address": "4th St Es 127ft N/O King St (K) F/Sw - 2",
+          "amount": 31.23,
+          "impressions": 3123.0,
+          "sot": 0.00033722169491964664
+        },
+        {
+          "address": "Sacramento St Ss 38ft E/O Fillmore St F/E - 2",
+          "amount": 77.34,
+          "impressions": 7734.000000000001,
+          "sot": 0.0009144211090104887
+        },
+        {
+          "address": "Fillmore St Es 43ft N/O Jackson St F/S - 1",
+          "amount": 34.17,
+          "impressions": 3417.0000000000005,
+          "sot": 0.0003971713311341875
+        },
+        {
+          "address": "Stockton St Es 23ft S/O Columbus Ave F/S - 1",
+          "amount": 21.65,
+          "impressions": 2165.0,
+          "sot": 0.00023560779192512786
+        },
+        {
+          "address": "Polk St Ws 60ft S/O Broadway St F/S - 2",
+          "amount": 34.45,
+          "impressions": 3445.0000000000005,
+          "sot": 0.0004043441467516905
+        },
+        {
+          "address": "Grove St Ss 42ft W/O Gough St F/E - 2",
+          "amount": 86.37,
+          "impressions": 8637.000000000002,
+          "sot": 0.0016086225296553115
+        },
+        {
+          "address": "Mission St Ns 60ft W/O 3rd St F/E - 1",
+          "amount": 18.39,
+          "impressions": 1839.0000000000002,
+          "sot": 0.00021476218503881838
+        },
+        {
+          "address": "Chestnut St Ss 45ft W/O Van Ness Ave F/E - 2",
+          "amount": 99.12,
+          "impressions": 9912.0,
+          "sot": 0.0011884977589766833
+        },
+        {
+          "address": "Mission St Ns 75ft W/O 4th St F/E - 1",
+          "amount": 18.69,
+          "impressions": 1869.0000000000005,
+          "sot": 0.00022157728886138442
+        },
+        {
+          "address": "Fillmore St Es 22ft N/O Pine St F/S - 1",
+          "amount": 76.64,
+          "impressions": 7664.0,
+          "sot": 0.000961630153830711
+        },
+        {
+          "address": "Geary Blvd Ns 32ft E/O Stockton St F/W - 2",
+          "amount": 18.63,
+          "impressions": 1863.0,
+          "sot": 0.0002220442372190479
+        },
+        {
+          "address": "18th St Ns 31ft W/O Valencia St F/E - 1",
+          "amount": 102.63,
+          "impressions": 10263.0,
+          "sot": 0.0012398386506380402
+        },
+        {
+          "address": "Fillmore St Ws 47ft S/O Lombard St F/N - 1",
+          "amount": 32.97,
+          "impressions": 3297.0,
+          "sot": 0.00037020443773727276
+        },
+        {
+          "address": "Sacramento St Ss 38ft E/O Fillmore St F/W - 1",
+          "amount": 75.06,
+          "impressions": 7506.0,
+          "sot": 0.00095177592562301
+        },
+        {
+          "address": "Market St Ns 66ft W/O Grant St (K) F/Se - 1",
+          "amount": 18.55,
+          "impressions": 1855.0000000000002,
+          "sot": 0.00022061744340657122
+        },
+        {
+          "address": "Castro St Es 26ft S/O 18th St F/N - 2",
+          "amount": 32.59,
+          "impressions": 3259.0000000000005,
+          "sot": 0.00038023168581825654
+        },
+        {
+          "address": "Chestnut St Ns 50ft E/O Pierce F/E - 1",
+          "amount": 46.62,
+          "impressions": 4661.999999999999,
+          "sot": 0.000533837169357609
+        },
+        {
+          "address": "California St Ns 82ft W/O Divisadero St F/E - 1",
+          "amount": 101.98,
+          "impressions": 10198.000000000002,
+          "sot": 0.0012526147319185839
+        },
+        {
+          "address": "Embarcadero/King St Ns 516ft W/O 2nd St (K) F/Sw - 2",
+          "amount": 29.73,
+          "impressions": 2973.0,
+          "sot": 0.00034836101590649443
+        },
+        {
+          "address": "Market St Ss 223ft E/O 4th St (K) F/Nw - 1",
+          "amount": 17.92,
+          "impressions": 1792.0,
+          "sot": 0.00024371005031959746
+        },
+        {
+          "address": "Castro St Es 40ft S/O 17th St F/N - 2",
+          "amount": 33.23,
+          "impressions": 3322.9999999999995,
+          "sot": 0.00037815035203373875
+        },
+        {
+          "address": "Geary Blvd Ns 36ft E/O Laguna St F/E - 1",
+          "amount": 83.15,
+          "impressions": 8315.0,
+          "sot": 0.0011003873522284994
+        },
+        {
+          "address": "Stockton St Ws 62ft S/O Broadway St F/N - 1",
+          "amount": 21.03,
+          "impressions": 2103.0,
+          "sot": 0.00025705903923725707
+        },
+        {
+          "address": "Stockton St Ws 45ft S/O Green St F/S - 2",
+          "amount": 21.1,
+          "impressions": 2110.0000000000005,
+          "sot": 0.00024668408653818054
+        },
+        {
+          "address": "16th St Ns 73ft W/O 4th St F/E - 1",
+          "amount": 833.03,
+          "impressions": 83303.0,
+          "sot": 0.009455816366259502
+        },
+        {
+          "address": "4th St Es 127ft N/O King St (K) F/Nw - 1",
+          "amount": 29.51,
+          "impressions": 2951.0000000000005,
+          "sot": 0.00036769149300688414
+        },
+        {
+          "address": "Lombard St (Us101) Ns 64ft W/O Divisadero St F/W - 2",
+          "amount": 165.95,
+          "impressions": 16595.0,
+          "sot": 0.002031065076083857
+        },
+        {
+          "address": "Kearny St Es 20ft S/O Jackson St F/N - 2",
+          "amount": 20.96,
+          "impressions": 2095.9999999999995,
+          "sot": 0.00025536342381921826
+        },
+        {
+          "address": "Geary Blvd Ns 114ft W/O Gough St F/E - 1",
+          "amount": 81.21,
+          "impressions": 8121.000000000001,
+          "sot": 0.0012563933574060839
+        },
+        {
+          "address": "Chestnut St Ss 49ft W/O Pierce St F/E - 1",
+          "amount": 45.61,
+          "impressions": 4561.0,
+          "sot": 0.0005469867756562702
+        },
+        {
+          "address": "Market St Ss 223ft E/O 4th St (K) F/Ne - 2",
+          "amount": 17.75,
+          "impressions": 1775.0,
+          "sot": 0.0002507317128295533
+        },
+        {
+          "address": "Kearny St Es 20ft S/O Jackson St F/S - 1",
+          "amount": 21.47,
+          "impressions": 2147.0,
+          "sot": 0.00024387445747304262
+        },
+        {
+          "address": "Polk St Es 65ft N/O Broadway St F/S - 1",
+          "amount": 33.51,
+          "impressions": 3350.9999999999995,
+          "sot": 0.00041764815853430543
+        },
+        {
+          "address": "Sutter St Ns 20ft W/O Stockton St F/E - 1",
+          "amount": 18.12,
+          "impressions": 1812.0,
+          "sot": 0.00023341642030413697
+        },
+        {
+          "address": "Lombard St Ns 75ft W/O Laguna St F/E - 1",
+          "amount": 45.93,
+          "impressions": 4593.0,
+          "sot": 0.0005698801055636825
+        },
+        {
+          "address": "Chestnut St Ns 50ft E/O Pierce F/W - 2",
+          "amount": 46.23,
+          "impressions": 4623.0,
+          "sot": 0.000539093930383068
+        },
+        {
+          "address": "Sacramento St Ns 35ft E/O Van Ness Ave F/E - 1",
+          "amount": 34.44,
+          "impressions": 3443.9999999999995,
+          "sot": 0.0004710497269306678
+        },
+        {
+          "address": "California St Cl 32ft E/O Van Ness St F/E - 1",
+          "amount": 34.08,
+          "impressions": 3407.9999999999995,
+          "sot": 0.0005074260189838079
+        },
+        {
+          "address": "The Embarcadero Ws 90ft S/O Don Chee Way (K) F/Ne - 1",
+          "amount": 21.44,
+          "impressions": 2144.0,
+          "sot": 0.0002535627697948081
+        },
+        {
+          "address": "Castro St Ws 96ft S/O Market St F/S - 2",
+          "amount": 31.84,
+          "impressions": 3184.0,
+          "sot": 0.00040140441116216915
+        },
+        {
+          "address": "18th St Ss 40ft E/O Castro St F/W - 1",
+          "amount": 31.65,
+          "impressions": 3165.0,
+          "sot": 0.0003980381060177325
+        },
+        {
+          "address": "1st St Ws 25ft S/O Mission St (K) F/Nw - 1",
+          "amount": 44.74,
+          "impressions": 4474.0,
+          "sot": 0.0006165719207579673
+        },
+        {
+          "address": "Chestnut St Ss 45ft W/O Van Ness Ave F/W - 1",
+          "amount": 97.26,
+          "impressions": 9726.0,
+          "sot": 0.0012132779461846489
+        },
+        {
+          "address": "Divisadero St Ws 84ft S/O Geary Blvd F/N - 1",
+          "amount": 72.86,
+          "impressions": 7286.0,
+          "sot": 0.0009594884133148441
+        },
+        {
+          "address": "Polk St Ws 60ft S/O Broadway St F/N - 1",
+          "amount": 34.09,
+          "impressions": 3409.0000000000005,
+          "sot": 0.00041130664967870066
+        },
+        {
+          "address": "Pacific Ave Ns 22ft E/O Polk St F/E - 1",
+          "amount": 33.38,
+          "impressions": 3338.0,
+          "sot": 0.0004348885353845272
+        },
+        {
+          "address": "Columbus Ave Ws 180ft S/O North Point St F/W - 1",
+          "amount": 55.55,
+          "impressions": 5555.0,
+          "sot": 0.0006427501142602588
+        },
+        {
+          "address": "California St Ss 20ft E/O Grant St F/W - 1",
+          "amount": 21.08,
+          "impressions": 2107.9999999999995,
+          "sot": 0.0002723725353386567
+        },
+        {
+          "address": "Kearny St Es 20ft S/O Sutter St F/S - 1",
+          "amount": 17.41,
+          "impressions": 1741.0,
+          "sot": 0.00024090817261257372
+        },
+        {
+          "address": "Union St Ns 40ft E/O Columbus Ave F/E - 1",
+          "amount": 55.4,
+          "impressions": 5540.0,
+          "sot": 0.000683570855697452
+        },
+        {
+          "address": "Fillmore St Ws 47ft S/O Lombard St F/S - 2",
+          "amount": 31.69,
+          "impressions": 3169.0,
+          "sot": 0.00039172785482953845
+        },
+        {
+          "address": "Geary Blvd Ns 38ft W/O Powell St F/E - 1",
+          "amount": 18.25,
+          "impressions": 1825.0,
+          "sot": 0.00024895982538708137
+        },
+        {
+          "address": "4th St Ws 34ft N/O Folsom St F/N 鈥?1",
+          "amount": 17.57,
+          "impressions": 1757.0,
+          "sot": 0.0002441742823471861
+        },
+        {
+          "address": "Stockton St Ws 45ft S/O Green St F/N - 1",
+          "amount": 20.61,
+          "impressions": 2061.0,
+          "sot": 0.0002584650112866817
+        },
+        {
+          "address": "The Embarcadero/King St Cl 280ft W/O 2nd St (K) F/E - 2",
+          "amount": 28.78,
+          "impressions": 2878.0000000000005,
+          "sot": 0.0003642765920013569
+        },
+        {
+          "address": "Lombard St (Us 101) Ns 64ft W/O Divisadero St F/E - 1",
+          "amount": 164.87,
+          "impressions": 16487.0,
+          "sot": 0.002043895339467375
+        },
+        {
+          "address": "California St Ss 46ft W/O Divisadero St F/W - 1",
+          "amount": 99.16,
+          "impressions": 9916.0,
+          "sot": 0.0012985873475476002
+        },
+        {
+          "address": "Fillmore St Es 18ft N/O Union St F/N - 2",
+          "amount": 30.96,
+          "impressions": 3096.0000000000005,
+          "sot": 0.00042392898367955574
+        },
+        {
+          "address": "Castro St Es 40ft S/O 17th St F/S - 1",
+          "amount": 31.37,
+          "impressions": 3137.0,
+          "sot": 0.00041249015454245414
+        },
+        {
+          "address": "Castro St Es 26ft S/O 18th St F/S - 1",
+          "amount": 30.77,
+          "impressions": 3077.0,
+          "sot": 0.00041511857254254394
+        },
+        {
+          "address": "Clay St Ss 82ft E/O Montgomery St F/W - 1",
+          "amount": 20.75,
+          "impressions": 2075.0,
+          "sot": 0.0002607357145100996
+        },
+        {
+          "address": "Stockton St Es 23ft S/O Columbus Ave F/N - 2",
+          "amount": 20.15,
+          "impressions": 2015.0,
+          "sot": 0.00027129825978659664
+        },
+        {
+          "address": "Broadway Ns 168ft W/O Columbus Ave F/W - 2",
+          "amount": 20.58,
+          "impressions": 2057.9999999999995,
+          "sot": 0.00026306202665132773
+        },
+        {
+          "address": "The Embarcadero/King St Cl 280ft W/O 2nd St (K) F/W - 1",
+          "amount": 28.25,
+          "impressions": 2824.9999999999995,
+          "sot": 0.00037545170494945017
+        },
+        {
+          "address": "Market St Ns 69ft E/O Church St (K) F/Sw - 2",
+          "amount": 104.23,
+          "impressions": 10423.0,
+          "sot": 0.0013799357892298018
+        },
+        {
+          "address": "Embarcadero/King St Ns 516ft W/O 2nd St (K) F/Se - 1",
+          "amount": 27.97,
+          "impressions": 2797.0,
+          "sot": 0.0003842692770049802
+        },
+        {
+          "address": "Market St (Ia) Ss 240ft W/O 1st St (K) F/Ne - 2",
+          "amount": 20.89,
+          "impressions": 2089.0000000000005,
+          "sot": 0.0003015683285405768
+        },
+        {
+          "address": "California St Ns 31ft E/O Sansome St F/E - 1",
+          "amount": 19.91,
+          "impressions": 1991.0,
+          "sot": 0.00028517205571668993
+        },
+        {
+          "address": "Haight St \t Ss 89ft E/O Masonic Ave F/W - 1",
+          "amount": 799.44,
+          "impressions": 79944.00000000001,
+          "sot": 0.010536804479169963
+        },
+        {
+          "address": "Mission Bay Blvd Ss 81ft E/O 4th St F/E - 1",
+          "amount": 28.52,
+          "impressions": 2852.0,
+          "sot": 0.0003588775638605763
+        },
+        {
+          "address": "Market St Ns 94ft E/O Powell St (K) F/Se - 1",
+          "amount": 17.44,
+          "impressions": 1744.0000000000002,
+          "sot": 0.0002965744292982886
+        },
+        {
+          "address": "California St Ss 65ft E/O Spruce St F/E - 2",
+          "amount": 791.73,
+          "impressions": 79173.0,
+          "sot": 0.009828427995247973
+        },
+        {
+          "address": "Columbus Ave Es 126ft N/O Union St F/S - 1",
+          "amount": 53.33,
+          "impressions": 5333.0,
+          "sot": 0.0007169861039408019
+        },
+        {
+          "address": "Drumm St Es 28ft N/O California St F/N - 1",
+          "amount": 20.46,
+          "impressions": 2046.0,
+          "sot": 0.0002880371660859466
+        },
+        {
+          "address": "Market St Ns 67ft E/O Front St (K) F/Sw - 2",
+          "amount": 20.79,
+          "impressions": 2079.0,
+          "sot": 0.0002915746292205743
+        },
+        {
+          "address": "Fillmore St Es 18ft N/O Union St F/S - 1",
+          "amount": 30.68,
+          "impressions": 3068.0000000000005,
+          "sot": 0.00043071074291987633
+        },
+        {
+          "address": "California St Ss 59ft E/O Kearny St F/W - 1",
+          "amount": 20.32,
+          "impressions": 2032.0,
+          "sot": 0.0002878827161280908
+        },
+        {
+          "address": "18th St Ss 40ft E/O Castro St F/E - 2",
+          "amount": 30.93,
+          "impressions": 3093.0,
+          "sot": 0.00041306089743589744
+        },
+        {
+          "address": "Sutter St Ns 20ft W/O Polk St F/E - 1",
+          "amount": 75.4,
+          "impressions": 7540.0,
+          "sot": 0.0013646515432869642
+        },
+        {
+          "address": "11th St Ws 117ft S/O Market St F/N - 1",
+          "amount": 195.33,
+          "impressions": 19533.0,
+          "sot": 0.003938898971566848
+        },
+        {
+          "address": "King St Ns 53ft E/O 3rd St (K) F/Se - 1",
+          "amount": 27.51,
+          "impressions": 2751.0,
+          "sot": 0.0003993032876115829
+        },
+        {
+          "address": "Mission St Ns 135ft W/O 5th St F/E - 1",
+          "amount": 17.56,
+          "impressions": 1756.0,
+          "sot": 0.0002992501704158146
+        },
+        {
+          "address": "Market St Ns 67ft E/O Front St (K) F/Se - 1",
+          "amount": 20.45,
+          "impressions": 2044.9999999999998,
+          "sot": 0.00030296296296296294
+        },
+        {
+          "address": "Steuart St Ws 37ft N/O Mission St F/N",
+          "amount": 20.34,
+          "impressions": 2033.9999999999998,
+          "sot": 0.0002835930147443271
+        },
+        {
+          "address": "2nd St. Ws 180ft N/O Howard St. (K) F/N - 1",
+          "amount": 44.58,
+          "impressions": 4458.0,
+          "sot": 0.0006516514936238138
+        },
+        {
+          "address": "Steuart St Ws 37ft N/O Mission St F/S - 2",
+          "amount": 20.12,
+          "impressions": 2012.0000000000002,
+          "sot": 0.00029033189033189036
+        },
+        {
+          "address": "Sacramento St Ns 42ft E/O Davis St F/E - 1",
+          "amount": 20.04,
+          "impressions": 2003.9999999999998,
+          "sot": 0.00030460556315549473
+        },
+        {
+          "address": "Union St Ss 35ft W/O Polk St F/W - 1",
+          "amount": 30.48,
+          "impressions": 3048.0,
+          "sot": 0.0004621858296372114
+        },
+        {
+          "address": "California St Ns 31ft E/O Sansome St F/W - 2",
+          "amount": 19.63,
+          "impressions": 1962.9999999999998,
+          "sot": 0.0002951755414809602
+        },
+        {
+          "address": "Taylor St Ws 70ft S/O Bay St F/N - 1",
+          "amount": 49.44,
+          "impressions": 4944.0,
+          "sot": 0.000748162507433957
+        },
+        {
+          "address": "Market St Ns 187ft W/O Montgomery St (K) F/Sw - 2",
+          "amount": 16.68,
+          "impressions": 1667.9999999999998,
+          "sot": 0.0002725917791026043
+        },
+        {
+          "address": "2nd St Ws 80ft S/O Howard St F/W - 2",
+          "amount": 42.82,
+          "impressions": 4282.0,
+          "sot": 0.0006927692812963619
+        },
+        {
+          "address": "Market St Ss 240ft W/O 1st St (K) F/Nw - 1",
+          "amount": 20.55,
+          "impressions": 2055.0,
+          "sot": 0.0003136820317437057
+        },
+        {
+          "address": "California St Ns 46ft E/O Laurel St F/W- 2",
+          "amount": 89.46,
+          "impressions": 8945.999999999998,
+          "sot": 0.0012898370185819576
+        },
+        {
+          "address": "Broadway St Ss 41ft W/O Montgomery St F/W- 1",
+          "amount": 19.33,
+          "impressions": 1932.9999999999998,
+          "sot": 0.00029221466364323504
+        },
+        {
+          "address": "California St Ss 20ft W/O Montgomery St F/W - 1",
+          "amount": 20.28,
+          "impressions": 2028.0000000000002,
+          "sot": 0.00028329205483126104
+        },
+        {
+          "address": "Castro St Ws 96ft S/O Market St F/N - 1",
+          "amount": 28.98,
+          "impressions": 2898.0,
+          "sot": 0.0004743315901892907
+        },
+        {
+          "address": "Market St Ns 170ft E/O Drumm St (K) F/Se - 1",
+          "amount": 19.7,
+          "impressions": 1969.9999999999998,
+          "sot": 0.00031214101802337093
+        },
+        {
+          "address": "Powell St Ws 34ft N/O Francisco St F/N - 1",
+          "amount": 49.08,
+          "impressions": 4907.999999999999,
+          "sot": 0.0007496128222281278
+        },
+        {
+          "address": "Market St Ns 170ft E/O Drumm St (K) F/Sw - 2",
+          "amount": 20.19,
+          "impressions": 2019.0000000000002,
+          "sot": 0.00029488443422061566
+        },
+        {
+          "address": "Beach St Ns 252ft E/O Polk St F/E - 1",
+          "amount": 88.21,
+          "impressions": 8821.0,
+          "sot": 0.001268850798911386
+        },
+        {
+          "address": "Market St (Ia) Ss 212ft E/O 3rd St (K) F/Ne - 2",
+          "amount": 16.6,
+          "impressions": 1660.0,
+          "sot": 0.00028188290991463703
+        },
+        {
+          "address": "Market St Ss 61ft W/O Steuart St (K) F/Nw - 1",
+          "amount": 19.41,
+          "impressions": 1941.0,
+          "sot": 0.00031891558841651264
+        },
+        {
+          "address": "Union St Ss 40ft W/O Gough St F/W - 1",
+          "amount": 29.41,
+          "impressions": 2940.9999999999995,
+          "sot": 0.0004945733149024474
+        },
+        {
+          "address": "Marina St Ss 25ft W/O Laguna St F/W - 1",
+          "amount": 40.12,
+          "impressions": 4011.9999999999995,
+          "sot": 0.0006406387225548902
+        },
+        {
+          "address": "King St Ns 53ft E/O 3rd St (K) F/Sw - 2",
+          "amount": 26.42,
+          "impressions": 2642.0,
+          "sot": 0.00043217601112337955
+        },
+        {
+          "address": "Division St Ss 37ft W/O Rhode Island St F/E - 2",
+          "amount": 157.46,
+          "impressions": 15746.000000000002,
+          "sot": 0.002667127392343485
+        },
+        {
+          "address": "Division St Ss 37ft W/O Rhode Island St F/W - 1",
+          "amount": 156.56,
+          "impressions": 15656.0,
+          "sot": 0.0026914078146408047
+        },
+        {
+          "address": "2nd St Ws 80ft S/O Howard St F/E - 1",
+          "amount": 41.17,
+          "impressions": 4117.000000000001,
+          "sot": 0.0007469456328082762
+        },
+        {
+          "address": "Market St Ss 212ft E/O 3rd St (K) F/Nw - 1",
+          "amount": 16.06,
+          "impressions": 1605.9999999999998,
+          "sot": 0.00031885577236159747
+        },
+        {
+          "address": "O' Farrell St Ss 84ft E/O Stockton St F/W - 1",
+          "amount": 16.51,
+          "impressions": 1651.0,
+          "sot": 0.0003249680149591576
+        },
+        {
+          "address": "Main St Es 369ft S/O Howard St F/S - 1",
+          "amount": 18.79,
+          "impressions": 1878.9999999999998,
+          "sot": 0.0003513298742579348
+        },
+        {
+          "address": "2nd St Ss 55ft E/O South Park St F/Nw - 1",
+          "amount": 39.08,
+          "impressions": 3907.9999999999995,
+          "sot": 0.000751713379459451
+        },
+        {
+          "address": "2nd St Ss 55ft E/O South Park St F/Ne - 2",
+          "amount": 39.73,
+          "impressions": 3972.999999999999,
+          "sot": 0.0007273479535214953
+        },
+        {
+          "address": "Market St Ss 61ft W/O Steuart St (K) F/Ne - 2",
+          "amount": 18.91,
+          "impressions": 1891.0,
+          "sot": 0.00034136654932755665
+        },
+        {
+          "address": "Mission St Ns 93ft W/O 2nd St F/E - 1",
+          "amount": 15.6,
+          "impressions": 1560.0,
+          "sot": 0.00033222166851944136
+        },
+        {
+          "address": "Marina St Ss 25ft W/O Laguna St F/E - 2",
+          "amount": 38.76,
+          "impressions": 3875.9999999999995,
+          "sot": 0.0006786605384110308
+        },
+        {
+          "address": "Van Ness Ave Cl 140ft N/O Bush St F/N - 1",
+          "amount": 63.08,
+          "impressions": 6307.999999999999,
+          "sot": 0.0024116192027281726
+        },
+        {
+          "address": "Market St Ns 187ft W/O Montgomery St (K) F/Se - 1",
+          "amount": 15.27,
+          "impressions": 1527.0,
+          "sot": 0.0003900173937030198
+        },
+        {
+          "address": "Stockton St Ws 77ft N/O Sutter St F/N - 1",
+          "amount": 15.6,
+          "impressions": 1560.0,
+          "sot": 0.0003956629256229789
+        },
+        {
+          "address": "Steuart St Es 24ft S/O Market St F/S - 1",
+          "amount": 7.19,
+          "impressions": 719.0000000000001,
+          "sot": 0.00016231530707843737
+        },
+        {
+          "address": "Mission St Ns 109ft W/O 5th St F/E - 1",
+          "amount": 15.53,
+          "impressions": 1553.0,
+          "sot": 0.0005652925652925653
+        },
+        {
+          "address": "Townsend St Ss 214ft W/O 4th St F/Ne - 2",
+          "amount": 7.19,
+          "impressions": 719.0,
+          "sot": 0.00020736895233975053
+        }
+      ]
+    }
+  ]
+}
