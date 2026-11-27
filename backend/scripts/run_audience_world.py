@@ -136,7 +136,18 @@ async def run(directory):
 
 if __name__=='__main__':
     directory=Path(sys.argv[1]).resolve()
-    try:asyncio.run(run(directory))
+    try:
+        if os.environ.get('PDOOH_POLICY_SIMULATION', 'false').lower() == 'true':
+            from run_audience_policy import run as run_policy
+            run_policy(directory)
+        elif os.environ.get('PDOOH_LIGHTWEIGHT_DECISIONS', 'false').lower() == 'true':
+            from run_audience_world_fast import run as run_fast
+            asyncio.run(run_fast(directory))
+        elif os.environ.get('PDOOH_BATCHED_DECISIONS', 'false').lower() == 'true':
+            from run_audience_world_batched import run as run_batched
+            asyncio.run(run_batched(directory))
+        else:
+            asyncio.run(run(directory))
     except Exception as exc:
         state=read_json(directory/'state.json')
         status=getattr(exc,'status_code',None)

@@ -1,5 +1,6 @@
 """Inventory-wide, auditable allocation. Model attitudes are never conversion rates."""
 from collections import Counter
+from copy import deepcopy
 from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR
 import hashlib
 import json
@@ -24,7 +25,7 @@ def summarize(base, threshold=60):
     rows = {}
     for screen in base['screens']:
         rows[screen['id']] = dict(screen_id=screen['id'], scene_id=base['meta']['id'], title=base['meta']['title'],
-            coordinate=screen.get('coordinate'),source_run_id=base['meta'].get('run_id'),observed_at=base['meta'].get('created_at'),hours=base['meta']['rounds'], total=0, pedestrian=0, vehicle=0,
+            simulation_method=base['meta'].get('decision_method','individual_interviews'),coordinate=screen.get('coordinate'),source_run_id=base['meta'].get('run_id'),observed_at=base['meta'].get('created_at'),hours=base['meta']['rounds'], total=0, pedestrian=0, vehicle=0,
             interest_sum=0, interest_rated=0, favorability_sum=0, favorability_rated=0, joint_rated=0,
             high_interest=0, high_favorability=0, joint_high=0, representatives=set(), hourly={})
     slots={s['round']:s for s in base['meta'].get('schedule',[])}
@@ -279,6 +280,35 @@ def attach_plan(result):
         items.append(dict(key=row['key'],screen_id=row['screen_id'],sot=row['recommended_sot'],impressions=row['recommended_exposures'],media_budget=media,dsp_cost=fee,rounding_reserve=max(0,amount-media-fee),total=amount,score=row['importance'],reason=row['reason'],cluster=[math.floor(row['lat']/.01),math.floor(row['lon']/.01)]))
     if result.get('options',{}).get('simulation_only'):result['plans']=[]
     result['plans'].append(dict(strategy='investment',items=items,**decision['allocation'],impressions=sum(i['impressions'] for i in items),region_cells=len({tuple(i['cluster']) for i in items}),weights=result['weights'],excluded_ids=[],risks=['七维重要度与独立的投资约束用于本方案；原六维库存评分保留供对照。']))
+    if decision['config'].get('complete_report'):
+        from .investment_allocation import allocate_trial
+        profiles = {
+            'sim_exposure': ('曝光效率优先', dict(exposure=70,cost=30), 0),
+            'sim_interest': ('人群兴趣优先', dict(interest=65,favorability=25,market=10), .5),
+            'sim_coverage': ('区域分散优先', dict(location=50,exposure=30,visibility=20), 4),
+        }
+        result['plans'] = [p for p in result['plans'] if p['strategy'] not in profiles]
+        for strategy, (label, profile, penalty) in profiles.items():
+            rows = deepcopy(decision['rows'])
+            cfg = deepcopy(decision['config'])
+            cfg['objective'] = 'effect'
+            for row in rows:
+                row.update(recommended_amount=0,recommended_sot=0,recommended_exposures=0,budget_share=0)
+                row['importance'] = sum((row['dimensions'].get(k) if row['dimensions'].get(k) is not None else 50)*v for k,v in profile.items())/100
+            allocation = allocate_trial(rows, finance, cfg, penalty)
+            variant_items = []
+            for row in rows:
+                if not row['recommended_amount']: continue
+                media = row['recommended_exposures']/1000*row['all_in_cpm']/(1+finance['fee'])
+                variant_items.append(dict(key=row['key'],screen_id=row['screen_id'],sot=row['recommended_sot'],
+                    impressions=row['recommended_exposures'],media_budget=media,dsp_cost=media*finance['fee'],
+                    rounding_reserve=max(0,row['recommended_amount']-media*(1+finance['fee'])),
+                    total=row['recommended_amount'],score=row['importance'],reason=label,
+                    cluster=[math.floor(row['lat']/.01),math.floor(row['lon']/.01)]))
+            result['plans'].append(dict(strategy=strategy,items=variant_items,**allocation,
+                impressions=sum(i['impressions'] for i in variant_items),
+                region_cells=len({tuple(i['cluster']) for i in variant_items}),
+                weights=profile,excluded_ids=[],risks=[label+'：使用同一轮全天模拟证据重新分配预算，连续 SOT 需确认可售份额。']))
     if decision['config'].get('complete_report'):
         result['formulas']['trial_allocation']='不设固定使用率；在预算、库存、单屏上限内分配试投种子，再按目标/CPM与区域重复惩罚加权；低重要度或利润目标下非正回报停止追加。连续SOT预算级测算'
     result['formulas'].update(importance='Σ(七维分数 × 归一权重)，缺少态度=50先验，仅用于重要度，不填入原态度列',investment='每步库存曝光 × 重要度 / 成本，按区域与单屏投入递减；受探索上限、单屏上限与总预算约束',orders='库存计划曝光 / 1000 × 用户千次订单假设 × 增量归因比例',roas='增量订单 × 客单价 / 广告费',roi='(增量订单 × 客单价 × 毛利率 − 广告费) / 广告费')

@@ -60,19 +60,65 @@ def shortest_path(network, start, end, rng):
     raise ValueError('步行网络不连通')
 
 
-def journey(profile, slot, seed, network, options, screens):
+
+class RoutePlanner:
+    """Per-network A* route atlas; bounded, reproducible alternatives, no global cache."""
+    def __init__(self,network,seed,variants=8):
+        self.nodes={n['id']:n for n in network['nodes']}
+        self.places={p['id']:p for p in network['places']}
+        self.edge_index={}
+        self.edges=[]
+        for edge in network['edges']:
+            a,b=edge['a'],edge['b']
+            self.edge_index.setdefault((a,b),edge);self.edge_index.setdefault((b,a),edge)
+            self.edges.append((a,b,math.hypot(self.nodes[a]['x']-self.nodes[b]['x'],self.nodes[a]['y']-self.nodes[b]['y']),25 if edge['kind']=='crossing' else 0))
+        self.seed=seed;self.variants=variants;self.graphs={};self.paths={};self.searches=0
+
+    def route(self,start,end,rng):
+        variant=rng.randrange(self.variants);key=(variant,start,end)
+        if key in self.paths:return self.paths[key]
+        if variant not in self.graphs:
+            weights=random.Random(f'route-atlas:{self.seed}:{variant}')
+            links={node:[] for node in self.nodes}
+            for a,b,length,penalty in self.edges:
+                cost=length*weights.uniform(.85,1.3)+penalty
+                links[a].append((b,cost));links[b].append((a,cost))
+            self.graphs[variant]=links
+        links=self.graphs[variant];target=self.nodes[end]
+        def heuristic(node):
+            value=self.nodes[node]
+            return .85*math.hypot(value['x']-target['x'],value['y']-target['y'])
+        queue=[(heuristic(start),0,start)];best={start:0};previous={};self.searches+=1
+        while queue:
+            _,cost,node=heapq.heappop(queue)
+            if cost!=best[node]:continue
+            if node==end:
+                path=[end]
+                while path[-1]!=start:path.append(previous[path[-1]])
+                result=tuple(reversed(path));self.paths[key]=result
+                return result
+            for nxt,weight in links[node]:
+                candidate=cost+weight
+                if candidate<best.get(nxt,float('inf')):
+                    best[nxt]=candidate;previous[nxt]=node
+                    heapq.heappush(queue,(candidate+heuristic(nxt),candidate,nxt))
+        raise ValueError('步行网络不连通')
+
+def journey(profile, slot, seed, network, options, screens, planner=None):
     """One bounded outing per scheduled hour; no cross-hour teleporting in view.
 
     Income, nationality and representative weight are deliberately not used.
     Explicit visit purpose guides stops; mobility shares remain scenario inputs.
     """
     rng=random.Random(f'journey:{seed}:{profile["id"]}:{slot["round"]}')
-    places={p['id']:p for p in network['places']};nodes={n['id']:n for n in network['nodes']}
-    # Geographic networks contain hundreds of edges; avoid scanning them at every step.
-    edge_index={}
-    for edge in network['edges']:
-        edge_index.setdefault((edge['a'],edge['b']),edge)
-        edge_index.setdefault((edge['b'],edge['a']),edge)
+    if planner is not None:
+        places=planner.places;nodes=planner.nodes;edge_index=planner.edge_index
+    else:
+        places={p['id']:p for p in network['places']};nodes={n['id']:n for n in network['nodes']}
+        edge_index={}
+        for edge in network['edges']:
+            edge_index.setdefault((edge['a'],edge['b']),edge)
+            edge_index.setdefault((edge['b'],edge['a']),edge)
     boundary=['west','east','southwest','southeast']
     text=profile.get('local_context',{}).get('visit_purpose','')+' '+profile.get('audience_profile',{}).get('mobility','')
     period=slot.get('period','daytime')
@@ -107,7 +153,7 @@ def journey(profile, slot, seed, network, options, screens):
     while True:
         visits=[origin,*stops,destination];path=[places[origin]['node']];stop_at={}
         for index,place in enumerate(visits[1:]):
-            part=shortest_path(network,path[-1],places[place]['node'],rng)
+            part=planner.route(path[-1],places[place]['node'],rng) if planner else shortest_path(network,path[-1],places[place]['node'],rng)
             path.extend(part[1:])
             if index<len(stops):stop_at[len(path)-1]=(place,rng.uniform(1,6))
         points=[dict(**nodes[path[0]],minute=0.,activity='进入街区' if origin!='transit' else '下车后步行')]
@@ -145,13 +191,13 @@ def journey(profile, slot, seed, network, options, screens):
         if best and best['distance']<=network['view_radius']:candidates.append(best)
     candidates.sort(key=lambda c:c['minute'])
     encounter=candidates[0] if candidates else None
-    return dict(purpose=purpose,mode='walking' if walking else 'walk_transit',
+    return dict(route_method='cached_route_variants_v1' if planner else 'per_trip_randomized_search',purpose=purpose,mode='walking' if walking else 'walk_transit',
                 mode_label='全程步行' if walking else '步行 + 公共交通',origin=places[origin]['label'],destination=places[destination]['label'],
                 origin_id=origin,destination_id=destination,departure_mode='walking' if destination!='transit' else 'transit',
                 stops=[places[s]['label'] for s in stops],exploring=explore,waypoints=points,
                 start_minute=points[0]['minute'],end_minute=points[-1]['minute'],distance_m=round(distance,1),speed_mps=speed,
                 crossing_count=crossings,curtailed_optional_stops=curtailed,encounter=encounter,screen_opportunities=candidates,
-                source='规则驱动的合成出行；本轮仅首块近邻屏幕调用 OASIS 反应，其余屏幕机会不外推曝光')
+                source='规则驱动的合成出行；本轮仅首块近邻屏幕调用模型推演反应，其余屏幕机会不外推曝光')
 
 
 def movement_summary(agents):

@@ -99,3 +99,24 @@ def test_map_tessellation_not_mistaken_for_signal_stops():
     pool=route_pool(network,42)
     assert pool and max(r['length'] for r in pool)>=650
     assert all(len(r['points'])==2 and not r['junctions'] for r in pool)
+
+
+def test_fast_vehicle_samples_preserve_hourly_volume_and_seed():
+    network=road_network();pool=route_pool(network,42)
+    kwargs=dict(slot={'round':1,'period':'daytime'},seed=42,base_count=1800,network=network,pool=pool,absolute_count=True,max_samples=300)
+    cars=connected_vehicles(**kwargs)
+    assert len(cars)==300
+    assert sum(c['represented_vehicles'] for c in cars)==1800
+    assert cars==connected_vehicles(**kwargs)
+
+
+def test_attitude_batches_overlap_and_keep_every_person():
+    import threading
+    from app.audience.campaign import analyze_people
+    barrier=threading.Barrier(2)
+    people=[dict(id=i,group='g',represented_population=1) for i in range(50)]
+    def model(config,prompt,payload,**kwargs):
+        barrier.wait(timeout=3)
+        return {'agents':[dict(agent_id=a['agent_id'],interest=50,favorability=50,reason='情景推演',confidence='low',source_ids=['local-context']) for a in payload['agents']]}
+    result=analyze_people(people,[dict(id='g',name='group')],{},dict(sources=[],facts=[],campaign={},gaps=[]),{'LLM_MODEL_NAME':'test'},model=model)
+    assert set(result['agents'])=={str(i) for i in range(50)}

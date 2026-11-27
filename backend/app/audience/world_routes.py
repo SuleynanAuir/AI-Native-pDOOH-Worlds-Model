@@ -1,5 +1,6 @@
 """Start actual OASIS workers and serve their recorded scene snapshots."""
 import os
+import sys
 from datetime import datetime,timezone
 from pathlib import Path
 import subprocess
@@ -112,7 +113,7 @@ def segments():return jsonify(success=True,data=DEFAULT_SEGMENTS)
 @world_bp.post('/preview')
 def preview():
     data=validated_config(request.get_json(silent=True))
-    return jsonify(success=True,data=scene(data['agent_count'],data['rounds'],data['seed'],total_population=data['total_population'],segments=data.get('segments'),day_cycle=data.get('day_cycle'),locality=data.get('locality'),audience_template=data.get('audience_template'),mobility=data.get('mobility'),traffic_options=data.get('traffic_options'),geographic_context=data.get('geographic_context')))
+    return jsonify(success=True,data=data['_prepared_scene'])
 
 
 @world_bp.get('/latest')
@@ -136,7 +137,7 @@ def validated_config(data):
     elif data['rounds']>12:raise ValueError('超过 12 轮请使用全天模拟配置')
     bind_locality(data)
     # Validate cohort allocation before creating a run or touching a provider.
-    scene(data['agent_count'],data['rounds'],data['seed'],total_population=data['total_population'],segments=data.get('segments'),day_cycle=data.get('day_cycle'),locality=data.get('locality'),audience_template=data.get('audience_template'),mobility=data.get('mobility'),traffic_options=data.get('traffic_options'),geographic_context=data.get('geographic_context'))
+    data['_prepared_scene']=scene(data['agent_count'],data['rounds'],data['seed'],total_population=data['total_population'],segments=data.get('segments'),day_cycle=data.get('day_cycle'),locality=data.get('locality'),audience_template=data.get('audience_template'),mobility=data.get('mobility'),traffic_options=data.get('traffic_options'),geographic_context=data.get('geographic_context'))
     return data
 
 
@@ -160,21 +161,24 @@ def start():
             if not frames:raise ValueError('当前区域与场所没有可用库存候选；请核对国家、城市、场所或取消库存模式')
             screens=[dict(id=f['screen_id'],name=str(f['fields'].get('CLOSEST_POI') or f['screen_id']),venue=f['fields'].get('VENUE_TAXONOMY_VALUE'),visibility=f['scores']['visibility']/100,obstruction=None,evidence=f['evidence'],audiences=f['analysis'].get('audiences',[])) for f in frames]
     backend=Path(__file__).resolve().parents[2]
-    python=os.environ.get('OASIS_PYTHON') or str(backend/'.venv-oasis/bin/python')
+    python=sys.executable if (os.environ.get('PDOOH_LIGHTWEIGHT_DECISIONS','false').lower()=='true' or os.environ.get('PDOOH_POLICY_SIMULATION','false').lower()=='true') else (os.environ.get('OASIS_PYTHON') or str(backend/'.venv-oasis/bin/python'))
     if not Path(python).is_file():raise ValueError('请安装 OASIS 独立环境并配置 OASIS_PYTHON')
     if not current_app.config.get('LLM_API_KEY'):raise ValueError('请先配置 LLM_API_KEY')
     with _start_lock:
-        for path in root().glob('*/state.json'):
-            old=read_json(path)
-            if old['status'] in ('initializing','running','paused','queued'):
-                try:
-                    old_pid=read_json(path.parent/'process.json')['pid']
-                    from .process_health import alive
-                    if not alive(old_pid):continue
-                except (OSError,TypeError):continue
-                if old_pid:raise ValueError('已有 OASIS 运行，请先停止或等待完成')
+        active_runs=0
+        for path in root().glob('*/process.json'):
+            # Check a tiny process record first; historical full-day states can
+            # contain tens of MB and must not be decoded on every new screen.
+            try:
+                old_pid=read_json(path)['pid']
+                from .process_health import alive
+                if not alive(old_pid):continue
+                old=read_json(path.parent/'progress.json' if (path.parent/'progress.json').exists() else path.parent/'state.json')
+            except (OSError,ValueError,KeyError,TypeError):continue
+            if old['status'] in ('initializing','running','paused','queued'):active_runs+=1
+        if active_runs>=3:return jsonify(success=False,error='模拟并发已满，等待空闲工作位'),429
         rid=uuid.uuid4().hex;path=root()/rid;path.mkdir()
-        config=scene(data['agent_count'],data['rounds'],data['seed'],screens,data['total_population'],data.get('segments'),data.get('day_cycle'),data.get('locality'),data.get('audience_template'),data.get('mobility'),data.get('traffic_options'),data.get('geographic_context'))
+        config=data['_prepared_scene'] if screens is None else scene(data['agent_count'],data['rounds'],data['seed'],screens,data['total_population'],data.get('segments'),data.get('day_cycle'),data.get('locality'),data.get('audience_template'),data.get('mobility'),data.get('traffic_options'),data.get('geographic_context'))
         state=dict(id=rid,status='queued',engine='OASIS',current_round=0,scene=config,snapshots=[dict(round=0,agents=config['agents'],events=[],summary=summarize(config['agents'],False))],events=[],message='正在启动 OASIS 独立进程',project_id=pid)
         write_json(path/'state.json',state);write_json(path/'control.json',dict(paused=False,stop=False))
         with (path/'worker.log').open('w') as log:
@@ -237,7 +241,7 @@ def traffic_replay(rid):
 def traffic_preview():
     from .traffic import build_traffic
     data=validated_config(request.get_json(silent=True))
-    value=scene(data['agent_count'],data['rounds'],data['seed'],total_population=data['total_population'],segments=data.get('segments'),day_cycle=data.get('day_cycle'),locality=data.get('locality'),audience_template=data.get('audience_template'),mobility=data.get('mobility'),traffic_options=data.get('traffic_options'),geographic_context=data.get('geographic_context'))
+    value=data['_prepared_scene']
     return jsonify(success=True,data=build_traffic(value))
 
 
@@ -319,10 +323,14 @@ def locate_frame():
         group=next((g for g in regional['groups'] if association and g['id']==association.get('region_id')),None)
         analysis=next((a for a in (regional.get('analysis') or {}).get('regions',[]) if group and a['id']==group['id']),None)
         evidence['regional_context']=dict(group=group,analysis=analysis,classification='区域地图线索与模型假设，不是人口调查')
-    try:inference=interpret(frame,evidence,current_app.config)
-    except ValueError:raise
-    except Exception:return jsonify(success=False,error='地点模型服务失败，未生成或应用推测结果'),502
-    result=resolved_context(frame,evidence,inference,uuid.uuid4().hex)
+    if data.get('defer_inference') is True:
+        from .geolocation import verified_map_context
+        result=verified_map_context(frame,evidence,uuid.uuid4().hex)
+    else:
+        try:inference=interpret(frame,evidence,current_app.config)
+        except ValueError:raise
+        except Exception:return jsonify(success=False,error='地点模型服务失败，未生成或应用推测结果'),502
+        result=resolved_context(frame,evidence,inference,uuid.uuid4().hex)
     # Validate usable geometry now, before offering to bind this location to a model.
     network,screens=geographic_network(result)
     result['network_summary']=dict(nodes=len(network['nodes']),edges=len(network['edges']),vehicle_paths=len(network['vehicle_paths']))
@@ -414,7 +422,7 @@ def comparison_import():
     from .comparison import import_run
     data=request.get_json(silent=True)
     if not isinstance(data,dict) or not isinstance(data.get('run_id'),str):raise ValueError('请选择已完成运行')
-    return jsonify(success=True,data=import_run(comparison_root(),run_dir(data['run_id'])))
+    return jsonify(success=True,data=import_run(comparison_root(),run_dir(data['run_id']),pedestrians_only=data.get('pedestrians_only') is True))
 
 
 @world_bp.post('/comparison-scenes/preview')
@@ -423,7 +431,7 @@ def comparison_preview():
     from .traffic import build_traffic
     data=validated_config(request.get_json(silent=True))
     if not data.get('geographic_context'):raise ValueError('请先查证屏幕坐标，不能用示意地图冒充地点场景')
-    value=scene(data['agent_count'],data['rounds'],data['seed'],total_population=data['total_population'],segments=data.get('segments'),day_cycle=data.get('day_cycle'),locality=data.get('locality'),audience_template=data.get('audience_template'),mobility=data.get('mobility'),traffic_options=data.get('traffic_options'),geographic_context=data['geographic_context'])
+    value=data['_prepared_scene']
     return jsonify(success=True,data=publish(comparison_root(),value,build_traffic(value),'preview'))
 
 

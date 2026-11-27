@@ -304,3 +304,28 @@ def test_zombie_is_not_a_live_oasis_worker(monkeypatch):
     assert not process_health.alive(123)
     monkeypatch.setattr(process_health.subprocess,'run',lambda *a,**k:SimpleNamespace(stdout='S\n'))
     assert process_health.alive(123)
+
+
+def test_simulation_strategy_variants_use_distinct_allocations(inventory):
+    from copy import deepcopy
+    options = dict(budget=1000,currency='USD',days=28,simulation_only=True,investment={'complete_report': True})
+    result = plan(inventory,options)
+    screens = {}
+    for frame in inventory['frames']:
+        screens.update(summarize(base(frame['screen_id'])))
+    evidence = dict(campaign_id='b'*32,campaign={'title':'Test'},fingerprint='fixture',screens=screens)
+    result['investment'] = report(result,evidence,options)
+    attach_plan(result)
+    original = deepcopy(result['investment']['rows'])
+    plans = {p['strategy']: p for p in result['plans']}
+    assert set(plans) == {'investment', 'sim_exposure', 'sim_interest', 'sim_coverage'}
+    allocations = []
+    for p in plans.values():
+        assert sum(i['total'] for i in p['items']) == pytest.approx(p['total'])
+        assert p['total'] + p.get('extra_cost_total', 0) <= result['finance']['budget'] + .001
+        assert all(0 < i['sot'] <= result['finance']['max_sot'] for i in p['items'])
+        allocations.append(tuple((i['key'], i['total']) for i in p['items']))
+    assert len(set(allocations)) > 1
+    attach_plan(result)
+    assert result['investment']['rows'] == original
+    assert len(result['plans']) == 4

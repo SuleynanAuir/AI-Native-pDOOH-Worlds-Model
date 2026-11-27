@@ -32,7 +32,7 @@ def scene(population=100, rounds=4, seed=42, screens=None, total_population=1000
         result.update(schema_version=3, day_cycle=cycle, schedule=slots, rounds=len(slots), scene_label='城市商业街 · 24 小时时间场景')
     if locality is not None:
         result.update(schema_version=4,locality=locality,audience_template=audience_template,scene_label=f'{locality["country"]} · {locality["city"]} · {locality["community"]}')
-    from .mobility import validate_mobility, neighborhood, journey
+    from .mobility import validate_mobility, neighborhood, journey, RoutePlanner
     from .traffic import validate_traffic
     traffic_options=validate_traffic(traffic_options)
     options=validate_mobility(mobility);network=neighborhood(locality)
@@ -41,11 +41,12 @@ def scene(population=100, rounds=4, seed=42, screens=None, total_population=1000
         network,screens=geographic_network(geographic_context)
         result.update(geographic_context=geographic_context,screens=screens,scene_label=geographic_context['locality']['city']+' · '+geographic_context['locality']['community']+' · GEOM 定位')
     movement=[]
+    planner=RoutePlanner(network,seed)
     for index in range(result['rounds']):
         slot=result.get('schedule',[dict(round=i+1,period='daytime') for i in range(result['rounds'])])[index]
         present=slot.get('present_agent_ids',[a['id'] for a in agents])
-        movement.append({str(a['id']):journey(a,slot,seed,network,options,screens) for a in agents if a['id'] in present})
-    result.update(schema_version=5,traffic_options=traffic_options,mobility=options,neighborhood=network,mobility_rounds=movement,
+        movement.append({str(a['id']):journey(a,slot,seed,network,options,screens,planner=planner) for a in agents if a['id'] in present})
+    result.update(schema_version=5,route_method='cached_route_variants_v1',traffic_options=traffic_options,mobility=options,neighborhood=network,mobility_rounds=movement,
                   spatial_source=network['source'])
     return result
 

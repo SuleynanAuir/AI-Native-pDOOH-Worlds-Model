@@ -7,12 +7,28 @@
   <p>重要度用于排序；自适应试投受重要度、目标、单屏与可售库存容量约束，不设固定投入比例。预测态度不是购买率；库存折算、LLM预测与直接模拟分别标注。所有 {{ decision.coverage.total }} 条记录均可查看，未分配的屏幕也保留原因。</p>
   <p v-for="note in decision.allocation.notes || []" :key="note">{{ note }}</p>
   <InvestmentMap :rows="decision.rows" :regions="decision.regions||[]" :currency="currency" @select="selected=$event" />
-  <div class="filters"><input v-model="query" aria-label="搜索投资屏幕" placeholder="屏幕 ID / 地址"><select v-model="filter" aria-label="投资状态筛选"><option value="all">全部屏幕</option><option value="chosen">建议投入</option><option value="missing">缺少直接模拟</option><option value="excluded">库存排除</option></select><select v-model="sort" aria-label="投资排序"><option value="rank">重要度排序</option><option value="amount">投入金额排序</option><option value="interest">兴趣排序</option><option value="favorability">好感排序</option></select><span>{{ filtered.length }} 条</span></div>
-  <div class="table-scroll"><table><thead><tr><th>重要度 / 排名</th><th>屏幕 / 地址</th><th>预测曝光度<br>建议投入 / 规划周期</th><th>模拟 / 预测机会<br>统计周期</th><th>好感 / 兴趣<br>0–100</th><th>建议投入<br>{{ currency }}</th><th>SOT</th><th>ROI · 来源与区间</th><th>建议</th></tr></thead><tbody><tr v-for="r in pageRows" :key="r.key"><td><b>{{ fixed(r.importance) }}</b><small>#{{ r.rank||'—' }}</small></td><td><button class="screen" @click="selected=r">{{ r.address || r.screen_id }}</button><small>{{ r.screen_id }}</small></td><td>{{ count(r.recommended_exposures) }}<small>全SOT {{ count(r.inventory_exposures) }}</small></td><td>{{ count(r.metrics?.total ?? r.sim?.total) }}<small>{{ r.metrics?.hours ?? r.sim?.hours }}h · {{ r.metrics?.opportunity_source || '直接模拟' }}</small></td><td>{{ fixed(r.metrics?.favorability ?? r.sim?.favorability) }} / {{ fixed(r.metrics?.interest ?? r.sim?.interest) }}<small>{{ r.metrics?.attitude_source }}</small></td><td><b>{{ money(r.recommended_amount) }}</b><small>预算 {{ pct(r.budget_share) }}</small></td><td>{{ pct(r.recommended_sot) }}</td><td><b v-if="r.returns?.calibrated">{{ pct(r.returns.base?.roi) }}</b><span v-else>{{ roiRange(r.returns) }}</span><small>{{ r.returns?.calibrated?'逐屏对照校准':'情景区间 · 待校准' }}</small></td><td><span :class="{picked:r.recommended_amount>0}">{{ r.status }}</span><button class="text-button" @click="selected=r">依据 →</button></td></tr></tbody></table></div>
-  <div class="pager"><button :disabled="page<=1" @click="page--">上一页</button><span>{{ page }} / {{ pages }}</span><button :disabled="page>=pages" @click="page++">下一页</button></div>
+  <div class="filters"><input v-model="query" aria-label="搜索投资屏幕" placeholder="屏幕 ID 或地址"><select v-model="filter" aria-label="投资状态筛选"><option value="all">全部屏幕</option><option value="chosen">建议投入</option><option value="missing">缺少直接模拟</option><option value="excluded">库存排除</option></select><select v-model="sort" aria-label="投资排序"><option value="rank">重要度排序</option><option value="amount">投入金额排序</option><option value="interest">兴趣排序</option><option value="favorability">好感排序</option></select><span>{{ filtered.length }} 条</span></div>
+  <InvestmentDistribution :rows="filtered" :currency="currency" :days="days" @select="selected=$event" />
+  <p>投放资金包含 DSP 费用，不含额外执行费用。每日单价为建议 SOT 下的日均投放资金，按总资金除以投放天数计算；显示金额四舍五入。累计 Impression 已覆盖完整投放周期，无需再乘天数。</p>
+  <div class="table-scroll"><table><thead><tr>
+   <th>重要度与排名</th><th>屏幕地址</th><th>投放天数</th><th>投放单价（每天）<br>{{ currency }}</th><th>对应投放资金<br>{{ currency }}</th><th>投放时段累计 Impression</th><th>观测周期累计机会</th><th>好感度与兴趣度<br>0–100</th><th>SOT</th><th>收益 ROI 来源与区间</th><th>投放建议</th>
+  </tr></thead><tbody><tr v-for="r in pageRows" :key="r.key">
+   <td><b>{{ fixed(r.importance) }}</b><small>#{{ r.rank||'—' }}</small></td>
+   <td><button class="screen" @click="selected=r">{{ r.address || r.screen_id }}</button><small>{{ r.screen_id }}</small></td>
+   <td>{{ days == null ? '未提供' : days + ' 天' }}<small v-if="!finance?.days">估算周期</small><small v-if="!r.recommended_amount">未分配投放资金</small></td>
+   <td>{{ money(dailyInvestment(r,days)) }}<small>建议 SOT 下的日均金额</small></td>
+   <td><b>{{ money(r.recommended_amount) }}</b><small>预算占比 {{ pct(r.budget_share) }}</small></td>
+   <td><b>{{ count(r.recommended_exposures) }}</b><small>完整周期 · 建议 SOT</small><small>全 SOT 累计 {{ count(r.inventory_exposures) }}</small></td>
+   <td>{{ count(r.metrics?.total ?? r.sim?.total) }}<small>{{ r.metrics?.hours ?? r.sim?.hours }} 小时 · {{ r.metrics?.opportunity_source || '直接模拟' }}</small></td>
+   <td>好感度 {{ fixed(r.metrics?.favorability ?? r.sim?.favorability) }}<small>兴趣度 {{ fixed(r.metrics?.interest ?? r.sim?.interest) }}</small><small>{{ r.metrics?.attitude_source }}</small></td>
+   <td>{{ pct(r.recommended_sot) }}</td>
+   <td><b v-if="r.returns?.calibrated">{{ pct(r.returns.base?.roi) }}</b><span v-else>{{ roiRange(r.returns) }}</span><small>{{ r.returns?.calibrated?'逐屏对照校准':'情景区间 · 待校准' }}</small></td>
+   <td><span :class="{picked:r.recommended_amount>0}">{{ r.status }}</span><button class="text-button" @click="selected=r">依据 →</button></td>
+  </tr><tr v-if="!pageRows.length"><td colspan="11">没有符合筛选条件的屏幕</td></tr></tbody></table></div>
+  <div class="pager"><button :disabled="page<=1" @click="page--">上一页</button><span>第 {{ page }} 页，共 {{ pages }} 页 · 每页 {{ SCREEN_PAGE_SIZE }} 块屏幕 · 共 {{ filtered.length }} 块</span><button :disabled="page>=pages" @click="page++">下一页</button></div>
   <details><summary>方案回报区间与计算口径</summary><div class="return-grid"><article v-for="(label,key) in scenarios" :key="key"><h3>{{ label }}情景</h3><p>增量收入 {{ money(decision.returns[key]?.revenue) }} {{ currency }}</p><p>扣广告费后贡献 {{ money(decision.returns[key]?.profit) }}</p><p>ROI {{ pct(decision.returns[key]?.roi) }} · ROAS {{ multiple(decision.returns[key]?.roas) }}</p></article></div><ul><li v-for="s in decision.assumptions" :key="s">{{ s }}</li></ul></details>
   <ModalWindow v-model="opened" title="逐屏投资依据" :subtitle="selected?.address">
-   <template v-if="selected"><p>{{ selected.screen_id }}</p><div class="kpis"><div><small>重要度与未知敏感性范围</small><b>{{ fixed(selected.importance) }}</b><span>{{ fixed(selected.importance_low) }}–{{ fixed(selected.importance_high) }}，非置信区间</span></div><div><small>建议金额 / SOT</small><b>{{ money(selected.recommended_amount) }}</b><span>{{ currency }} · {{ pct(selected.recommended_sot) }}</span></div></div><p class="reason">{{ selected.reason }}</p><p v-if="selected.metrics?.prediction?.reason">逐屏预测依据：{{ selected.metrics.prediction.reason }} · {{ selected.metrics.prediction.model }}</p>
+   <template v-if="selected"><p>{{ selected.screen_id }}</p><div class="kpis"><div><small>重要度与未知敏感性范围</small><b>{{ fixed(selected.importance) }}</b><span>{{ fixed(selected.importance_low) }}–{{ fixed(selected.importance_high) }}，非置信区间</span></div><div><small>建议金额与 SOT</small><b>{{ money(selected.recommended_amount) }}</b><span>{{ currency }} · {{ pct(selected.recommended_sot) }}</span></div></div><p class="reason">{{ selected.reason }}</p><p v-if="selected.metrics?.prediction?.reason">逐屏预测依据：{{ selected.metrics.prediction.reason }} · {{ selected.metrics.prediction.model }}</p>
    <div class="table-scroll"><table><thead><tr><th>维度</th><th>分数</th><th>权重</th><th>口径</th></tr></thead><tbody><tr v-for="(label,key) in labels" :key="key"><td>{{ label }}</td><td>{{ fixed(selected.dimensions[key]) }}</td><td>{{ pct(decision.config.weights[key]) }}</td><td>{{ selected.unknown_dimensions.includes(key)?'预测 / 假设，非实测；详见来源':'库存推导 / 直接模拟推断，非实测效果' }}</td></tr></tbody></table></div>
    <p v-if="selected.sim">原模拟 {{ selected.sim.hours }}h（{{ selected.sim.observed_at||'原始记录' }}）：行人 {{ count(selected.sim.pedestrian) }}、车内 {{ count(selected.sim.vehicle) }} 次机会；{{ selected.sim.representatives }} 个代表画像。高好感 {{ count(selected.sim.high_favorability) }}、高兴趣 {{ count(selected.sim.high_interest) }}、同时达到阈值 {{ count(selected.sim.joint_high) }} 次。阈值 {{ decision.config.threshold }}，重复经过仍计次。</p>
    <p v-if="selected.peak.length">建议对照试投时段：{{ selected.peak.map(h=>`第${h.day}天 ${h.time}`).join(' / ') }}；仅按模拟机会排序，尚未模拟分时购买价格。</p><p v-else>此屏幕缺少模拟时段证据，先完成本地点仿真或取得实测客流。</p>
@@ -25,12 +41,15 @@
 import {computed,ref,watch} from 'vue'
 import ModalWindow from './ModalWindow.vue'
 import InvestmentMap from './InvestmentMap.vue'
-const props=defineProps({decision:Object,currency:String,sourceSheet:String,dirty:Boolean,busy:Boolean})
+import InvestmentDistribution from './InvestmentDistribution.vue'
+import { SCREEN_PAGE_SIZE, planningDays, dailyInvestment } from '../utils/investmentDisplay'
+const props=defineProps({decision:Object,finance:Object,currency:String,sourceSheet:String,dirty:Boolean,busy:Boolean})
 defineEmits(['export'])
 const query=ref(''),filter=ref('all'),sort=ref('amount'),page=ref(1),selected=ref(null)
 const opened=computed({get:()=>!!selected.value,set:v=>{if(!v)selected.value=null}})
 const filtered=computed(()=>props.decision.rows.filter(r=>`${r.screen_id} ${r.address}`.toLowerCase().includes(query.value.toLowerCase())&&(filter.value==='all'||filter.value==='chosen'&&r.recommended_amount>0||filter.value==='missing'&&!r.sim||filter.value==='excluded'&&!r.eligible)).sort((a,b)=>sort.value==='amount'?b.recommended_amount-a.recommended_amount:sort.value==='rank'?(a.rank??Infinity)-(b.rank??Infinity):(b.metrics?.[sort.value]??b.sim?.[sort.value]??-1)-(a.metrics?.[sort.value]??a.sim?.[sort.value]??-1)))
-const pages=computed(()=>Math.max(1,Math.ceil(filtered.value.length/12))),pageRows=computed(()=>filtered.value.slice((page.value-1)*12,page.value*12))
+const days=computed(()=>planningDays(props.finance))
+const pages=computed(()=>Math.max(1,Math.ceil(filtered.value.length/SCREEN_PAGE_SIZE))),pageRows=computed(()=>filtered.value.slice((page.value-1)*SCREEN_PAGE_SIZE,page.value*SCREEN_PAGE_SIZE))
 watch([query,filter,sort],()=>page.value=1);watch(()=>props.decision,()=>{page.value=1;selected.value=null})
 const labels={exposure:'曝光',favorability:'好感',interest:'兴趣',visibility:'可见性',location:'位置',market:'市场匹配',cost:'成本'},scenarios={low:'保守',base:'基准',high:'乐观'}
 const roiRange=r=>r?.low&&r?.high?`${pct(r.low.roi)} ～ ${pct(r.high.roi)}`:'待补齐收益依据'

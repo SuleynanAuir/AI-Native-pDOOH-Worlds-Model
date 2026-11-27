@@ -212,7 +212,7 @@ def resolved_coverage(pid):
     if request.method=='POST':
         batch=begin(root(),pid)
         start(current_app._get_current_object(),pid,batch['id'])
-    with store.locked(root(),pid) as (_,project):value,_=inspect(root(),project)
+    with store.locked(root(),pid) as (_,project):value,_=inspect(root(),project,progress_only=True)
     return jsonify(success=True,data=value)
 
 

@@ -16,7 +16,7 @@ def signature(project):
 def full_day(run):
     scene=run.get('scene',{});schedule=scene.get('schedule',[])
     snapshots=run.get('snapshots',[])
-    return (run.get('status')=='completed' and str(run.get('engine','')).startswith('OASIS') and run.get('current_round')==24
+    return (run.get('status')=='completed' and (str(run.get('engine','')).startswith('OASIS') or (run.get('engine')=='pDOOH batch v2' and run.get('decision_method')=='batched_interviews_v2') or (run.get('engine')=='pDOOH policy v1' and run.get('decision_method')=='policy_simulation_v1')) and run.get('current_round')==24
         and scene.get('rounds')==24 and len(schedule)==24 and [s.get('hour') for s in schedule]==list(range(24))
         and [s.get('round') for s in schedule]==list(range(1,25))
         and {s.get('round') for s in snapshots if s.get('round',0)>0}==set(range(1,25)))
@@ -40,7 +40,7 @@ def begin(root,pid):
         return batch
 
 
-def inspect(root,project,threshold=60,require_ready=False):
+def inspect(root,project,threshold=60,require_ready=False,progress_only=False):
     from .investment import summarize
     batch=project.get('simulation_batch');ids={f['screen_id'] for f in project['frames'] if f.get('screen_id')}
     evidence=dict(campaign_id=batch['id'] if batch else None,campaign=project.get('ad_setup',{}).get('campaign'),screens={},fingerprint=batch['signature'] if batch else None)
@@ -51,6 +51,15 @@ def inspect(root,project,threshold=60,require_ready=False):
         if file.exists():
             from .coverage import status
             state=status(root,project['id'],batch['id'])
+        completed={sid:item for sid,item in state.get('items',{}).items() if sid in ids and item.get('status')=='completed'}
+        # Polling partial progress must not decode every completed traffic file
+        # while holding the project lock and blocking the remaining workers.
+        # Final readiness and report generation still run the full validation.
+        if progress_only and not require_ready and len(completed)<len(ids):
+            evidence['batch']=batch
+            return dict(simulation_mode=state.get('simulation_mode'),status=state.get('status','not_started'),campaign_id=batch['id'],direct=len(completed),done=len(completed),total=len(ids),ready=False,
+                        scene_ids=[item['scene_id'] for item in completed.values()],message=state.get('message','准备本轮模拟'),
+                        failures=[dict(screen_id=sid,error=item.get('error')) for sid,item in state.get('items',{}).items() if item.get('status')=='failed']),evidence
         for sid,item in state.get('items',{}).items():
             if sid not in ids or item.get('status')!='completed':continue
             try:
@@ -62,7 +71,7 @@ def inspect(root,project,threshold=60,require_ready=False):
                 evidence['screens'][sid]=row
             except (ValueError,OSError,KeyError) as exc:errors.append(dict(screen_id=sid,error=str(exc)[:200]))
     ready=current and bool(ids) and ids<=evidence['screens'].keys()
-    summary=dict(status=state.get('status','not_started') if current else 'not_started',campaign_id=evidence['campaign_id'],direct=len(evidence['screens']),
+    summary=dict(simulation_mode=state.get('simulation_mode'),status=state.get('status','not_started') if current else 'not_started',campaign_id=evidence['campaign_id'],direct=len(evidence['screens']),
         done=len(evidence['screens']),total=len(ids),ready=ready,scene_ids=[r['scene_id'] for r in evidence['screens'].values()],
         message=state.get('message','请开始本轮00:00–24:00模拟') if current else '请开始本轮00:00–24:00模拟',failures=errors+[dict(screen_id=sid,error=i.get('error')) for sid,i in state.get('items',{}).items() if i.get('status')=='failed'])
     evidence['batch']=batch

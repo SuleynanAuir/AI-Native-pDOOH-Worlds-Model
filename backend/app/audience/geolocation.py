@@ -206,3 +206,11 @@ def resolved_context(frame,evidence,inference,record_id):
     locality=dict(country=nation,city=city,community=community,venue_type=venue_type,venue_name=f'{road} · Frame {frame["screen_id"]}'[:200],languages='',cultural_notes='地图不能证明当地文化或个体偏好；需补充社区资料。',community_notes=inference['environment_interpretation'][:4000],sources=sources,geolocation_id=record_id)
     return dict(id=record_id,frame=frame,coordinate=frame['coordinate'],evidence=evidence,inference=inference,facts=facts,warnings=warnings,locality=locality,
                 status='map_verified_with_model_inference',source_sheet='FilteredFrames',map_url=f'https://www.openstreetmap.org/?mlat={frame["coordinate"]["lat"]}&mlon={frame["coordinate"]["lon"]}#map=18/{frame["coordinate"]["lat"]}/{frame["coordinate"]["lon"]}')
+
+
+def verified_map_context(frame,evidence,record_id):
+    """Bind verified geography directly; the audience stage performs inference once."""
+    value=resolved_context(frame,evidence,dict(environment_interpretation='坐标、道路和设施来自地图查证；人群角色由下一阶段结合这些证据生成。地图不证明当地人口、文化或偏好。',audience_hypotheses=[],uncertainties=list(evidence['limitations']),classification='map_evidence_only'),record_id)
+    value['locality']['sources']=[s for s in value['locality']['sources'] if s['id']!='geo-model-inference']
+    value['status']='map_verified'
+    return value

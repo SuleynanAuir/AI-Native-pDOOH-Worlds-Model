@@ -2,7 +2,7 @@
 import math
 import random
 from .cohorts import apportioned
-from .mobility import journey
+from .mobility import journey,RoutePlanner
 
 DEFAULT = dict(pedestrians_per_agent=4, vehicles_per_hour=1200)
 VEHICLES = [dict(kind='car',label='轿车',color='#81b5dd',length=22,occupancy=(1,4)),
@@ -75,7 +75,8 @@ def build_traffic(scene,options=None,snapshots=None):
     if 'neighborhood' not in scene:raise ValueError('该旧运行没有步行路网，请重新预览或运行')
     screens=list(scene['screens']) if scene['neighborhood'].get('geographic') else [*scene['screens'],*roadside_screens(scene['screens'])];frames=[];events=[]
     from .traffic_network import route_pool,connected_vehicles
-    pool=route_pool(scene['neighborhood'],scene['seed']) if scene['neighborhood'].get('geographic') else None
+    pool=route_pool(scene['neighborhood'],scene['seed']) if scene['neighborhood'].get('geographic') and options['vehicles_per_hour'] else []
+    planner=RoutePlanner(scene['neighborhood'],scene['seed'])
     recorded={s['round']:s for s in (snapshots or []) if s['round']>0}
     for index,trips in enumerate(scene['mobility_rounds']):
         slot=scene.get('schedule',[dict(round=i+1,period='daytime') for i in range(scene['rounds'])])[index]
@@ -90,7 +91,7 @@ def build_traffic(scene,options=None,snapshots=None):
                 profile={**parent,'id':aid}
                 if variant==0:
                     profile_trip=next((a['journey'] for a in recorded.get(index+1,{}).get('agents',[]) if a['id']==parent['id'] and a.get('journey')),trip)
-                else:profile_trip=journey(profile,slot,scene['seed'],scene['neighborhood'],scene['mobility'],scene['screens'])
+                else:profile_trip=journey(profile,slot,scene['seed'],scene['neighborhood'],scene['mobility'],scene['screens'],planner=planner)
                 appearance,label=VARIANTS[(parent['id']+variant)%len(VARIANTS)]
                 actor=dict(id=aid,parent_agent_id=parent['id'],name=f'{parent["name"]} · 行人 {variant+1}',group=parent['group'],color=parent['color'],represented_population=weight,
                            appearance=appearance,variant_label=label,journey=profile_trip,

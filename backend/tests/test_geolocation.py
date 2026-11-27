@@ -140,3 +140,13 @@ def test_short_model_source_alias_resolves_to_persisted_map_id():
     client=SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
     output=geo.interpret(context['frame'],context['evidence'],dict(LLM_MODEL_NAME='offline'),client)
     assert all(r['source_ids']==[context['evidence']['features'][0]['id']] for r in output['audience_hypotheses'])
+
+
+def test_direct_map_context_keeps_evidence_without_claiming_model_inference():
+    original=fixture_context()
+    value=geo.verified_map_context(original['frame'],original['evidence'],'d'*32)
+    assert value['status']=='map_verified'
+    assert value['evidence']==original['evidence']
+    assert [s['id'] for s in value['locality']['sources']]==['geo-map-evidence']
+    assert not value['inference']['audience_hypotheses']
+    assert geographic_network(value)==geographic_network(original)

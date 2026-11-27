@@ -9,10 +9,16 @@
       <AdSetup v-if="step===2" :key="project.id" :project="project" @back="goStep(1)" @saved="adSaved" />
       <section v-if="step===3" class="simulation-stage" aria-label="第三步 人群模拟分析">
         <h2>第三步 · 人群模拟分析</h2><p>先查证屏幕地点、生成人群场景，使用第二步的广告设置完成态度分析。全部屏幕完成本轮全天模拟后，才开放第四步报告。</p>
-        <InventoryLocations :key="project.id" :project-id="project.id" embedded @ready="preparedScene=$event" />
-        <SceneComparison ref="simulationPlayer" @request-start="simulationTask?.start()" :simulation-complete="simulationReady" @edit-ad="goStep(2)" :key="project.id" :project-id="project.id" :initial-scene="preparedScene" @campaign="acceptCampaign" />
-        <CoverageTask ref="simulationTask" @starting="simulationPlayer?.startPlayback($event)" @started="simulationPlayer?.refresh()" @start-failed="simulationPlayer?.stopPlayback()" :project-id="project.id" :campaign-id="options.campaign_id" @completed="evidenceChanged=true" @status="simulationReady=$event.ready" />
+        <InventoryLocations :key="project.id" :project-id="project.id" />
+        <CoverageTask ref="simulationTask" @starting="simulationPlayer?.startPlayback($event)" @started="simulationPlayer?.refresh()" @start-failed="simulationPlayer?.stopPlayback()" :project-id="project.id" :campaign-id="options.campaign_id" @completed="evidenceChanged=true" @status="updateSimulationStatus" />
+        <SceneComparison ref="simulationPlayer" @request-start="simulationTask?.start()" :simulation-complete="simulationReady" :simulation-running="simulationStatus?.status==='running'" @edit-ad="goStep(2)" :key="project.id" :project-id="project.id" @campaign="acceptCampaign" />
+
         <p v-if="simulationReady" class="simulation-complete" role="status">✓ 本轮 24 小时模拟完成，已停止。可以进入下一步「生成屏幕分析报告」。</p>
+        <p v-if="!simulationReady" class="simulation-progress" role="status">
+          <template v-if="simulationStatus">实际分析完成 {{ simulationStatus.done }} / {{ simulationStatus.total }} 块屏幕。{{ simulationStatus.status==='running' ? '后台仍在处理，请等待全部屏幕完成。' : '请点击上方模拟按钮开始或继续本轮任务。' }}<span v-if="simulationStatus.failures?.length"> 有 {{ simulationStatus.failures.length }} 块屏幕失败，请查看「失败记录」；任务停止后可继续重试。</span></template>
+          <template v-else>正在读取本轮模拟状态…</template>
+          回放到 23:59 不代表全部屏幕分析完成。
+        </p>
         <div class="stage-actions"><button :disabled="busy" @click="goStep(2)">← 返回广告设置</button><button class="next-step" :disabled="busy||!simulationReady" @click="finishAnalysis">{{ busy?'正在生成报告…':'生成屏幕分析报告 →' }}</button></div>
         <p v-if="!options.campaign_id">请在本步骤启动本轮全天模拟。所有屏幕从00:00完成24小时后，才能生成第四步报告；历史回放不作为本轮结果。</p>
       </section>
@@ -46,12 +52,12 @@
         </aside>
         <div class="main-results" v-show="step===4" aria-label="第四步 报告与投放建议"><div class="stage-actions"><h2>第四步 · 屏幕报告与投放建议</h2><button @click="goStep(3)">← 返回人群分析</button></div><p v-if="result?.investment?.coverage.direct < result?.investment?.coverage.total" class="notice">本轮模拟结果发生变化，请重新检查完成状态。</p>
           <CoverageTask v-if="result?.investment" :project-id="project.id" :campaign-id="result.investment.evidence.campaign_id" @completed="evidenceChanged=true" />
-          <InvestmentDashboard v-if="result?.investment" :decision="result.investment" :currency="result.finance.currency" :source-sheet="project.source_sheet" :dirty="dirty" :busy="busy" @export="exportExcel('investment')" />
+          <InvestmentDashboard v-if="result?.investment" :decision="result.investment" :finance="result.finance" :currency="result.finance.currency" :source-sheet="project.source_sheet" :dirty="dirty" :busy="busy" @export="exportExcel('investment')" />
           <section class="panel"><div class="section-heading"><h2>库存与评分卡</h2><span>{{ filteredFrames.length }} 条匹配</span></div>
             <div class="toolbar"><input v-model="search" placeholder="搜索 ID、地点、场所" aria-label="搜索屏幕"><select v-model="availability" aria-label="候选筛选"><option value="all">全部记录</option><option value="eligible">可用候选</option><option value="rejected">已排除</option></select><button @click="selectPage">勾选当前页</button><button @click="selectedIds=[]">清除勾选</button></div>
             <p v-if="dirty" class="notice">输入或证据已变更；下方仍为上次结果，请重新计算后导出。</p>
-            <div class="table-wrap"><table><thead><tr><th>分析</th><th>屏幕 / 场所</th><th>状态</th><th>原始曝光</th><th>CPM</th><th>总分</th><th>详情</th></tr></thead><tbody><tr v-for="f in pagedFrames" :key="f.key"><td><input v-model="selectedIds" type="checkbox" :value="f.screen_id" :disabled="!f.screen_id" :aria-label="`分析 ${f.screen_id}`"></td><td><strong class="screen-id">{{ f.screen_id || '缺少 ID' }}</strong><small>{{ f.fields.VENUE_TAXONOMY_VALUE }}<br>{{ f.fields.CLOSEST_POI || f.fields.ADDRESS_LOCALITY }}</small></td><td><span :class="['badge',f.eligible ? 'good' : 'bad']">{{ f.eligible ? '候选' : '排除' }}</span></td><td>{{ format(f.impressions) }}</td><td>{{ f.currency }} {{ format(f.cpm) }}</td><td>{{ f.total_score?.toFixed(1) ?? '待计算' }}</td><td><button @click="detailId=f.key">查看</button></td></tr></tbody></table></div>
-            <div class="pager"><button :disabled="page<=1" @click="page--">上一页</button><span>{{ page }} / {{ pageCount }}</span><button :disabled="page>=pageCount" @click="page++">下一页</button></div>
+            <div class="table-wrap"><table><thead><tr><th>分析</th><th>屏幕与场所</th><th>状态</th><th>原始曝光</th><th>CPM</th><th>总分</th><th>详情</th></tr></thead><tbody><tr v-for="f in pagedFrames" :key="f.key"><td><input v-model="selectedIds" type="checkbox" :value="f.screen_id" :disabled="!f.screen_id" :aria-label="`分析 ${f.screen_id}`"></td><td><strong class="screen-id">{{ f.screen_id || '缺少 ID' }}</strong><small>{{ f.fields.VENUE_TAXONOMY_VALUE }}<br>{{ f.fields.CLOSEST_POI || f.fields.ADDRESS_LOCALITY }}</small></td><td><span :class="['badge',f.eligible ? 'good' : 'bad']">{{ f.eligible ? '候选' : '排除' }}</span></td><td>{{ format(f.impressions) }}</td><td>{{ f.currency }} {{ format(f.cpm) }}</td><td>{{ f.total_score?.toFixed(1) ?? '待计算' }}</td><td><button @click="detailId=f.key">查看</button></td></tr></tbody></table></div>
+            <div class="pager"><button :disabled="page<=1" @click="page--">上一页</button><span>第 {{ page }} 页，共 {{ pageCount }} 页 · 每页 5 块屏幕</span><button :disabled="page>=pageCount" @click="page++">下一页</button></div>
             <article v-if="detail" class="detail"><div class="section-heading"><h3>{{ detail.screen_id }}</h3><button @click="detailId=null">关闭</button></div><p>{{ detail.reasons.join('；') || '通过当前清洗检查' }}</p><ul><li v-for="w in detail.warnings" :key="w">{{ w }}</li></ul>
               <template v-if="detail.scores"><div v-for="(name,key) in dimensions" :key="key" class="score-line"><div><b>{{ name }} · {{ detail.scores[key].toFixed(1) }}</b><span>{{ detail.evidence[key].type }}</span></div><progress :value="detail.scores[key]" max="100"/><p>{{ detail.evidence[key].reason }}<br><small>来源：{{ detail.evidence[key].source }}</small></p></div><p>SCORE_P 原值：{{ detail.score_p_reference ?? '缺失' }}（未计入总分）</p></template>
               <template v-if="detailAnalysis"><h3>场景观察与代表性人群</h3><p v-for="(o,i) in detailAnalysis.observations" :key="i">[{{ o.kind }}] {{ o.statement }} · {{ o.source }}</p><article v-for="(a,i) in detailAnalysis.audiences" :key="i"><b>{{ a.name }} · {{ a.confidence }}</b><p>{{ a.passing }}；{{ a.staying }}<br>{{ a.reaction }}<br>依据：{{ a.basis }}</p></article><ul><li v-for="u in detailAnalysis.uncertainties" :key="u">{{ u }}</li></ul></template>
@@ -60,8 +66,8 @@
           </section>
           <section class="panel"><h2>05 / 方案对比</h2><p v-if="!result">填写预算后运行。所有金额由代码计算；不会由模型生成预算数字。</p><template v-else>
             <div class="summary"><span>{{ result.summary.total }} 原始记录</span><span>{{ result.summary.eligible }} 候选</span><span>{{ result.summary.rejected }} 排除</span><strong>{{ result.finance.budget_only ? '预算级建议' : '按投放条件估算' }}</strong></div>
-            <div class="plan-grid"><button v-for="p in result.plans" :key="p.strategy" :class="['plan-card',{active:activeStrategy===p.strategy}]" @click="activeStrategy=p.strategy"><b>{{ strategies[p.strategy] }}</b><strong>{{ result.finance.currency }} {{ money(p.total) }}</strong><span>{{ p.screen_count }} 块屏幕 · {{ p.region_cells }} 区域网格</span><span>估算曝光 {{ format(p.impressions) }}</span><span>剩余预算 {{ money(p.remaining) }}</span></button></div>
-            <template v-if="activePlan"><p>{{ activePlan.excluded_ids.length ? `此替代方案排除：${activePlan.excluded_ids.join('、')}` : '按当前候选范围与 SOT 步长分配。' }}</p><p v-for="risk in activePlan.risks" :key="risk" class="notice">{{ risk }}</p><div class="table-wrap"><table><thead><tr><th>屏幕</th><th>SOT</th><th>估算曝光</th><th>媒体预算</th><th>DSP 费用</th><th>总投资</th></tr></thead><tbody><tr v-for="item in activePlan.items" :key="item.key"><td>{{ item.screen_id }}</td><td>{{ (item.sot*100).toFixed(0) }}%</td><td>{{ format(item.impressions) }}</td><td>{{ money(item.media_budget) }}</td><td>{{ money(item.dsp_cost) }}</td><td>{{ money(item.total) }}</td></tr></tbody></table></div><p>金额均以 {{ result.finance.currency }} 为主。总投资包含向上取整到分的预算预留，导出保留 USD 参考及汇率。</p><button class="primary" :disabled="busy || dirty" @click="exportExcel()">导出 {{ strategies[activeStrategy] }} Excel</button></template>
+            <p>选择投资侧重点，下方资金分配与联合分布图同步切换。各方案使用相同预算和投放周期；约束相同时，部分方案可能接近。</p><button :disabled="busy || dirty" @click="calculate">生成或更新不同侧重点方案</button><div class="plan-grid"><button v-for="p in result.plans" :key="p.strategy" :class="['plan-card',{active:activeStrategy===p.strategy}]" @click="activeStrategy=p.strategy"><b>{{ strategies[p.strategy] }}</b><span>{{ strategyDescriptions[p.strategy] }}</span><strong>{{ result.finance.currency }} {{ money(p.total) }}</strong><span>{{ p.screen_count }} 块屏幕 · {{ p.region_cells }} 区域网格</span><span>估算曝光 {{ format(p.impressions) }}</span><span>剩余预算 {{ money(p.remaining) }}</span></button></div>
+            <template v-if="activePlan"><InvestmentDistribution :key="activeStrategy" :rows="activePlanRows" :currency="result.finance.currency" :days="result.finance.planning_days" @select="showPlanScreen" /><p v-if="planSelection" class="notice">{{ planSelection.address }} · 投入 {{ money(planSelection.recommended_amount) }} {{ result.finance.currency }} · 累计 Impression {{ format(planSelection.recommended_exposures) }}</p><p>{{ activePlan.excluded_ids.length ? `此替代方案排除：${activePlan.excluded_ids.join('、')}` : '按当前候选范围与 SOT 步长分配。' }}</p><p v-for="risk in activePlan.risks" :key="risk" class="notice">{{ risk }}</p><div class="table-wrap"><table><thead><tr><th>屏幕</th><th>SOT</th><th>估算曝光</th><th>媒体预算</th><th>DSP 费用</th><th>总投资</th></tr></thead><tbody><tr v-for="item in pagedPlanItems" :key="item.key"><td>{{ item.screen_id }}</td><td>{{ (item.sot*100).toFixed(3) }}%</td><td>{{ format(item.impressions) }}</td><td>{{ money(item.media_budget) }}</td><td>{{ money(item.dsp_cost) }}</td><td>{{ money(item.total) }}</td></tr></tbody></table></div><div class="pager"><button :disabled="planPage<=1" @click="planPage--">上一页</button><span>第 {{ planPage }} 页，共 {{ planPages }} 页 · 每页 5 块屏幕 · 共 {{ activePlan.items.length }} 块</span><button :disabled="planPage>=planPages" @click="planPage++">下一页</button></div><p>金额均以 {{ result.finance.currency }} 为主。总投资包含向上取整到分的预算预留，导出保留 USD 参考及汇率。</p><button class="primary" :disabled="busy || dirty" @click="exportExcel()">导出 {{ strategies[activeStrategy] }} Excel</button></template>
             <h3>计算方法与风险</h3><dl><template v-for="(formula,key) in result.formulas" :key="key"><dt>{{ key }}</dt><dd>{{ formula }}</dd></template></dl><ul><li v-for="risk in result.risks" :key="risk">{{ risk }}</li></ul>
           </template></section>
         </div>
@@ -69,10 +75,17 @@
       <div v-if="step===1" class="stage-actions"><span>保存当前设置后设置广告内容，不会提前生成投资报告。</span><button class="next-step" :disabled="busy" @click="beginAnalysis">保存设置，进入广告设置 →</button></div>
     </template>
     <section v-else class="empty"><h2>从真实库存开始</h2><p>可直接加载项目样本验证流程，再替换为正式投放库存。地区资料和照片可稍后补充，缺失证据会显式标注。</p></section>
+  <dialog ref="completionDialog" class="completion-dialog" aria-labelledby="completion-title">
+      <h2 id="completion-title">全部屏幕模拟完成</h2>
+      <p>共 {{ simulationStatus?.total || 0 }} 块屏幕已完成全天模拟，二宫格播放已停止。</p>
+      <p>现在可以进入第四步「报告与投放建议」。</p>
+      <p v-if="error" role="alert" class="error">{{ error }}</p>
+      <div class="actions"><button :disabled="busy" @click="completionDialog.close()">稍后查看</button><button class="primary" :disabled="busy" @click="finishAnalysis">{{ busy ? '正在生成报告…' : '进入报告与投放建议 →' }}</button></div>
+    </dialog>
   </main>
 </template>
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import api from '../api'
 import { inventoryRegion, inventoryBounds, resolveRegionFilters } from '../utils/inventorySetup'
 import AdSetup from '../components/AdSetup.vue'
@@ -81,13 +94,25 @@ import InventoryLocations from '../components/InventoryLocations.vue'
 import CoverageTask from '../components/CoverageTask.vue'
 import InvestmentControls from '../components/InvestmentControls.vue'
 import InvestmentDashboard from '../components/InvestmentDashboard.vue'
+import InvestmentDistribution from '../components/InvestmentDistribution.vue'
+const simulationStatus=ref(null)
+const completionDialog=ref(null)
+let announcedBatch=null
+async function updateSimulationStatus(value){
+ simulationStatus.value=value;simulationReady.value=value.ready===true
+ if(value.ready && step.value===3 && announcedBatch!==value.campaign_id){
+  announcedBatch=value.campaign_id
+  await nextTick()
+  completionDialog.value?.showModal()
+ }
+}
 const simulationReady=ref(false),simulationPlayer=ref(null),simulationTask=ref(null)
-const step=ref(1),preparedScene=ref(''),stepLabels=['导入数据与设置','广告设置','人群模拟分析','报告与投放建议']
+const step=ref(1),stepLabels=['导入数据与设置','广告设置','人群模拟分析','报告与投放建议']
 const campaigns=ref([]),sourceSheet=ref('FilteredFrames')
 const investmentDefaults=()=>({complete_report:true,minimum_importance:40,objective:'effect',max_screen_share:.15,exploration_share:.2,threshold:60,weights:{exposure:20,favorability:15,interest:20,visibility:15,location:15,market:10,cost:5},roi:{order_value:'',margin:'',incrementality:'',rates:{low:'',base:'',high:''},overrides:{},calibration:{},source:''}})
 const project=ref(null),result=ref(null),busy=ref(false),error=ref(''),notice=ref(''),progress=ref('')
 const dimensions={exposure:'曝光潜力',visibility:'可见性',location:'位置价值',market:'市场相关性',cost:'成本效率',availability:'可用性'}
-const strategies={investment:'综合投资建议',balanced:'均衡方案',coverage:'覆盖优先',venue:'场所价值优先',exposure:'曝光优先',alternative:'替代方案',custom:'自定义目标'}
+const strategies={sim_exposure:'曝光效率优先',sim_interest:'人群兴趣优先',sim_coverage:'区域分散优先',investment:'综合投资建议',balanced:'均衡方案',coverage:'覆盖优先',venue:'场所价值优先',exposure:'曝光优先',alternative:'替代方案',custom:'自定义目标'}
 const presets={balanced:{exposure:12,visibility:28,location:22,market:22,cost:10,availability:6},roadside:{exposure:15,visibility:40,location:20,market:10,cost:10,availability:5},retail:{exposure:10,visibility:25,location:20,market:30,cost:10,availability:5}}
 const options=ref({campaign_id:new URLSearchParams(window.location.search).get('campaign')||'',investment:investmentDefaults(),budget:null,currency:'USD',start_date:'',days:'',planning_days:30,impression_period_days:30,dsp_fee:0,cpm_markup:0,sot_step:0.1,max_sot:1,overlap_penalty:0.5,fx_source:'',fx_date:'',weights:{...presets.balanced},filters:{country:'',city:'',market:'',venue:'',poi:''}})
 const preset=ref('balanced'),fxText=ref('{"USD":1}'),boundsText=ref(''),excludedText=ref(''),alternativeText=ref(''),customEnabled=ref(false),customWeights=ref({...presets.balanced})
@@ -97,11 +122,19 @@ const inputSnapshot=computed(()=>JSON.stringify([options.value,fxText.value,boun
 const dirty=computed(()=>!!result.value && (evidenceChanged.value || inputSnapshot.value!==lastInput.value))
 const frames=computed(()=>result.value?.frames || project.value?.frames || [])
 const filteredFrames=computed(()=>frames.value.filter(f=>(availability.value==='all'||(availability.value==='eligible'?f.eligible:!f.eligible)) && `${f.screen_id} ${f.fields.CLOSEST_POI} ${f.fields.ADDRESS_LOCALITY} ${f.fields.VENUE_TAXONOMY_VALUE}`.toLowerCase().includes(search.value.toLowerCase())))
-const pageCount=computed(()=>Math.max(1,Math.ceil(filteredFrames.value.length/20)))
-const pagedFrames=computed(()=>filteredFrames.value.slice((page.value-1)*20,page.value*20))
+const pageCount=computed(()=>Math.max(1,Math.ceil(filteredFrames.value.length/5)))
+const pagedFrames=computed(()=>filteredFrames.value.slice((page.value-1)*5,page.value*5))
 const detail=computed(()=>frames.value.find(f=>f.key===detailId.value))
 const detailAnalysis=computed(()=>project.value?.analyses[detail.value?.screen_id])
 const activePlan=computed(()=>result.value?.plans.find(p=>p.strategy===activeStrategy.value))
+const strategyDescriptions={investment:'综合七维评分与成本约束',sim_exposure:'提高曝光与成本效率的权重',sim_interest:'优先兴趣、好感与人群匹配',sim_coverage:'提高区域重复惩罚，分散投放地点'}
+const planPage=ref(1),planSelection=ref(null)
+const planPages=computed(()=>Math.max(1,Math.ceil((activePlan.value?.items.length||0)/5)))
+const pagedPlanItems=computed(()=>activePlan.value?.items.slice((planPage.value-1)*5,planPage.value*5)||[])
+const activePlanRows=computed(()=>{const originals=new Map((result.value?.investment?.rows||[]).map(r=>[r.key,r]));return (activePlan.value?.items||[]).map(i=>({key:i.key,screen_id:i.screen_id,address:originals.get(i.key)?.address||i.screen_id,recommended_amount:i.total,recommended_exposures:i.impressions}))})
+function showPlanScreen(row){planSelection.value=row}
+watch(activePlan,()=>{planPage.value=1;planSelection.value=null})
+
 watch([search,availability],()=>page.value=1)
 watch(pageCount,n=>{if(page.value>n)page.value=n})
 const format=n=>n==null?'—':Number(n).toLocaleString('zh-CN',{maximumFractionDigits:0})
@@ -113,7 +146,7 @@ async function task(fn){if(busy.value)return;busy.value=true;error.value='';noti
 function setProject(value,reset=false){project.value=value;try{localStorage.setItem('pdooh-planning-project',value.id)}catch{};evidenceChanged.value=true;if(reset){result.value=null;selectedIds.value=[];detailId.value=null;page.value=1;search.value='';availability.value='all'}}
 const regionLabels={country:'国家 / ISO',city:'城市',market:'媒体市场',venue:'场所类型',poi:'POI'}
 function fillInventoryRegion(){options.value.filters=inventoryRegion(project.value.frames)}
-function resetImportedScope(){step.value=1;preparedScene.value='';options.value.campaign_id='';fillInventoryRegion();boundsText.value=inventoryBounds(project.value.frames);excludedText.value='';alternativeText.value='';const u=new URL(window.location.href);u.searchParams.set('project',project.value.id);u.searchParams.delete('campaign');window.history.replaceState({},'',u)}
+function resetImportedScope(){step.value=1;options.value.campaign_id='';fillInventoryRegion();boundsText.value=inventoryBounds(project.value.frames);excludedText.value='';alternativeText.value='';const u=new URL(window.location.href);u.searchParams.set('project',project.value.id);u.searchParams.delete('campaign');window.history.replaceState({},'',u)}
 async function loadSample(){await task(async()=>{setProject((await api.post('/api/planning/sample',{source_sheet:sourceSheet.value})).data,true);resetImportedScope();notice.value='已加载实际样本。请输入自己的总预算；样本中的占位图不会用于现场分析。'})}
 async function importWorkbook(event){const file=event.target.files[0];if(!file)return;await task(async()=>{const form=new FormData();form.append('workbook',file);form.append('source_sheet',sourceSheet.value);setProject((await api.post('/api/planning/import',form,{headers:{'Content-Type':'multipart/form-data'}})).data,true);resetImportedScope()});event.target.value=''}
 async function uploadFiles(event,kind){const files=[...event.target.files];if(!files.length)return;await task(async()=>{const form=new FormData();files.forEach(file=>form.append(kind,file));if(kind==='photos')form.append('screen_id',photoScreen.value);else form.append('kind',documentKind.value);setProject((await api.post(`/api/planning/${project.value.id}/${kind}`,form,{headers:{'Content-Type':'multipart/form-data'}})).data);notice.value='证据已更新，请重新分析相关屏幕并计算方案。'});event.target.value=''}
@@ -139,9 +172,9 @@ function config(){
 async function calculate(){await task(async()=>{const snapshot=inputSnapshot.value;progress.value='正在汇总本轮24小时模拟与预算报告…';result.value=(await api.post(`/api/planning/${project.value.id}/plan`,config())).data;options.value.campaign_id=result.value.options.campaign_id||'';lastInput.value=inputSnapshot.value;evidenceChanged.value=false;if(!result.value.plans.some(p=>p.strategy===activeStrategy.value))activeStrategy.value='investment';notice.value=`已完成：${result.value.summary.eligible} 条候选，${result.value.plans.length} 个预算方案。`})}
 function goStep(value){step.value=value;error.value='';window.scrollTo({top:0,behavior:'smooth'})}
 function acceptCampaign(value){options.value.campaign_id=value?.id||'';evidenceChanged.value=true;const u=new URL(window.location.href);if(value)u.searchParams.set('campaign',value.id);else u.searchParams.delete('campaign');window.history.replaceState({},'',u);try{const key='pdooh-workflow-draft-'+project.value.id;const draft=JSON.parse(localStorage.getItem(key)||'null');if(draft){draft.options.campaign_id=options.value.campaign_id;localStorage.setItem(key,JSON.stringify(draft))}}catch{};if(value&&!campaigns.value.some(c=>c.id===value.id))campaigns.value.push({id:value.id,campaign:value.spec.campaign,scenes:value.spec.scene_ids.length})}
-function adSaved(id){simulationReady.value=false;options.value.campaign_id=id||'';evidenceChanged.value=true;const u=new URL(window.location.href);if(id)u.searchParams.set('campaign',id);else u.searchParams.delete('campaign');window.history.replaceState({},'',u);goStep(3)}
+function adSaved(id){simulationStatus.value=null;simulationReady.value=false;options.value.campaign_id=id||'';evidenceChanged.value=true;const u=new URL(window.location.href);if(id)u.searchParams.set('campaign',id);else u.searchParams.delete('campaign');window.history.replaceState({},'',u);goStep(3)}
 async function beginAnalysis(){await task(async()=>{if(!Number.isFinite(Number(options.value.budget))||Number(options.value.budget)<=0)throw Error('请先填写有效的总预算');if(!/^[A-Z]{3}$/i.test(options.value.currency))throw Error('请填写三字母预算币种');const value=config();const days=value.days||value.planning_days;if(!Number.isFinite(Number(days))||Number(days)<1||Number(days)>366)throw Error('请填写1–366天的投放或估算周期');const inv=(await api.post('/api/world/geo-inventory',{project_id:project.value.id})).data;if(!inv.valid_coordinates)throw Error('库存没有可用坐标，请先修正后上传');localStorage.setItem('pdooh-workflow-draft-'+project.value.id,JSON.stringify({options:options.value,fx:fxText.value,bounds:boundsText.value,excluded:excludedText.value,alternative:alternativeText.value,custom:customEnabled.value,customWeights:customWeights.value}));const u=new URL(window.location.href);u.searchParams.set('project',project.value.id);if(options.value.campaign_id)u.searchParams.set('campaign',options.value.campaign_id);else u.searchParams.delete('campaign');window.history.replaceState({},'',u);goStep(2)})}
-async function finishAnalysis(){await calculate();if(error.value)return;if(!result.value)return;goStep(4)}
+async function finishAnalysis(){await calculate();if(error.value)return;if(!result.value)return;completionDialog.value?.close();goStep(4)}
 async function exportExcel(strategy=activeStrategy.value){await task(async()=>{const blob=await api.get(`/api/planning/${project.value.id}/export`,{params:{strategy},responseType:'blob'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`pDOOH-${strategy}.xlsx`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)})}
 onMounted(async()=>{
   try{campaigns.value=(await api.get('/api/planning/campaigns')).data}catch(e){error.value=e.message}
@@ -166,6 +199,8 @@ onMounted(async()=>{
 })
 </script>
 <style scoped>
+.completion-dialog{border:1px solid #b8cbbd;border-radius:16px;padding:28px;max-width:480px;width:calc(100% - 48px);color:#193c31}.completion-dialog::backdrop{background:#102b2466}.completion-dialog .primary{width:auto;margin:0}
+
 .simulation-complete{padding:16px 20px;background:#e5f5eb;color:#17623b;border:1px solid #a4d6b7;border-radius:8px;font-weight:600}
 
 .import-source{display:flex;align-items:center;gap:12px;flex:1 1 100%;min-width:0}.import-source select{flex:1;min-width:140px;margin:0}.import-filename{overflow-wrap:anywhere;max-width:50%;font-size:14px}.import-success{background:#e5f5eb;color:#17623b;border:1px solid #a4d6b7;border-radius:6px;padding:10px 14px;font-size:13px;font-weight:600}.actions{max-width:620px}.fields textarea{box-sizing:border-box;max-height:140px}

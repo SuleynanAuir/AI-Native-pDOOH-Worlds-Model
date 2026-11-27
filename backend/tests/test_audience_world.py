@@ -52,3 +52,19 @@ def test_world_api_preview_and_replay(tmp_path):
     assert c.post('/api/world/runs',json={'population':100000}).status_code==400
     assert c.post('/api/world/runs',json={'population':True}).status_code==400
     assert c.post('/api/world/runs/'+rid+'/control',json={'command':'delete'}).status_code==400
+
+
+def test_preview_generates_scene_once_and_ignores_supplied_cache(tmp_path,monkeypatch):
+    from app import create_app
+    from app.audience import world_routes
+    app=create_app();app.config.update(TESTING=True,UPLOAD_FOLDER=str(tmp_path))
+    original=world_routes.scene;calls=[]
+    def counted(*args,**kwargs):
+        calls.append(1)
+        return original(*args,**kwargs)
+    monkeypatch.setattr(world_routes,'scene',counted)
+    response=app.test_client().post('/api/world/preview',json={'agent_count':12,'rounds':1,'_prepared_scene':{'tampered':True}})
+    assert response.status_code==200
+    assert len(calls)==1
+    assert response.json['data']['agent_count']==12
+    assert 'tampered' not in response.json['data']

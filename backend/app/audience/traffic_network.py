@@ -1,6 +1,7 @@
 """Mesoscopic vehicle routes on connected map geometry, never measured flow."""
 import math
 import random
+from itertools import accumulate
 from collections import defaultdict
 
 
@@ -64,19 +65,21 @@ def simplify_route(points,junctions):
     kept.append(points[-1]);return kept,kept_junctions
 
 
-def connected_vehicles(slot,seed,base_count,network,policies=(),pool=None,absolute_count=False):
+def connected_vehicles(slot,seed,base_count,network,policies=(),pool=None,absolute_count=False,max_samples=3000):
     from .traffic import VEHICLES
     pool=route_pool(network,seed,policies) if pool is None else pool
     if not pool or base_count==0:return []
     factor={'quiet':.18,'morning':1.5,'evening':1.6,'night':1.2,'daytime':1.}.get(slot.get('period'),1.)
     target=max(0,round(base_count if absolute_count else base_count*factor*slot.get('activity_factor',1.)))
-    count=min(3000,target)
+    if type(max_samples) is not int or not 1<=max_samples<=3000:raise ValueError("车辆样本上限须为1–3000")
+    count=min(max_samples,target)
     # Each path is a stratified traffic sample; integer weights preserve volume.
     weight,remainder=divmod(target,max(1,count))
     rng=random.Random(f'connected-vehicles:{seed}:{slot["round"]}');result=[]
     peak=slot.get('period') in ('morning','evening')
+    cumulative=list(accumulate(r["length"] for r in pool))
     for i in range(count):
-        route=rng.choices(pool,[r['length'] for r in pool])[0];defs=[v for v in VEHICLES if v['kind'] in route['allowed']]
+        route=rng.choices(pool,cum_weights=cumulative)[0];defs=[v for v in VEHICLES if v['kind'] in route['allowed']]
         if not defs:continue
         definition=rng.choices(defs,[{'car':66,'taxi':18,'bus':5,'van':11}[v['kind']] for v in defs])[0]
         # Lower peak speeds model urban congestion; signal wait is an explicit

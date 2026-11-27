@@ -86,3 +86,15 @@ def test_unexposed_is_neither_away_nor_ignoring_ad(world):
     expanded=[{**a,'journey':trips.get(str(a['id']))} for a in world['agents']]
     movement=movement_summary(expanded)
     assert movement['walking_departures']+movement['transit_departures']==world['schedule'][8]['scheduled_population']
+
+
+def test_route_atlas_is_bounded_reproducible_and_connected():
+    import random
+    from app.audience.mobility import RoutePlanner
+    network=neighborhood();atlas=RoutePlanner(network,42);other=RoutePlanner(network,42)
+    edges={frozenset((e['a'],e['b'])) for e in network['edges']}
+    for i in range(500):
+        path=atlas.route('0-0','6-3',random.Random(i))
+        assert path==other.route('0-0','6-3',random.Random(i))
+        assert all(frozenset((a,b)) in edges for a,b in zip(path,path[1:]))
+    assert atlas.searches<=8

@@ -79,3 +79,25 @@ def test_replay_recovers_same_hour_and_original_vehicle_parameters(tmp_path,monk
     value=replay_repair.campaign_hour(target,9,tmp_path)
     assert value['round']==9 and value['pedestrians']==[{'id':'original'}] and value['recovered_from_run']==rid
     assert read_json(target/'hour-9.json')==value
+
+
+def test_partial_progress_does_not_decode_completed_traffic(tmp_path,monkeypatch):
+    from app.audience import simulation_workflow
+    project=store.create(tmp_path,dict(frames=[{'screen_id':'a'},{'screen_id':'b'}],ad_setup={'campaign':{'brand':'Nike'}}))
+    batch=begin(tmp_path,project['id'])
+    coverage=store.directory(tmp_path,project['id'])/('coverage-'+batch['id']);coverage.mkdir()
+    write_json(coverage/'state.json',dict(status='interrupted',items={'a':dict(status='completed',scene_id='s',run_id='r')}))
+    monkeypatch.setattr(simulation_workflow,'validated_screen',lambda *args:pytest.fail('partial poll must not decode traffic'))
+    with store.locked(tmp_path,project['id']) as (_,p):
+        summary,_=inspect(tmp_path,p,progress_only=True)
+    assert summary['done']==1 and summary['total']==2 and not summary['ready']
+    assert summary['scene_ids']==['s']
+
+
+def test_lightweight_engine_requires_complete_day_and_explicit_provenance():
+    value=run();value.update(engine='pDOOH batch v2',decision_method='batched_interviews_v2')
+    assert full_day(value)
+    value['current_round']=23
+    assert not full_day(value)
+    value['current_round']=24;value['decision_method']='unknown'
+    assert not full_day(value)
