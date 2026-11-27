@@ -1,13 +1,14 @@
 <div align="center">
-  <img src="assets/Copy%20of%20VTM%20email%20header.png" alt="VIOOH Trading Manager +Intelligence" width="260">
 
-# AI-Native pDOOH World-Model
+# 🇺🇸 🇬🇧 VIOOH AI-Native pDOOH World-Model Platform
 
-**A workspace for full-day audience simulation, screen-level investment analysis, and media proposals in programmatic digital out-of-home advertising**
+**A workspace for full-day audience simulation, screen-level investment analysis, and media proposals**
 
-Minghao LI · [t330034027@mail.bnbu.edu.cn](mailto:t330034027@mail.bnbu.edu.cn)
+Minghao LI · [t330034027@mail.bnbu.edu.cn](mailto:t330034027@mail.bnbu.edu.cn) (BNBU)
 
 [Business Workflow](#2-four-stage-business-workflow) · [Calculation Methods](#4-core-metrics-and-mathematical-models) · [Deployment](#6-installation-configuration-and-operation) · [APIs and Acceptance](#7-apis-deliverables-and-acceptance)
+
+  <img src="assets/VIOOH_page.png" alt="VIOOH Trading Manager +Intelligence" width="1000">
 
 </div>
 
